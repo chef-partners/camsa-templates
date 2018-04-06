@@ -34,7 +34,7 @@
         },
 
         "urls": {
-            "publicIPAddress": "[concat(variables('baseUrl'), '/src/templates/public-ipaddress.json')]"
+            "publicIPAddress": "[concat(variables('baseUrl'), '/src/templates/public_ip_address.json')]"
         },
 
         "apiVersions": {
