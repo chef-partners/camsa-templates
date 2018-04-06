@@ -9,12 +9,7 @@
             }
         },
 
-        "virtualNetworkName": {
-            "type": "string",
-            "metadata": {
-                "description": "Name of the Virtual Network which contains the Subnet to which the machines should be connected"
-            }
-        },
+
 
         "subnetName": {
             "type": "string",
