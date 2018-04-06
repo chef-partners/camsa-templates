@@ -14,7 +14,7 @@
         "unique": "[uniqueString(subscription().subscriptionId, resourceGroup().id, deployment().name, parameters('prefix'))]",
         "uniqueShort": "[substring(variables('unique'), 0, 4)]",
 
-        "baseUrl": "https://github.com/chef-partners/azure-managed-automate/tree/master",
+        "baseUrl": "https://raw.githubusercontent.com/chef-partners/azure-managed-automate/master",
 
         "location": "[resourceGroup().location]",
 
@@ -34,7 +34,7 @@
         },
 
         "urls": {
-            "publicIPAddress": "[concat(variables('baseUrl'), '/src/templates/public_ip_address.json')]"
+            "publicIPAddress": "[concat(variables('baseUrl'), '/src/templates/public-ipaddress.json')]"
         },
 
         "apiVersions": {
