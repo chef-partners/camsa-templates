@@ -28,8 +28,17 @@
             "metadata": {
                 "description": "A string of 4 or 5 characters that will be used to help uniquely identify the resources that are created. If this is not specified then a value will be automatically created."
             }
-        }
+        },
 
+        "networkVNetSize": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/24"
+        },
+    
+        "networkSubnetSize": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/28"
+        }
     },
     "variables": {
         "unique": "[uniqueString(subscription().subscriptionId, resourceGroup().id, deployment().name, parameters('prefix'))]",
@@ -40,6 +49,8 @@
         "location": "[resourceGroup().location]",
 
         "name": {
+            "virtualNetwork": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-VNet')]",
+            "subnet":  "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-Subnet')]",
             "vm": {
                 "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-VM')]",
                 "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-VM')]"
@@ -58,11 +69,17 @@
             }
         },
 
+        "networks": {
+            "vnet": "[parameters('networkVNetSize')]",
+            "subnet": "[parameters('networkSubnetSize')]"
+        },
+
         "refs": {
             "subnet": ""
         },
 
         "urls": {
+            "virtualNetwork": "[concat(variables('baseUrl'), '/src/templates/virtual-network.json')]",
             "publicIPAddress": "[concat(variables('baseUrl'), '/src/templates/public-ipaddress.json')]",
             "networkInterface": "[concat(variables('baseUrl'), '/src/templates/network-interface.json')]"
         },
@@ -72,6 +89,37 @@
         }
     },
     "resources": [
+
+        {
+            "type": "Microsoft.Resources/depployments",
+            "name": "[concat(variables('name').virtualNetwork, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').virtualNetwork]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "virtualNetworkName": {
+                      "value": "[variables('name').virtualNetwork]"
+                    },
+                    "location": {
+                      "value": "[variables('location')]"
+                    },
+                    "vnetAddressPrefix": {
+                      "value": "[variables('networks').vnet]"
+                    },
+                    "subnetName": {
+                      "value": "[variables('name').subnet]"
+                    },
+                    "subnetPrefix": {
+                      "value": "[variables('networks').subnet]"
+                    }
+                }
+            }
+        },
+
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').publicIPAddress.chef, '-Deployment')]",
@@ -125,6 +173,8 @@
                 }
             }
         },
+
+
         
         {
             "type": "Microsoft.Resources/deployments",
