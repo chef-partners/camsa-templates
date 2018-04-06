@@ -11,7 +11,7 @@ control 'Automate-Server-Public-IP-Address' do
     its('location') { should cmp 'westeurope' }
     its('properties.provisioningState') { should cmp 'Succeeded' }
     its('properties.publicIPAddressVersion') { should cmp 'IPv4' }
-    its('properties.publicIPAllcationMethod') { should cmp 'Dynamic' }
+    its('properties.publicIPAllocationMethod') { should cmp 'Dynamic' }
     its('properties.dnsSettings.domainNameLabel') { should cmp "inspec-automate-#{unique_string}" }
   end
 end
@@ -24,7 +24,7 @@ control 'Chef-Server-Public-IP-Address' do
     its('location') { should cmp 'westeurope' }
     its('properties.provisioningState') { should cmp 'Succeeded' }
     its('properties.publicIPAddressVersion') { should cmp 'IPv4' }
-    its('properties.publicIPAllcationMethod') { should cmp 'Dynamic' }
+    its('properties.publicIPAllocationMethod') { should cmp 'Dynamic' }
     its('properties.dnsSettings.domainNameLabel') { should cmp "inspec-chef-#{unique_string}" }
   end
 end

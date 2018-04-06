@@ -9,20 +9,12 @@
             }
         },
 
-
-
-        "subnetName": {
-            "type": "string",
-            "metadata": {
-                "description": "Name of the subnet to which the machines should be connected to"
-            }
-        },
-
         "uniqueShort": {
             "type": "string",
             "metadata": {
                 "description": "A string of 4 or 5 characters that will be used to help uniquely identify the resources that are created. If this is not specified then a value will be automatically created."
-            }
+            },
+            "defaultValue": ""
         },
 
         "networkVNetSize": {
@@ -59,8 +51,14 @@
                 "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-PublicIP')]"
             },
             "nic": {
-                "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-NIC')]",
-                "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-NIC')]"
+                "ama": {
+                    "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-NIC')]",
+                    "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-NIC')]"
+                },
+                "customer": {
+                    "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), 'Customer-NIC')]",
+                    "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), 'Customer-NIC')]"
+                }
             }
         },
 
@@ -76,7 +74,7 @@
         "urls": {
             "virtualNetwork": "[concat(variables('baseUrl'), '/src/templates/virtual-network.json')]",
             "publicIPAddress": "[concat(variables('baseUrl'), '/src/templates/public-ipaddress.json')]",
-            "networkInterface": "[concat(variables('baseUrl'), '/src/templates/network-interface.json')]"
+            "networkInterfacePrivate": "[concat(variables('baseUrl'), '/src/templates/network-interface-private.json')]"
         },
 
         "apiVersions": {
@@ -86,7 +84,7 @@
     "resources": [
 
         {
-            "type": "Microsoft.Resources/depployments",
+            "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').virtualNetwork, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
             "properties": {
@@ -169,11 +167,9 @@
             }
         },
 
-
-        
         {
             "type": "Microsoft.Resources/deployments",
-            "name": "[concat(variables('name').nic.chef, '-Deployment')]",
+            "name": "[concat(variables('name').nic.ama.chef, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', variables('name').publicIPAddress.chef, '-Deployment')]"
@@ -181,18 +177,15 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('urls').networkInterface]",
+                    "uri": "[variables('urls').networkInterfacePrivate]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
                     "nicName": {
-                        "value": "[variables('name').nic.chef]"
-                    },
-                    "publicIPAddressRef": {
-                        "value": "[reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.publicIpId.value]"
+                        "value": "[variables('name').nic.ama.chef]"
                     },
                     "subnetRef": {
-                        "value": ""
+                        "value": "[reference(concat(variables('name').virtualNetwork, '-Deployment')).outputs.subnetRef.value]"
                     }
                 }
             }
