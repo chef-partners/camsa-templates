@@ -1,0 +1,102 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "prefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Prefix to be applied to the name and hostname of the Chef and Automate servers"
+            }
+        }
+
+    },
+    "variables": {
+        "unique": "[uniqueString(subscription().subscriptionId, resourceGroup().id, deployment().name, parameters('prefix'))]",
+        "uniqueShort": "[substring(variables('unique'), 0, 4)]",
+
+        "baseUrl": "",
+
+        "location": "[resourceGroup().location]",
+
+        "name": {
+            "vm": {
+                "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-VM')]",
+                "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-VM')]"
+            },
+            "computer": {
+                "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'))]",
+                "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'))]"
+            },
+            "publicIPAddress": {
+                "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-PublicIP')]",
+                "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-PublicIP')]"
+            }
+        },
+
+        "urls": {
+            "publicIPAddress": "[concat(variables('baseUrl'), '/src/templates/public-ipaddress.json')]"
+        },
+
+        "apiVersions": {
+            "deployments": "2016-02-01"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').publicIPAddress.chef, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').publicIPAddress]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "publicIPAddressName": {
+                        "value": "[variables('name').publicIPAddress.chef]"
+                    },
+                    "publicIPAddressType": {
+                        "value": "Dynamic"
+                    },
+                    "dnsLabelPrefix": {
+                        "value": "[variables('name').computer.chef]"
+                    }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').publicIPAddress.automate, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').publicIPAddress]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "publicIPAddressName": {
+                        "value": "[variables('name').publicIPAddress.automate]"
+                    },
+                    "publicIPAddressType": {
+                        "value": "Dynamic"
+                    },
+                    "dnsLabelPrefix": {
+                        "value": "[variables('name').computer.automate]"
+                    }
+                }
+            }
+        }        
+    ],
+    "outputs": {
+        
+    }
+}
