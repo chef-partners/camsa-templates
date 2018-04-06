@@ -14,7 +14,7 @@
         "unique": "[uniqueString(subscription().subscriptionId, resourceGroup().id, deployment().name, parameters('prefix'))]",
         "uniqueShort": "[substring(variables('unique'), 0, 4)]",
 
-        "baseUrl": "",
+        "baseUrl": "https://github.com/chef-partners/azure-managed-automate/tree/master",
 
         "location": "[resourceGroup().location]",
 
