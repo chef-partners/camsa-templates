@@ -7,12 +7,33 @@
             "metadata": {
                 "description": "Prefix to be applied to the name and hostname of the Chef and Automate servers"
             }
+        },
+
+        "virtualNetworkName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Virtual Network which contains the Subnet to which the machines should be connected"
+            }
+        },
+
+        "subnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the subnet to which the machines should be connected to"
+            }
+        },
+
+        "uniqueShort": {
+            "type": "string",
+            "metadata": {
+                "description": "A string of 4 or 5 characters that will be used to help uniquely identify the resources that are created. If this is not specified then a value will be automatically created."
+            }
         }
 
     },
     "variables": {
         "unique": "[uniqueString(subscription().subscriptionId, resourceGroup().id, deployment().name, parameters('prefix'))]",
-        "uniqueShort": "[substring(variables('unique'), 0, 4)]",
+        "uniqueShort": "[if(empty(parameters('uniqueShort')), substring(variables('unique'), 0, 4), parameters('uniqueShort'))]",
 
         "baseUrl": "https://raw.githubusercontent.com/chef-partners/azure-managed-automate/master",
 
@@ -30,11 +51,20 @@
             "publicIPAddress": {
                 "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-PublicIP')]",
                 "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-PublicIP')]"
+            },
+            "nic": {
+                "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-NIC')]",
+                "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-NIC')]"
             }
         },
 
+        "refs": {
+            "subnet": ""
+        },
+
         "urls": {
-            "publicIPAddress": "[concat(variables('baseUrl'), '/src/templates/public-ipaddress.json')]"
+            "publicIPAddress": "[concat(variables('baseUrl'), '/src/templates/public-ipaddress.json')]",
+            "networkInterface": "[concat(variables('baseUrl'), '/src/templates/network-interface.json')]"
         },
 
         "apiVersions": {
@@ -94,7 +124,35 @@
                     }
                 }
             }
-        }        
+        },
+        
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').nic.chef, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').publicIPAddress.chef, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').networkInterface]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "nicName": {
+                        "value": "[variables('name').nic.chef]"
+                    },
+                    "publicIPAddressRef": {
+                        "value": "[reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.publicIpId.value]"
+                    },
+                    "subnetRef": {
+                        "value": ""
+                    }
+                }
+            }
+
+        }
     ],
     "outputs": {
         
