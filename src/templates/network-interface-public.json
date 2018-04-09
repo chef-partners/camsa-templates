@@ -14,6 +14,10 @@
   
       "subnetRef": {
         "type": "string"
+      },
+      
+      "nsgRef": {
+        "type": "string"
       }
     },
     "variables": {
@@ -26,7 +30,8 @@
   
       "ref": {
         "publicIPAddress": "[parameters('publicIPAddressRef')]",
-        "subnet": "[parameters('subnetRef')]"
+        "subnet": "[parameters('subnetRef')]",
+        "nsg": "[parameters('nsgRef')]"
       },
   
       "apiVersions": {
@@ -57,7 +62,10 @@
                 }
               }
             }
-          ]
+          ],
+          "networkSecurityGroup": {
+            "id": "[variables('ref').nsg]"
+          }
         }
       }
     ],

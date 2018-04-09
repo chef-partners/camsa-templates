@@ -9,6 +9,27 @@
             }
         },
 
+        "customerResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the resource group that contains the Virtual network to which the Chef and Automate servers should be connected to"
+            }
+        },
+
+        "virtualNetworkName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Virtual Network which contains the Subnet to which the machines should be connected"
+            }
+        },
+
+        "subnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the subnet to which the machines should be connected to"
+            }
+        },
+
         "uniqueShort": {
             "type": "string",
             "metadata": {
@@ -52,13 +73,17 @@
             },
             "nic": {
                 "ama": {
-                    "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-NIC')]",
-                    "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-NIC')]"
+                    "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-AMA-NIC')]",
+                    "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-AMA-NIC')]"
                 },
                 "customer": {
-                    "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), 'Customer-NIC')]",
-                    "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), 'Customer-NIC')]"
+                    "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-Customer-VNet-NIC')]",
+                    "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-Customer-VNet-NIC')]"
                 }
+            },
+            "nsg": {
+                "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-Customer-NSG')]",
+                "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-Customer-NSG')]"
             }
         },
 
@@ -67,14 +92,15 @@
             "subnet": "[parameters('networkSubnetSize')]"
         },
 
-        "refs": {
-            "subnet": ""
-        },
+        "customerVNetID": "[resourceId(parameters('customerResourceGroupName'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+        "customerSubnetRef": "[concat(variables('customerVNetID'), '/subnets/', parameters('subnetName'))]",
 
         "urls": {
             "virtualNetwork": "[concat(variables('baseUrl'), '/src/templates/virtual-network.json')]",
             "publicIPAddress": "[concat(variables('baseUrl'), '/src/templates/public-ipaddress.json')]",
-            "networkInterfacePrivate": "[concat(variables('baseUrl'), '/src/templates/network-interface-private.json')]"
+            "networkInterfacePrivate": "[concat(variables('baseUrl'), '/src/templates/network-interface-private.json')]",
+            "networkInterfacePublic": "[concat(variables('baseUrl'), '/src/templates/network-interface-public.json')]",
+            "networkSecurityGroup": "[concat(variables('baseUrl'), '/src/templates/network-security-group.json')]"
         },
 
         "apiVersions": {
@@ -108,6 +134,48 @@
                     },
                     "subnetPrefix": {
                       "value": "[variables('networks').subnet]"
+                    }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').nsg.chef, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "properties": {
+                "mode":"Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').networkSecurityGroup]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "groupName": {
+                        "value": "variables('name').nsg.chef"
+                    }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').nsg.automate, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "properties": {
+                "mode":"Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').networkSecurityGroup]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "groupName": {
+                        "value": "variables('name').nsg.automate"
                     }
                 }
             }
@@ -172,7 +240,7 @@
             "name": "[concat(variables('name').nic.ama.chef, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
             "dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', variables('name').publicIPAddress.chef, '-Deployment')]"
+                "[concat('Microsoft.Resources/deployments/', variables('name').virtualNetwork, '-Deployment')]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -189,8 +257,93 @@
                     }
                 }
             }
+        },
 
-        }
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').nic.ama.automate, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').virtualNetwork, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').networkInterfacePrivate]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "nicName": {
+                        "value": "[variables('name').nic.ama.automate]"
+                    },
+                    "subnetRef": {
+                        "value": "[reference(concat(variables('name').virtualNetwork, '-Deployment')).outputs.subnetRef.value]"
+                    }
+                }
+            }
+        },
+        
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').nic.customer.chef, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').publicIPAddress.chef, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').nsg.chef, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').networkInterfacePublic]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "nicName": {
+                        "value": "[variables('name').nic.customer.chef]"
+                    },
+                    "publicIPAddressRef": {
+                        "value": "[reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.publicIpId.value]"
+                    },
+                    "subnetRef": {
+                        "value": "[variables('customerSubnetRef')]"
+                    },
+                    "nsgRef": {
+                        "value": "[reference(concat(variables('name').nsg.chef, '-Deployment')).outputs.nsgId.value]"
+                    }
+                }
+            }
+        },
+        
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').nic.customer.automate, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').publicIPAddress.automate, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').nsg.automate, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').networkInterfacePublic]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "nicName": {
+                        "value": "[variables('name').nic.customer.automate]"
+                    },
+                    "publicIPAddressRef": {
+                        "value": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.publicIpId.value]"
+                    },
+                    "subnetRef": {
+                        "value": "[variables('customerSubnetRef')]"
+                    },
+                    "nsgRef": {
+                        "value": "[reference(concat(variables('name').nsg.automate, '-Deployment')).outputs.nsgId.value]"
+                    }
+                }
+            }
+        }        
     ],
     "outputs": {
         
