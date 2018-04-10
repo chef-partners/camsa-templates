@@ -107,11 +107,10 @@
   
       "osProfilesshPublicKey": {
         "adminUsername": "[parameters('adminUsername')]",
-        "adminPassword": "[parameters('adminPassword')]",
         "computerName": "[variables('name').computer]",
         "customData": "[base64(variables('customData'))]",
         "linuxConfiguration": {
-          "disablePasswordAuthentication": "false",
+          "disablePasswordAuthentication": "true",
           "ssh": {
             "publicKeys": [
               {
