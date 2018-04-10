@@ -1,0 +1,198 @@
+{  
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+  
+      "vmName": {
+        "type": "string",
+        "metadata": {
+          "description": "Name of the VM as it will appear in Azure"
+        }
+      },
+  
+      "computerName": {
+        "type": "string",
+        "metadata": {
+          "description": "Hostname of the machine"
+        }
+      },
+  
+      "vmSize": {
+        "type": "string",
+        "metadata": {
+          "description": "Size of the machine to create"
+        }
+      },
+  
+      "adminUsername": {
+        "type": "string"
+      },
+  
+      "adminPassword": {
+        "type": "securestring",
+        "defaultValue": ""
+      },
+  
+      "sshPublicKey": {
+        "defaultValue": "",
+        "metadata": {
+          "description": "Administrator SSH public key"
+        },
+        "type": "string"
+      },
+  
+      "authenticationType": {
+        "allowedValues": [
+          "password",
+          "sshPublicKey"
+        ],
+        "defaultValue": "password",
+        "metadata": {
+          "description": "Authentication type"
+        },
+        "type": "string"
+      },
+  
+      "storageAccountName": {
+        "type": "string"
+      },
+  
+      "amaNicRef": {
+        "type": "string",
+        "metadata": {
+          "description": "Reference to the NIC that is connected to the AMA network"
+        }
+      },
+
+      "customerNicRef": {
+          "type": "string",
+          "metadata": {
+              "description": "Reference to the NIC that is connected to the Customer network"
+          }
+      },
+  
+      "fqdn": {
+        "type": "string",
+        "metadata": {
+          "description": "FQDN of the machine to set"
+        },
+        "defaultValue": ""
+      }
+    },
+    "variables": {
+  
+      "location": "[resourceGroup().location]",
+  
+      "name": {
+        "vm": "[parameters('vmName')]",
+        "computer": "[parameters('computerName')]",
+        "sa": {
+          "name": "[parameters('storageAccountName')]"
+        },
+        "disk": {
+          "os": "[concat(parameters('computerName'), '-OSDisk')]"
+        }
+      },
+  
+      "customData": "[concat('#cloud-config\nmanage_etc_hosts: true\n\npackage_update: true\npackage_upgrade: false\nfqdn: ', parameters('fqdn'))]",
+  
+      "osProfile": "[variables(concat('osprofile', parameters('authenticationType')))]",
+  
+      "osProfilepassword": {
+        "adminPassword": "[parameters('adminPassword')]",
+        "adminUsername": "[parameters('adminUsername')]",
+        "computerName": "[variables('name').computer]",
+        "customData": "[base64(variables('customData'))]"
+      },
+  
+      "osProfilesshPublicKey": {
+        "adminUsername": "[parameters('adminUsername')]",
+        "adminPassword": "[parameters('adminPassword')]",
+        "computerName": "[variables('name').computer]",
+        "customData": "[base64(variables('customData'))]",
+        "linuxConfiguration": {
+          "disablePasswordAuthentication": "false",
+          "ssh": {
+            "publicKeys": [
+              {
+                "keyData": "[parameters('sshPublicKey')]",
+                "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]"
+              }
+            ]
+          }
+        }
+      },
+  
+      
+  
+      "ref": {
+        "amaNic": "[parameters('amaNicRef')]",
+        "customerNic": "[parameters('customerNicRef')]"
+      },
+  
+      "vmSize": "[parameters('vmSize')]",
+  
+      "apiVersions": {
+        "virtualMachines": "2016-04-30-preview"
+      },
+  
+      "image": {
+        "publisher": "canonical",
+        "offer": "ubuntuserver",
+        "sku": "16.04-LTS"
+      }
+  
+    },
+    "resources": [
+  
+      {
+        "type": "Microsoft.Compute/virtualMachines",
+        "name": "[variables('name').vm]",
+        "apiVersion": "[variables('apiVersions').virtualMachines]",
+        "location": "[variables('location')]",
+        "tags": {
+          "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+        },
+        "properties": {
+          "hardwareProfile": {
+            "vmSize": "[variables('vmSize')]"
+          },
+          "osProfile": "[variables('osprofile')]",
+          "storageProfile": {
+            "imageReference": {
+              "publisher": "[variables('image').publisher]",
+              "offer": "[variables('image').offer]",
+              "sku": "[variables('image').sku]",
+              "version": "latest"
+            },
+            "osDisk": {
+              "name": "[variables('name').disk.os]",
+              "caching": "ReadOnly",
+              "createOption": "FromImage"
+            },
+            "dataDisks": [
+            ]
+          },
+          "networkProfile": {
+            "networkInterfaces": [
+              {
+                "id": "[variables('ref').amaNic]"
+              },
+              {
+                "id": "[variables('ref').customerNic]"
+              }
+            ]
+          },
+          "diagnosticsProfile": {
+            "bootDiagnostics": {
+                "enabled": true,
+                "storageUri": "[concat('http://', parameters('storageAccountName'), '.blob.core.windows.net')]"
+            }
+          }
+        }
+      }
+    ],
+    "outputs": {
+  
+    }
+  }
