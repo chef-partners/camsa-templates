@@ -175,10 +175,16 @@
           "networkProfile": {
             "networkInterfaces": [
               {
-                "id": "[variables('ref').amaNic]"
+                "id": "[variables('ref').amaNic]",
+                "properties": {
+                  "primary": false
+                }
               },
               {
-                "id": "[variables('ref').customerNic]"
+                "id": "[variables('ref').customerNic]",
+                "properties": {
+                  "primary": true
+                }
               }
             ]
           },
