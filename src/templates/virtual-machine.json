@@ -168,9 +168,7 @@
               "name": "[variables('name').disk.os]",
               "caching": "ReadOnly",
               "createOption": "FromImage"
-            },
-            "dataDisks": [
-            ]
+            }
           },
           "networkProfile": {
             "networkInterfaces": [
