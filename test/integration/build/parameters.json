@@ -7,6 +7,15 @@
       },
       "uniqueShort": {
         "value": "9j2f"
+      },
+      "virtualNetworkName": {
+        "value": "InSpec-Customer-Network"
+      },
+      "customerResourceGroupName": {
+        "value": "InSpec-AMA-Customer"
+      },
+      "subnetName": {
+        "value": "InSpec-Customer-Subnet"
       }
     }
 }

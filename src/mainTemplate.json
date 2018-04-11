@@ -38,14 +38,12 @@
             "defaultValue": ""
         },
 
-        "networkVNetSize": {
+        "networkAMASubnetSize": {
             "type": "string",
-            "defaultValue": "10.0.0.0/24"
-        },
-    
-        "networkSubnetSize": {
-            "type": "string",
-            "defaultValue": "10.0.0.0/28"
+            "metadata": {
+                "description": "Network range that should be assigned to the new subnet created for Chef access to the Chef and Automate servers"
+            },
+            "defaultValue": "10.3.0.128/25"
         }
     },
     "variables": {
@@ -57,8 +55,9 @@
         "location": "[resourceGroup().location]",
 
         "name": {
+            "storageAccount": "[variables('unique')]",
             "virtualNetwork": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-VNet')]",
-            "subnet":  "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-Subnet')]",
+            "subnet":  "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-AMA-Subnet')]",
             "vm": {
                 "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-VM')]",
                 "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-VM')]"
@@ -84,57 +83,89 @@
             "nsg": {
                 "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-Customer-NSG')]",
                 "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-Customer-NSG')]"
-            }
+            },
+            "resourceGroup": "[parameters('customerResourceGroupName')]"
+        },
+
+        "vmSize": {
+            "chef": "Standard_DS2_V2",
+            "automate": "Standard_DS2_V2"
+        },
+
+        "admin": {
+            "username": "azureama",
+            "sshPublicKey": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDU56RXZd2AbthjPXKc6dWs9kBxBeUQjQsiJHu5rHaAqKBWvS3XtgYDnWg8p0U2wvkQGGHpowPaP0AGhyRgE2xvsglaT0OnV1vF7zt/24zhoYkfbWtRuEsQCI9ZKs/q2Fg8Wf6q//eRaAi7iH4/MPMuYr+pBVVZp+bcYhne8CJOi4w0VIcSIk462WyqOEKZJk+f7gdkqxk+2yzo3Rqh25+C5j4NuXPmw8H4ccjPeL2E5snfLSZHIe/iCwXnVEdmpsqvaMuVs/LuQ/mJ0Rv8rjwtd8HKPlZJN/M4bt4U8CB8a0dsn+skZXsu7CUHEVwrol/jNzF1hTOA6Fy1jJFvy2yP"
         },
 
         "networks": {
-            "vnet": "[parameters('networkVNetSize')]",
-            "subnet": "[parameters('networkSubnetSize')]"
+            "ama_subnet": "[parameters('networkAMASubnetSize')]"
         },
 
         "customerVNetID": "[resourceId(parameters('customerResourceGroupName'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
         "customerSubnetRef": "[concat(variables('customerVNetID'), '/subnets/', parameters('subnetName'))]",
 
+        "amaSubnetRef": "[concat(variables('customerVNetID'), '/subnets/', variables('name').subnet)]",
+
         "urls": {
+            "storageAccount": "[concat(variables('baseUrl'), '/src/templates/storage-account.json')]",
             "virtualNetwork": "[concat(variables('baseUrl'), '/src/templates/virtual-network.json')]",
             "publicIPAddress": "[concat(variables('baseUrl'), '/src/templates/public-ipaddress.json')]",
             "networkInterfacePrivate": "[concat(variables('baseUrl'), '/src/templates/network-interface-private.json')]",
             "networkInterfacePublic": "[concat(variables('baseUrl'), '/src/templates/network-interface-public.json')]",
-            "networkSecurityGroup": "[concat(variables('baseUrl'), '/src/templates/network-security-group.json')]"
+            "networkSecurityGroup": "[concat(variables('baseUrl'), '/src/templates/network-security-group.json')]",
+            "virtualMachine": "[concat(variables('baseUrl'), '/src/templates/virtual-machine.json')]"
         },
 
         "apiVersions": {
-            "deployments": "2016-02-01"
+            "deployments": "2017-05-10"
         }
     },
     "resources": [
 
         {
             "type": "Microsoft.Resources/deployments",
-            "name": "[concat(variables('name').virtualNetwork, '-Deployment')]",
+            "name": "[concat(variables('name').storageAccount, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('urls').virtualNetwork]",
+                    "uri": "[variables('urls').storageAccount]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
-                    "virtualNetworkName": {
-                      "value": "[variables('name').virtualNetwork]"
-                    },
                     "location": {
-                      "value": "[variables('location')]"
+                        "value": "[variables('location')]"
                     },
-                    "vnetAddressPrefix": {
-                      "value": "[variables('networks').vnet]"
-                    },
-                    "subnetName": {
-                      "value": "[variables('name').subnet]"
-                    },
-                    "subnetPrefix": {
-                      "value": "[variables('networks').subnet]"
+                    "storageAccountName": {
+                        "value": "[variables('name').storageAccount]"
                     }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').subnet, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "resourceGroup": "[variables('name').resourceGroup]",
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/subnets",
+                            "name": "[concat(parameters('virtualNetworkName'), '/', variables('name').subnet)]",
+                            "apiVersion": "2015-06-15",
+                            "location": "[resourceGroup().location]",
+                            "properties": {
+                                "addressPrefix": "[variables('networks').ama_subnet]"
+                            }
+                        }
+                    ]
                 }
             }
         },
@@ -154,7 +185,7 @@
                         "value": "[variables('location')]"
                     },
                     "groupName": {
-                        "value": "variables('name').nsg.chef"
+                        "value": "[variables('name').nsg.chef]"
                     }
                 }
             }
@@ -175,7 +206,7 @@
                         "value": "[variables('location')]"
                     },
                     "groupName": {
-                        "value": "variables('name').nsg.automate"
+                        "value": "[variables('name').nsg.automate]"
                     }
                 }
             }
@@ -240,7 +271,7 @@
             "name": "[concat(variables('name').nic.ama.chef, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
             "dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', variables('name').virtualNetwork, '-Deployment')]"
+                "[concat('Microsoft.Resources/deployments/', variables('name').subnet, '-Deployment')]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -253,7 +284,7 @@
                         "value": "[variables('name').nic.ama.chef]"
                     },
                     "subnetRef": {
-                        "value": "[reference(concat(variables('name').virtualNetwork, '-Deployment')).outputs.subnetRef.value]"
+                        "value": "[variables('amaSubnetRef')]"
                     }
                 }
             }
@@ -264,7 +295,7 @@
             "name": "[concat(variables('name').nic.ama.automate, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
             "dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', variables('name').virtualNetwork, '-Deployment')]"
+                "[concat('Microsoft.Resources/deployments/', variables('name').subnet, '-Deployment')]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -277,7 +308,7 @@
                         "value": "[variables('name').nic.ama.automate]"
                     },
                     "subnetRef": {
-                        "value": "[reference(concat(variables('name').virtualNetwork, '-Deployment')).outputs.subnetRef.value]"
+                        "value": "[variables('amaSubnetRef')]"
                     }
                 }
             }
@@ -340,6 +371,106 @@
                     },
                     "nsgRef": {
                         "value": "[reference(concat(variables('name').nsg.automate, '-Deployment')).outputs.nsgId.value]"
+                    }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').vm.chef, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').nic.customer.chef, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').nic.ama.chef, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').storageAccount, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').virtualMachine]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vmName": {
+                        "value": "[variables('name').vm.chef]"
+                    },
+                    "computerName": {
+                        "value": "[variables('name').computer.chef]"
+                    },
+                    "vmSize": {
+                        "value": "[variables('vmSize').chef]"
+                    },
+                    "adminUsername": {
+                        "value": "[variables('admin').username]"
+                    },
+                    "sshPublicKey": {
+                        "value": "[variables('admin').sshPublicKey]"
+                    },
+                    "authenticationType": {
+                        "value": "sshPublicKey"
+                    },
+                    "storageAccountName": {
+                        "value": "[variables('name').storageAccount]"
+                    },
+                    "amaNicRef": {
+                        "value": "[reference(concat(variables('name').nic.ama.chef, '-Deployment')).outputs.ref.value]"
+                    },
+                    "customerNicRef": {
+                        "value": "[reference(concat(variables('name').nic.customer.chef, '-Deployment')).outputs.ref.value]"
+                    },
+                    "fqdn": {
+                        "value": "[reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value]"
+                    }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').vm.automate, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').nic.customer.automate, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').nic.ama.automate, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').storageAccount, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').virtualMachine]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vmName": {
+                        "value": "[variables('name').vm.automate]"
+                    },
+                    "computerName": {
+                        "value": "[variables('name').computer.automate]"
+                    },
+                    "vmSize": {
+                        "value": "[variables('vmSize').automate]"
+                    },
+                    "adminUsername": {
+                        "value": "[variables('admin').username]"
+                    },
+                    "sshPublicKey": {
+                        "value": "[variables('admin').sshPublicKey]"
+                    },
+                    "authenticationType": {
+                        "value": "sshPublicKey"
+                    },
+                    "storageAccountName": {
+                        "value": "[variables('name').storageAccount]"
+                    },
+                    "amaNicRef": {
+                        "value": "[reference(concat(variables('name').nic.ama.automate, '-Deployment')).outputs.ref.value]"
+                    },
+                    "customerNicRef": {
+                        "value": "[reference(concat(variables('name').nic.customer.automate, '-Deployment')).outputs.ref.value]"
+                    },
+                    "fqdn": {
+                        "value": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value]"
                     }
                 }
             }
