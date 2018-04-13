@@ -38,12 +38,12 @@
             "defaultValue": ""
         },
 
-        "networkAMASubnetSize": {
-            "type": "string",
+        "sshSourceAddresses": {
+            "type": "array",
             "metadata": {
-                "description": "Network range that should be assigned to the new subnet created for Chef access to the Chef and Automate servers"
+                "description": "Source ranges from which SSH access is permitted."
             },
-            "defaultValue": "10.3.0.128/25"
+            "defaultValue": []
         }
     },
     "variables": {
@@ -57,7 +57,6 @@
         "name": {
             "storageAccount": "[variables('unique')]",
             "virtualNetwork": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-VNet')]",
-            "subnet":  "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-AMA-Subnet')]",
             "vm": {
                 "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-VM')]",
                 "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-VM')]"
@@ -97,14 +96,12 @@
             "sshPublicKey": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDU56RXZd2AbthjPXKc6dWs9kBxBeUQjQsiJHu5rHaAqKBWvS3XtgYDnWg8p0U2wvkQGGHpowPaP0AGhyRgE2xvsglaT0OnV1vF7zt/24zhoYkfbWtRuEsQCI9ZKs/q2Fg8Wf6q//eRaAi7iH4/MPMuYr+pBVVZp+bcYhne8CJOi4w0VIcSIk462WyqOEKZJk+f7gdkqxk+2yzo3Rqh25+C5j4NuXPmw8H4ccjPeL2E5snfLSZHIe/iCwXnVEdmpsqvaMuVs/LuQ/mJ0Rv8rjwtd8HKPlZJN/M4bt4U8CB8a0dsn+skZXsu7CUHEVwrol/jNzF1hTOA6Fy1jJFvy2yP"
         },
 
-        "networks": {
-            "ama_subnet": "[parameters('networkAMASubnetSize')]"
-        },
-
         "customerVNetID": "[resourceId(parameters('customerResourceGroupName'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
         "customerSubnetRef": "[concat(variables('customerVNetID'), '/subnets/', parameters('subnetName'))]",
 
-        "amaSubnetRef": "[concat(variables('customerVNetID'), '/subnets/', variables('name').subnet)]",
+        "sourceAddresses": {
+            "ssh": "[parameters('sshSourceAddresses')]"
+        },
 
         "urls": {
             "storageAccount": "[concat(variables('baseUrl'), '/src/templates/storage-account.json')]",
@@ -145,33 +142,6 @@
 
         {
             "type": "Microsoft.Resources/deployments",
-            "name": "[concat(variables('name').subnet, '-Deployment')]",
-            "apiVersion": "[variables('apiVersions').deployments]",
-            "resourceGroup": "[variables('name').resourceGroup]",
-            "properties": {
-                "mode": "Incremental",
-                "template": {
-                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-                    "contentVersion": "1.0.0.0",
-                    "parameters": {},
-                    "variables": {},
-                    "resources": [
-                        {
-                            "type": "Microsoft.Network/virtualNetworks/subnets",
-                            "name": "[concat(parameters('virtualNetworkName'), '/', variables('name').subnet)]",
-                            "apiVersion": "2015-06-15",
-                            "location": "[resourceGroup().location]",
-                            "properties": {
-                                "addressPrefix": "[variables('networks').ama_subnet]"
-                            }
-                        }
-                    ]
-                }
-            }
-        },
-
-        {
-            "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').nsg.chef, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
             "properties": {
@@ -186,6 +156,9 @@
                     },
                     "groupName": {
                         "value": "[variables('name').nsg.chef]"
+                    },
+                    "sshSourceAddresses": {
+                        "value": "[variables('sourceAddresses').ssh]"
                     }
                 }
             }
@@ -207,6 +180,9 @@
                     },
                     "groupName": {
                         "value": "[variables('name').nsg.automate]"
+                    },
+                    "sshSourceAddresses": {
+                        "value": "[variables('sourceAddresses').ssh]"
                     }
                 }
             }
@@ -261,54 +237,6 @@
                     },
                     "dnsLabelPrefix": {
                         "value": "[variables('name').computer.automate]"
-                    }
-                }
-            }
-        },
-
-        {
-            "type": "Microsoft.Resources/deployments",
-            "name": "[concat(variables('name').nic.ama.chef, '-Deployment')]",
-            "apiVersion": "[variables('apiVersions').deployments]",
-            "dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', variables('name').subnet, '-Deployment')]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('urls').networkInterfacePrivate]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "nicName": {
-                        "value": "[variables('name').nic.ama.chef]"
-                    },
-                    "subnetRef": {
-                        "value": "[variables('amaSubnetRef')]"
-                    }
-                }
-            }
-        },
-
-        {
-            "type": "Microsoft.Resources/deployments",
-            "name": "[concat(variables('name').nic.ama.automate, '-Deployment')]",
-            "apiVersion": "[variables('apiVersions').deployments]",
-            "dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', variables('name').subnet, '-Deployment')]"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('urls').networkInterfacePrivate]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "nicName": {
-                        "value": "[variables('name').nic.ama.automate]"
-                    },
-                    "subnetRef": {
-                        "value": "[variables('amaSubnetRef')]"
                     }
                 }
             }
@@ -382,7 +310,6 @@
             "apiVersion": "[variables('apiVersions').deployments]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', variables('name').nic.customer.chef, '-Deployment')]",
-                "[concat('Microsoft.Resources/deployments/', variables('name').nic.ama.chef, '-Deployment')]",
                 "[concat('Microsoft.Resources/deployments/', variables('name').storageAccount, '-Deployment')]"
             ],
             "properties": {
@@ -413,9 +340,6 @@
                     "storageAccountName": {
                         "value": "[variables('name').storageAccount]"
                     },
-                    "amaNicRef": {
-                        "value": "[reference(concat(variables('name').nic.ama.chef, '-Deployment')).outputs.ref.value]"
-                    },
                     "customerNicRef": {
                         "value": "[reference(concat(variables('name').nic.customer.chef, '-Deployment')).outputs.ref.value]"
                     },
@@ -432,7 +356,6 @@
             "apiVersion": "[variables('apiVersions').deployments]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', variables('name').nic.customer.automate, '-Deployment')]",
-                "[concat('Microsoft.Resources/deployments/', variables('name').nic.ama.automate, '-Deployment')]",
                 "[concat('Microsoft.Resources/deployments/', variables('name').storageAccount, '-Deployment')]"
             ],
             "properties": {
@@ -462,9 +385,6 @@
                     },
                     "storageAccountName": {
                         "value": "[variables('name').storageAccount]"
-                    },
-                    "amaNicRef": {
-                        "value": "[reference(concat(variables('name').nic.ama.automate, '-Deployment')).outputs.ref.value]"
                     },
                     "customerNicRef": {
                         "value": "[reference(concat(variables('name').nic.customer.automate, '-Deployment')).outputs.ref.value]"

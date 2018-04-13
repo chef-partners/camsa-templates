@@ -5,27 +5,6 @@ customer_subnet_name = attribute('customer-subnet-name', default: 'InSpec-Custom
 
 title 'Check that all Network Interface Cards are setup correctly'
 
-control 'AMA-Automate-Server-NIC' do
-  impact 1.0
-  title 'Ensure that the AMA NIC for the automate server is correct'
-
-  describe azure_generic_resource(group_name: resource_group_name, name: "inspec-automate-#{unique_string}-AMA-NIC") do
-    its('location') { should cmp location }
-    its('properties.provisioningState') { should cmp 'Succeeded' }
-    its('properties.ipConfigurations.first.properties.provisioningState') { should cmp 'Succeeded' }
-    its('properties.ipConfigurations.first.properties.privateIPAllocationMethod') { should cmp 'Dynamic' }
-    its('properties.ipConfigurations.first.properties.subnet.id') { should include "inspec-#{unique_string}-AMA-Subnet" }
-    its('properties.ipConfigurations.first.properties.primary') { should be true }
-    its('properties.ipConfigurations.first.properties.privateIPAddressVersion') { should cmp 'IPv4' }
-
-    its('properties.dnsSettings.dnsServers.count') { should be 0 }
-    its('properties.dnsSettings.appliedDnsServers.count') { should be 0 }
-
-    its('properties.enableAcceleratedNetworking') { should be false }
-    its('properties.enableIPForwarding') { should be false }
-  end
-end
-
 control 'AMA-Automate-Server-Customer-NIC' do
   impact 1.0
   title 'Ensure that the NIC connected to the Customer VNet is configured correctly'
@@ -48,27 +27,6 @@ control 'AMA-Automate-Server-Customer-NIC' do
 
     # Ensure it is connected to the correct network security group
     its('properties.networkSecurityGroup.id') { should include "inspec-automate-#{unique_string}-Customer-NSG" }
-  end
-end
-
-control 'AMA-Chef-Server-NIC' do
-  impact 1.0
-  title 'Ensure that the AMA NIC for the Chef server is correct'
-
-  describe azure_generic_resource(group_name: resource_group_name, name: "inspec-chef-#{unique_string}-AMA-NIC") do
-    its('location') { should cmp location }
-    its('properties.provisioningState') { should cmp 'Succeeded' }
-    its('properties.ipConfigurations.first.properties.provisioningState') { should cmp 'Succeeded' }
-    its('properties.ipConfigurations.first.properties.privateIPAllocationMethod') { should cmp 'Dynamic' }
-    its('properties.ipConfigurations.first.properties.subnet.id') { should include "inspec-#{unique_string}-AMA-Subnet" }
-    its('properties.ipConfigurations.first.properties.primary') { should be true }
-    its('properties.ipConfigurations.first.properties.privateIPAddressVersion') { should cmp 'IPv4' }
-
-    its('properties.dnsSettings.dnsServers.count') { should be 0 }
-    its('properties.dnsSettings.appliedDnsServers.count') { should be 0 }
-
-    its('properties.enableAcceleratedNetworking') { should be false }
-    its('properties.enableIPForwarding') { should be false }
   end
 end
 

@@ -36,8 +36,7 @@ title 'Check AMA Chef and Automate virtual machines'
       # There should be 2 nics attached to the machine
       # these should be one for the AMA network and one for the customer
       it { should have_nics }
-      its('nic_count') { should eq 2 }
-      its('connected_nics') { should include /#{ama_nic_name}/ }
+      its('nic_count') { should eq 1 }
       its('connected_nics') { should include /#{customer_nic_name}/ }
 
       # Ensure that boot diagnostics have been enabled

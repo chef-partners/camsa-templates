@@ -11,7 +11,7 @@ control 'Azure-Managed-Automate-Resources' do
     its('Microsoft.Network/publicIPAddresses') { should eq 2 }
 
     # It should have two network interfaces, one for each vm
-    its('Microsoft.Network/networkInterfaces') { should eq 4 }
+    its('Microsoft.Network/networkInterfaces') { should eq 2 }
 
     # It should have two network security groups, one for each server
     its('Microsoft.Network/networkSecurityGroups') { should eq 2 }

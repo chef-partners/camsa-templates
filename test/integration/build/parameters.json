@@ -16,6 +16,11 @@
       },
       "subnetName": {
         "value": "InSpec-Customer-Subnet"
+      },
+      "sshSourceAddresses": {
+        "value": [
+          "10.1.1.0/24"
+        ]
       }
     }
 }
