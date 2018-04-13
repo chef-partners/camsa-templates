@@ -56,7 +56,7 @@
                     "fileUris": [
                         "[variables('urls').script]"
                     ],
-                    "commandToExecute": "[concat(last(split(variables('urls').script, '/')), variables('arguments'))]"
+                    "commandToExecute": "[concat('./chef-server.sh', variables('arguments'))]"
                 }
             }
         }
