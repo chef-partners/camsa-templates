@@ -8,6 +8,12 @@
           "description": "Name of the security group"
         }
       },
+      "sshSourceAddresses": {
+        "type": "array",
+        "metadata": {
+          "description": "Array of source address ranges that SSH access is permitted from"
+        }
+      },
       "location": {
         "type": "string"
       }
@@ -56,7 +62,7 @@
                 "protocol": "Tcp",
                 "sourcePortRange": "*",
                 "destinationPortRange": "22",
-                "sourceAddressPrefix": "Internet",
+                "sourceAddressPrefixes": "[parameters('sshSourceAddresses')]",
                 "destinationAddressPrefix": "VirtualNetwork",
                 "access": "Allow",
                 "priority": 120,

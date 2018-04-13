@@ -56,13 +56,6 @@
       "storageAccountName": {
         "type": "string"
       },
-  
-      "amaNicRef": {
-        "type": "string",
-        "metadata": {
-          "description": "Reference to the NIC that is connected to the AMA network"
-        }
-      },
 
       "customerNicRef": {
           "type": "string",
@@ -125,7 +118,6 @@
       
   
       "ref": {
-        "amaNic": "[parameters('amaNicRef')]",
         "customerNic": "[parameters('customerNicRef')]"
       },
   
@@ -172,12 +164,6 @@
           },
           "networkProfile": {
             "networkInterfaces": [
-              {
-                "id": "[variables('ref').amaNic]",
-                "properties": {
-                  "primary": false
-                }
-              },
               {
                 "id": "[variables('ref').customerNic]",
                 "properties": {
