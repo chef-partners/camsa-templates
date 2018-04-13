@@ -21,7 +21,7 @@
     "variables": {},
     "resources": [
       {
-        "apiVersion": "2016-03-30",
+        "apiVersion": "2017-06-01",
         "type": "Microsoft.Network/networkSecurityGroups",
         "name": "[parameters('groupName')]",
         "location": "[parameters('location')]",
