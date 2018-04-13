@@ -19,8 +19,30 @@
       },
       "sshSourceAddresses": {
         "value": [
-          "10.1.1.0/24"
+          "10.1.1.0/24",
+          "86.176.196.44/32"
         ]
+      },
+      "chefServerVersion": {
+        "value": "12.17.33"
+      },
+      "chefUsername": {
+        "value": "inspec"
+      },
+      "chefUserFullname": {
+        "value": "InSpec Testing"
+      },
+      "chefUserEmailaddress": {
+        "value": "inspec@example.com"
+      },
+      "chefUserPassword": {
+        "value": "P@ssw0rd321"
+      },
+      "chefOrg": {
+        "value": "ama"
+      },
+      "chefOrgDescription": {
+        "value": "Azure Managed Automate"
       }
     }
 }

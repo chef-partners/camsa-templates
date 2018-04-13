@@ -44,6 +44,55 @@
                 "description": "Source ranges from which SSH access is permitted."
             },
             "defaultValue": []
+        },
+
+        "chefServerVersion": {
+            "type": "string",
+            "metadata": {
+                "description": "Version of the Chef Server to download and install"
+            }
+        },
+
+        "chefUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Username when creating the Chef user"
+            }
+        },
+
+        "chefUserFullname": {
+            "type": "string",
+            "metadata": {
+                "description": "Ful name of the Chef user"
+            }
+        },
+
+        "chefUserPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Password to be associated with the Chef user"
+            }
+        },
+
+        "chefUserEmailaddress": {
+            "type": "string",
+            "metadata": {
+                "description": "Email address associated with the chef user"
+            }
+        },
+
+        "chefOrg": {
+            "type": "string",
+            "metadata": {
+                "description": "Org that should be created and the user associated with"
+            }
+        },
+
+        "chefOrgDescription": {
+            "type": "string",
+            "metadata": {
+                "description": "Description of the Chef org"
+            }
         }
     },
     "variables": {
@@ -83,7 +132,10 @@
                 "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-Customer-NSG')]",
                 "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-Customer-NSG')]"
             },
-            "resourceGroup": "[parameters('customerResourceGroupName')]"
+            "resourceGroup": "[parameters('customerResourceGroupName')]",
+            "extension": {
+                "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-ScriptExtension')]"
+            }
         },
 
         "vmSize": {
@@ -110,11 +162,25 @@
             "networkInterfacePrivate": "[concat(variables('baseUrl'), '/src/templates/network-interface-private.json')]",
             "networkInterfacePublic": "[concat(variables('baseUrl'), '/src/templates/network-interface-public.json')]",
             "networkSecurityGroup": "[concat(variables('baseUrl'), '/src/templates/network-security-group.json')]",
-            "virtualMachine": "[concat(variables('baseUrl'), '/src/templates/virtual-machine.json')]"
+            "virtualMachine": "[concat(variables('baseUrl'), '/src/templates/virtual-machine.json')]",
+            "scriptExtension": "[concat(variables('baseUrl'), '/src/templates/script-extension.json')]",
+            "scripts": {
+                "chefserver": "[concat(variables('baseUrl'), '/src/scripts/chef-server.sh')]"
+            }
         },
 
         "apiVersions": {
             "deployments": "2017-05-10"
+        },
+
+        "chef": {
+            "version": "[parameters('chefServerVersion')]",
+            "username": "[parameters('chefUsername')]",
+            "email": "[parameters('chefUserEmailaddress')]",
+            "fullname": "[parameters('chefUserFullname')]",
+            "password": "[parameters('chefUserPassword')]",
+            "org": "[toLower(parameters('chefOrg'))]",
+            "orgDescription": "[parameters('chefOrgDescription')]"
         }
     },
     "resources": [
@@ -394,7 +460,37 @@
                     }
                 }
             }
-        }        
+        },
+        
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').extension.chef, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').vm.chef, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').scriptExtension]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "vmname": {
+                        "value": "[variables('name').vm.chef]"
+                    },
+                    "scriptUrl": {
+                        "value": "[variables('urls').scripts.chefserver]"
+                    },
+                    "scriptArguments": {
+                        "value": "[concat('-v ', variables('chef').version, ' -u ', variables('chef').username, ' -f \"', variables('chef').fullname. '\" -p \"', variables('chef').password, '\" -a ', variables('chef').email, ' -o ', variable('chef').org, ' -d \"', variables('chef').orgDescription, '\"]'"
+                    }
+                }
+            }
+        }
     ],
     "outputs": {
         
