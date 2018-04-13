@@ -56,7 +56,7 @@
                     "fileUris": [
                         "[variables('urls').script]"
                     ],
-                    "commandToExecute": "[concat(last(split(variables('url').script, '/')), variables('arguments'))]"
+                    "commandToExecute": "[concat(last(split(variables('urls').script, '/')), variables('arguments'))]"
                 }
             }
         }
