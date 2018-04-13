@@ -28,7 +28,7 @@
     },
     "variables": {
         "name": {
-            "extension": "[concat(parameters('vmname'), '/InstallAndConfigureChef']"
+            "extension": "[concat(parameters('vmname'), '/InstallAndConfigureChef')]"
         },
 
         "apiVersions": {
