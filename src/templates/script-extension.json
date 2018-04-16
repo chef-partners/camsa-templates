@@ -55,9 +55,7 @@
                 "settings": {
                     "fileUris": [
                         "[variables('urls').script]"
-                    ]
-                },
-                "protectedSettings": {
+                    ],
                     "commandToExecute": "[concat('bash chef-server.sh ', variables('arguments'))]"
                 }
             }
