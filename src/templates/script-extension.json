@@ -56,7 +56,7 @@
                     "fileUris": [
                         "[variables('urls').script]"
                     ],
-                    "commandToExecute": "[concat('./chef-server.sh ', variables('arguments'))]"
+                    "commandToExecute": "./chef-server.sh"
                 }
             }
         }
