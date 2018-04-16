@@ -36,6 +36,7 @@
         },
 
         "arguments": "[parameters('scriptArguments')]",
+        "command": "[concat('./', last(split(parameters('scriptUrl'), '/')), ' ', variables('arguments'))]",
 
         "urls": {
             "script": "[parameters('scriptUrl')]"
@@ -56,15 +57,15 @@
                     "fileUris": [
                         "[variables('urls').script]"
                     ],
-                    "commandToExecute": "./chef-server.sh"
+                    "commandToExecute": "[variables('command')]"
                 }
             }
         }
     ],
     "outputs": {
-        "scriptArguments": {
+        "executedCommand": {
             "type": "string",
-            "value": "[variables('arguments')]"
+            "value": "[variables('command')]"
         }
     }
 }
