@@ -16,6 +16,8 @@ CHEF_USER_PASSWORD=""
 CHEF_ORGNAME=""
 CHEF_ORG_DESCRIPTION=""
 
+DRY_RUN=0
+
 # FUNCTIONS ------------------------------------
 
 # Execute commands and keep a log of the commands that were executed
@@ -48,7 +50,7 @@ function executeCmd()
 function install()
 {
   comnmand_to_check=$1
-  url $2
+  url=$2
 
   # Determine if the specified command exists or not
   COMMAND=`which $command_to_check`
