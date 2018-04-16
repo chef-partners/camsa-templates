@@ -62,6 +62,9 @@
         }
     ],
     "outputs": {
-
+        "scriptArguments": {
+            "type": "string",
+            "value": "[variables('arguments')]"
+        }
     }
 }
