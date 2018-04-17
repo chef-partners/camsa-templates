@@ -10,6 +10,8 @@
 # Declare and initialise variables
 AUTOMATE_SERVER_VERSION=""
 
+AUTOMATE_DOWNLOAD_URL="https://s3-us-west-2.amazonaws.com/chef-automate-artifacts/current/latest/chef-automate-cli/chef-automate_linux_amd64.zip"
+
 # FUNCTIONS ------------------------------------
 
 # Execute commands and keep a log of the commands that were executed
@@ -42,7 +44,8 @@ function executeCmd()
 function install()
 {
   comnmand_to_check=$1
-  url $2
+  url=$2
+  install=$3
 
   # Determine if the specified command exists or not
   COMMAND=`which $command_to_check`
@@ -58,8 +61,11 @@ function install()
     fi
 
     # Install the package
-    echo -e "\tinstalling package"
-    executeCmd "dpkg -i $download_file"
+    if [ $install -eq 1 ]
+    then
+      echo -e "\tinstalling package"
+      executeCmd "dpkg -i $download_file"
+    fi
   else
     echo -e "\talready installed"
   fi
@@ -77,6 +83,10 @@ do
     -v|--version)
       AUTOMATE_SERVER_VERSION="$2"
     ;;
+
+    -u|--url)
+      AUTOMATE_DOWNLOAD_URL="$2"
+    ;;
   esac
 
   # move onto the next argument
@@ -85,8 +95,11 @@ done
 
 echo "Checking Automate server"
 
-# Download and installed Chef server
-# Determine the download url taking into account the version
-download_url=$(printf 'https://packages.chef.io/stable/ubuntu/16.04/chef-server-core-_%s-1.amd64.deb' $AUTOMATE_SERVER_VERSION)
-install automate-ctl $download_url
+# Download and unpack the Automate server
+install automate-ctl $AUTOMATE_DOWNLOAD_URL 0
+echo -r "\tunpacking"
+cmd=$(printf 'gunzip %s > /usr/local/bin/chef-automate && chmod +x /usr/local/bin/chef-automate' `basename $AUTOMATE_DOWNLOAD_URL`)
+executeCmd $cmd
+
+
 
