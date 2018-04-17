@@ -99,10 +99,9 @@ echo "Checking Automate server"
 
 # Download and unpack the Automate server
 install automate-ctl $AUTOMATE_DOWNLOAD_URL 0
-echo -r "\tunpacking"
+echo -e "\tunpacking"
 download_filename=`basename $AUTOMATE_DOWNLOAD_URL`
-cmd=$(printf 'gunzip -S .zip %s > /usr/local/bin/chef-automate && chmod +x /usr/local/bin/chef-automate' $download_filename)
-executeCmd $cmd
-
+cmd=$(printf 'gunzip -S .zip < %s > /usr/local/bin/chef-automate && chmod +x /usr/local/bin/chef-automate' $download_filename)
+executeCmd "$cmd"
 
 

@@ -157,7 +157,7 @@ then
         $CHEF_USER_EMAILADDRESS \
         $CHEF_USER_PASSWORD \
         $CHEF_USER_NAME)
-  executeCmd $cmd
+  executeCmd "$cmd"
 
   # Create the named organisation
   echo -e "\tcreate organisation: ${CHEF_ORGNAME}"
@@ -166,7 +166,7 @@ then
         $CHEF_ORG_DESCRIPTION \
         $CHEF_USER_NAME \
         $CHEF_ORGNAME)
-  executeCmd $cmd
+  executeCmd "$cmd"
 
   # Reconfigure the server after creating user and organisation
   echo -e "\treconfigure"
