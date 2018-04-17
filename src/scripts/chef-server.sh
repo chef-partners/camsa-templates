@@ -49,7 +49,7 @@ function executeCmd()
 # Download and install specific package
 function install()
 {
-  comnmand_to_check=$1
+  command_to_check=$1
   url=$2
 
   # Determine if the specified command exists or not
