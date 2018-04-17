@@ -12,6 +12,8 @@ AUTOMATE_SERVER_VERSION=""
 
 AUTOMATE_DOWNLOAD_URL="https://s3-us-west-2.amazonaws.com/chef-automate-artifacts/current/latest/chef-automate-cli/chef-automate_linux_amd64.zip"
 
+DRY_RUN=0
+
 # FUNCTIONS ------------------------------------
 
 # Execute commands and keep a log of the commands that were executed
