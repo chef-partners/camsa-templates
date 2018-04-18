@@ -113,13 +113,13 @@ executeCmd "$cmd"
 # Set kernel parameters for the session and permenantly
 echo "Kernel Parameters"
 cmd="sysctl -w vm.max_map_count=262144"
-execute "$cmd"
+executeCmd "$cmd"
 cmd="sysctl -w vm.dirty_expire_centisecs=20000"
-execute "$cmd"
+executeCmd "$cmd"
 cmd="echo vm.max_map_count=262144 > /etc/sysctl.d/50-chef-automate.conf"
-execute "$cmd"
+executeCmd "$cmd"
 cmd="echo vm.dirty_expire_centisecs=20000 >> /etc/sysctl.d/50-chef-automate.conf"
-execute "$cmd"
+executeCmd "$cmd"
 
 # Configure automate
 
