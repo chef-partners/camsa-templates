@@ -153,7 +153,7 @@ then
   echo -e "\tcreate user: ${CHEF_USER_NAME}"
   cmd=$(printf 'chef-server-ctl user-create %s %s %s "%s" --filename %s.pem' \
         $CHEF_USER_NAME \
-        $CHEF_USER_FULLNAME \
+        "$CHEF_USER_FULLNAME" \
         $CHEF_USER_EMAILADDRESS \
         $CHEF_USER_PASSWORD \
         $CHEF_USER_NAME)
@@ -163,7 +163,7 @@ then
   echo -e "\tcreate organisation: ${CHEF_ORGNAME}"
   cmd=$(printf 'chef-server-ctl org-create %s "%s" --association-user %s --filename %s-validator.pem' \
         $CHEF_ORGNAME \
-        $CHEF_ORG_DESCRIPTION \
+        "$CHEF_ORG_DESCRIPTION" \
         $CHEF_USER_NAME \
         $CHEF_ORGNAME)
   executeCmd "${cmd}"
