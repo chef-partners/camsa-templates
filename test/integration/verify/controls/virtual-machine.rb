@@ -10,7 +10,6 @@ title 'Check AMA Chef and Automate virtual machines'
     title format('Check the attributes of the %s server', component)
 
     server_name = format('inspec-%s-%s-VM', component, unique_string)
-    ama_nic_name = format('inspec-%s-%s-AMA-NIC', component, unique_string)
     customer_nic_name = format('inspec-%s-%s-Customer-VNet-NIC', component, unique_string)
 
     describe azure_virtual_machine(group_name: resource_group_name, name: server_name) do

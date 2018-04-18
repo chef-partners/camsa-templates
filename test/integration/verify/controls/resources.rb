@@ -24,5 +24,8 @@ control 'Azure-Managed-Automate-Resources' do
 
     # The VMs should each have a disk associated
     its('Microsoft.Compute/disks') { should eq 2 }
+
+    # There should be two extensions, one for each of the VMs to execute the script
+    its('Microsoft.Compute/virtualMachines/extensions') { should eq 2 }
   end
 end
