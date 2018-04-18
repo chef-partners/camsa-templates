@@ -133,7 +133,7 @@ cmd="chef-automate deploy config.toml"
 executeCmd "$cmd"
 
 echo -e "\tapplying licence"
-cmd=$(printf 'chef-automate license apply %s' $AUTOMATE_LICENSE)
+cmd=$(printf 'chef-automate license apply %s' $AUTOMATE_LICENCE)
 executeCmd "$cmd"
 
 
