@@ -24,11 +24,18 @@
             "metadata": {
                 "description": "Arguments that should be passed to the script"
             }
+        },
+
+        "extensionName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the extension when seen in Azure"
+            }
         }
     },
     "variables": {
         "name": {
-            "extension": "[concat(parameters('vmname'), '/InstallAndConfigureChef')]"
+            "extension": "[concat(parameters('vmname'), '/', parameters('extensionName'))]"
         },
 
         "apiVersions": {

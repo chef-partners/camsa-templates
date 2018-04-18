@@ -12,6 +12,8 @@ AUTOMATE_SERVER_VERSION=""
 
 AUTOMATE_DOWNLOAD_URL="https://s3-us-west-2.amazonaws.com/chef-automate-artifacts/current/latest/chef-automate-cli/chef-automate_linux_amd64.zip"
 
+AUTOMATE_LICENCE=""
+
 DRY_RUN=0
 
 # FUNCTIONS ------------------------------------
@@ -89,6 +91,10 @@ do
     -u|--url)
       AUTOMATE_DOWNLOAD_URL="$2"
     ;;
+
+    -l|--licence)
+      AUTOMATE_LICENCE="$2"
+    ;;
   esac
 
   # move onto the next argument
@@ -102,6 +108,32 @@ install automate-ctl $AUTOMATE_DOWNLOAD_URL 0
 echo -e "\tunpacking"
 download_filename=`basename $AUTOMATE_DOWNLOAD_URL`
 cmd=$(printf 'gunzip -S .zip < %s > /usr/local/bin/chef-automate && chmod +x /usr/local/bin/chef-automate' $download_filename)
+executeCmd "$cmd"
+
+# Set kernel parameters for the session and permenantly
+echo "Kernel Parameters"
+cmd="sysctl -w vm.max_map_count=262144"
+execute "$cmd"
+cmd="sysctl -w vm.dirty_expire_centisecs=20000"
+execute "$cmd"
+cmd="echo vm.max_map_count=262144 > /etc/sysctl.d/50-chef-automate.conf"
+execute "$cmd"
+cmd="echo vm.dirty_expire_centisecs=20000 >> /etc/sysctl.d/50-chef-automate.conf"
+execute "$cmd"
+
+# Configure automate
+
+echo "Configure Automate"
+echo -e "\tinitialisation"
+cmd="chef-automate init-config"
+executeCmd "$cmd"
+
+echo -e "\tdeploy"
+cmd="chef-automate deploy config.toml"
+executeCmd "$cmd"
+
+echo -e "\tapplying licence"
+cmd=$(printf 'chef-automate license apply %s' $AUTOMATE_LICENSE)
 executeCmd "$cmd"
 
 
