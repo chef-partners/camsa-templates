@@ -1,0 +1,57 @@
+{  
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string"
+        },
+        "computeMode": {
+            "type": "string",
+            "defaultValue": "Dynamic"
+        },
+        "sku": {
+            "type": "string",
+            "defaultValue": "Dynamic"
+        },
+        "tags": {
+            "type": "object"
+        }
+    },
+    "variables": {
+        "name": {
+            "servicePlan": "[parameters('name')]"
+        },
+        "location": "[parameers('location')]",
+
+        "servicePlan": {
+            "computeMode": "[parameters('computeMode')]",
+            "sku": "[parameters('sku')]"
+        },
+
+        "apiVersions": {
+            "serverFarms": "2016-09-01"
+        },
+
+        "tags": "[parameters('tags')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "name": "[variables('name').servicePlan]",
+            "apiVersion": "[variables('apiVersions').serverFarms]",
+            "location": "[variables('location')]",
+            "tags": "[variables('tags')]",
+            "properties": {
+                "name": "[variables('name').servicePlan]",
+                "computeMode": "[variables('servicePlan').computeMode]",
+                "sku": "[variables('servicePlan').sku]"
+            }
+        }
+    ],
+    "outputs": {
+        
+    }
+}
