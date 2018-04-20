@@ -18,6 +18,9 @@
       
       "nsgRef": {
         "type": "string"
+      },
+      "tags": {
+          "type": "object"
       }
     },
     "variables": {
@@ -36,7 +39,9 @@
   
       "apiVersions": {
         "networkInterfaces": "2015-06-15"
-      }
+      },
+
+      "tags": "[parameters('tags')]"
   
     },
     "resources": [
@@ -45,9 +50,7 @@
         "name": "[variables('name').nic]",
         "apiVersion": "[variables('apiVersions').networkInterfaces]",
         "location": "[variables('location')]",
-        "tags": {
-          "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
-        },
+        "tags": "[variables('tags')]",
         "properties": {
           "ipConfigurations": [
               {

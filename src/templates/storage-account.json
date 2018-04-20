@@ -20,6 +20,9 @@
           "Description": "The type of the Storage Account created"
         },
         "defaultValue": "Standard_LRS"
+      },
+      "tags": {
+          "type": "object"
       }
     },
     "resources": [
@@ -28,6 +31,7 @@
         "name": "[concat(parameters('storageAccountName'))]",
         "apiVersion": "2015-06-15",
         "location": "[parameters('location')]",
+        "tags": "[parameters('tags')]",
         "properties": {
           "accountType": "[parameters('storageAccountType')]"
         }

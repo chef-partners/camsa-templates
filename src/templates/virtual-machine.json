@@ -70,6 +70,9 @@
           "description": "FQDN of the machine to set"
         },
         "defaultValue": ""
+      },
+      "tags": {
+          "type": "object"
       }
     },
     "variables": {
@@ -131,7 +134,9 @@
         "publisher": "canonical",
         "offer": "ubuntuserver",
         "sku": "16.04-LTS"
-      }
+      },
+
+      "tags": "[parameters('tags')]"
   
     },
     "resources": [
@@ -141,9 +146,7 @@
         "name": "[variables('name').vm]",
         "apiVersion": "[variables('apiVersions').virtualMachines]",
         "location": "[variables('location')]",
-        "tags": {
-          "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
-        },
+        "tags": "[variables('tags')]",
         "properties": {
           "hardwareProfile": {
             "vmSize": "[variables('vmSize')]"

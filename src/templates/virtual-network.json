@@ -16,11 +16,15 @@
       },
       "subnetPrefix": {
         "type": "string"
+      },
+      "tags": {
+          "type": "object"
       }
     },
     "variables" : {
       "vnetID" : "[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
-      "subnet" : "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]"
+      "subnet" : "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
+      "tags": "[parameters('tags')"
     },
     "resources": [
           {
@@ -28,9 +32,7 @@
               "type": "Microsoft.Network/virtualNetworks",
               "name": "[parameters('virtualNetworkName')]",
               "location": "[parameters('location')]",
-              "tags": {
-                "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
-              },
+              "tags": "[variables('tags')]",
               "properties": {
                   "addressSpace": {
                       "addressPrefixes": [

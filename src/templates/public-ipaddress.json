@@ -33,6 +33,9 @@
       "metadata": {
         "description": "Azure location for the resource"
       }
+    },
+    "tags": {
+        "type": "object"
     }
   },
   "resources": [
@@ -41,9 +44,7 @@
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[parameters('publicIPAddressName')]",
       "location": "[parameters('location')]",
-      "tags": {
-        "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
-      },
+      "tags": "[parameters('tags')]",
       "properties": {
         "publicIPAllocationMethod": "[parameters('publicIPAddressType')]",
         "dnsSettings": {

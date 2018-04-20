@@ -16,15 +16,25 @@
       },
       "location": {
         "type": "string"
+      },
+      "tags": {
+          "type": "object"
       }
     },
-    "variables": {},
+    "variables": {
+      "name": {
+        "group": "[parameters('groupName')]"
+      },
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]"
+    },
     "resources": [
       {
         "apiVersion": "2017-06-01",
         "type": "Microsoft.Network/networkSecurityGroups",
-        "name": "[parameters('groupName')]",
-        "location": "[parameters('location')]",
+        "name": "[variables('name').group]",
+        "location": "[variables('location')]",
+        "tags": "[variables('tags')]",
         "properties": {
           "securityRules": [
             {
@@ -75,12 +85,12 @@
     ],
     "outputs": {
       "nsgId": {
-        "value": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('groupName'))]",
+        "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('name').group)]",
         "type": "string"
       },
       "groupName": {
         "type": "string",
-        "value": "[parameters('groupName')]"
+        "value": "[variables('name').group]"
       }
     }
   }

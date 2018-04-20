@@ -31,6 +31,9 @@
             "metadata": {
                 "description": "Name of the extension when seen in Azure"
             }
+        },
+        "tags": {
+            "type": "object"
         }
     },
     "variables": {
@@ -47,7 +50,8 @@
 
         "urls": {
             "script": "[parameters('scriptUrl')]"
-        }
+        },
+        "tags": "[parameters('tags')]"
     },
     "resources": [
         {
@@ -55,6 +59,7 @@
             "name": "[variables('name').extension]",
             "location": "[parameters('location')]",
             "apiVersion": "[variables('apiVersions').extensions]",
+            "tags": "[variables('tags')]",
             "properties": {
                 "publisher": "Microsoft.Azure.Extensions",
                 "type": "CustomScript",
