@@ -24,7 +24,7 @@
         "name": {
             "servicePlan": "[parameters('name')]"
         },
-        "location": "[parameers('location')]",
+        "location": "[parameters('location')]",
 
         "servicePlan": {
             "computeMode": "[parameters('computeMode')]",
