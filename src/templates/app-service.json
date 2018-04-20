@@ -1,0 +1,95 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string"
+        },
+        "tags": {
+            "type": "object"
+        },
+        "servicePlanId": {
+            "type": "string"
+        },
+        "storageAccountName": {
+            "type": "string"
+        },
+        "functions": {
+            "type": "array",
+            "metadata": {
+                "descripton": "Object containing the functions that need to be deployed into the site"
+            }
+        }
+    },
+    "variables": {
+        "name": {
+            "function": "[parameters('name')]",
+            "sa": "[parameters('storageAccountName')]"
+        },
+        "sa": {
+            "key": "[listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('name').sa, '2015-06-15').key1]"
+        },
+        "location": "[parameters('location')]",
+        "tags": "[parameters('tags')]",
+        "servicePlan": {
+            "id": "[parameters('servicePlanId')]"
+        },
+        "apiVersions": {
+            "sites": "2016-08-01",
+            "config": "2016-08-01",
+            "functions": "2016-08-01"
+        },
+        "functions": "[parameters('functions')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/sites",
+            "name": "[variables('name').function]",
+            "apiVersion": "[variables('apiVersions').sites]",
+            "location": "[variables('location')]",
+            "tags": "[variables('tags')]",
+            "kind": "functionapp",
+            "properties": {
+                "serverFarmId": "[variables('servicePlan').id]",
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "AzureWebJobsStorage",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('name').sa, ';AccountKey=', variables('sa').key, ';')]"
+                        },
+                        {
+                            "name": "AzureWebJobsDashboard",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('name').sa, ';AccountKey=', variables('sa').key, ';')]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('name').sa, ';AccountKey=', variables('sa').key, ';')]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTSHARE",
+                            "value": "[toLower(variables('name').function))]"
+                        },
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "latest"
+                        }
+                    ]
+                }
+            },
+            "resources": "[variables('functions')]"
+        }
+    ],
+    "outputs": {
+        "baseUrl": {
+            "type": "string",
+            "value": "[concat('https://', variables('name').function, '.azurewebsites.net/api/')]"
+        },
+        "apiKey": {
+            "type": "securestring",
+            "value": "[listsecrets(resourceId('Microsoft.Web/sites/functions', variables('name').function, variables('name').code), '2016-08-01').key]"
+        }
+    }
+}
