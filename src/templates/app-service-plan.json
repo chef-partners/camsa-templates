@@ -48,7 +48,7 @@
                 "name": "[variables('name').servicePlan]"
             },
             "sku": {
-                "name":  "[variables('servicePlan').sku]"
+                "tier":  "[variables('servicePlan').sku]"
             }
         }
     ],
