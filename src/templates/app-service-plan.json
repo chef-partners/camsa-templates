@@ -45,9 +45,10 @@
             "location": "[variables('location')]",
             "tags": "[variables('tags')]",
             "properties": {
-                "name": "[variables('name').servicePlan]",
-                "computeMode": "[variables('servicePlan').computeMode]",
-                "sku": "[variables('servicePlan').sku]"
+                "name": "[variables('name').servicePlan]"
+            },
+            "sku": {
+                "name":  "[variables('servicePlan').sku]"
             }
         }
     ],
