@@ -21,7 +21,8 @@
     "variables": {
         "name": {
             "site": "[parameters('name')]",
-            "sa": "[parameters('storageAccountName')]"
+            "sa": "[parameters('storageAccountName')]",
+            "contentshare": "[toLower(parameters('name'))]"
         },
         "location": "[parameters('location')]",
         "tags": "[parameters('tags')]",
@@ -58,7 +59,7 @@
                         },
                         {
                             "name": "WEBSITE_CONTENTSHARE",
-                            "value": "[toLower(variables('name').site)]"
+                            "value": "[variables('name').contentshare]"
                         },
                         {
                             "name": "FUNCTIONS_EXTENSION_VERSION",
