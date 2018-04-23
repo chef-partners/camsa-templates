@@ -16,21 +16,15 @@
         },
         "storageAccountName": {
             "type": "string"
-        },
-        "functions": {
-            "type": "array",
-            "metadata": {
-                "descripton": "Object containing the functions that need to be deployed into the site"
-            }
         }
     },
     "variables": {
         "name": {
-            "function": "[parameters('name')]",
+            "site": "[parameters('name')]",
             "sa": "[parameters('storageAccountName')]"
         },
         "sa": {
-            "key": "[listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('name').sa, '2015-06-15').key1]"
+            "key": "[listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('name').sa), '2015-06-15').key1]"
         },
         "location": "[parameters('location')]",
         "tags": "[parameters('tags')]",
@@ -38,15 +32,13 @@
             "id": "[parameters('servicePlanId')]"
         },
         "apiVersions": {
-            "sites": "2016-08-01",
-            "functions": "2016-08-01"
-        },
-        "functions": "[parameters('functions')]"
+            "sites": "2016-08-01"
+        }
     },
     "resources": [
         {
             "type": "Microsoft.Web/sites",
-            "name": "[variables('name').function]",
+            "name": "[variables('name').site]",
             "apiVersion": "[variables('apiVersions').sites]",
             "location": "[variables('location')]",
             "tags": "[variables('tags')]",
@@ -69,7 +61,7 @@
                         },
                         {
                             "name": "WEBSITE_CONTENTSHARE",
-                            "value": "[toLower(variables('name').function))]"
+                            "value": "[toLower(variables('name').site))]"
                         },
                         {
                             "name": "FUNCTIONS_EXTENSION_VERSION",
@@ -77,18 +69,13 @@
                         }
                     ]
                 }
-            },
-            "resources": "[parameters('functions')]"
+            }
         }
     ],
     "outputs": {
         "baseUrl": {
             "type": "string",
-            "value": "[concat('https://', variables('name').function, '.azurewebsites.net/api/')]"
-        },
-        "apiKey": {
-            "type": "securestring",
-            "value": "[listsecrets(resourceId('Microsoft.Web/sites/functions', variables('name').function, variables('name').code), '2016-08-01').key]"
+            "value": "[concat('https://', variables('name').site, '.azurewebsites.net/api/')]"
         }
     }
 }
