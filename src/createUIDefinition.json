@@ -1,0 +1,55 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+    "handler": "Microsoft.Compute.MultiVm",
+    "version": "0.1.2-preview",
+    "parameters": {
+        "basics": [
+            {
+                "name": "prefix",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Resource Prefix",
+                "toolTip": "A prefix that should be applied to all resources that are created",
+                "constraints": {
+                    "required": true
+                }
+            }
+        ],
+        "steps": [
+            {
+                "name": "customerResources",
+                "label": "Chef Automate - Azure Managed Application",
+                "bladeTitle": "Customer Resources",
+                "subLabel": {
+                    "preValidation": "Provide network resources for connection",
+                    "postValidation": "Networking components have been specified"
+                },
+                "elements": [
+                    {
+                        "name": "virtualNetwork",
+                        "type": "Microsoft.Network.VirtualNetworkCombo",
+                        "label": {
+                            "virtualNetwork": "Virtual Network",
+                            "subnets": "Subnet"
+                        },
+                        "subnets": {
+                            "customer": {
+                                "label": "Subnet",
+                                "constraints": {
+                                    "minAddressPrefixSize": "/24"
+                                }
+                            }
+                        },
+                        "visible": true,
+                        "toolTip": {
+                           "virtualNetwork": "Select the virtual network that contains the subnet on which you wish to place the Automate system",
+                           "subnets": "Select the subnet to attach the Automate components to" 
+                        }
+                    }
+                ]
+            }
+        ],
+        "outputs": {
+            
+        }
+    }
+}
