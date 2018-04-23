@@ -78,7 +78,7 @@
                     ]
                 }
             },
-            "resources": "[variables('functions')]"
+            "resources": "[parameters('functions')]"
         }
     ],
     "outputs": {
