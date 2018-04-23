@@ -39,7 +39,6 @@
         },
         "apiVersions": {
             "sites": "2016-08-01",
-            "config": "2016-08-01",
             "functions": "2016-08-01"
         },
         "functions": "[parameters('functions')]"
