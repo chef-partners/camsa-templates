@@ -36,9 +36,6 @@
             "type": "Microsoft.Web/sites/functions",
             "name": "[concat(variables('name').site, '/', variables('name').function)]",
             "apiVersion": "[variables('apiVersions').functions]",
-            "dependsOn": [
-                "[concat('Microsoft.Web/sites/', variables('name').site)]"
-            ],
             "properties": {
                 "config": {
                     "bindings": [
