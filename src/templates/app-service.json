@@ -23,9 +23,6 @@
             "site": "[parameters('name')]",
             "sa": "[parameters('storageAccountName')]"
         },
-        "sa": {
-            "key": "[listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('name').sa), '2015-06-15').key1]"
-        },
         "location": "[parameters('location')]",
         "tags": "[parameters('tags')]",
         "servicePlan": {
@@ -49,15 +46,15 @@
                     "appSettings": [
                         {
                             "name": "AzureWebJobsStorage",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('name').sa, ';AccountKey=', variables('sa').key, ';')]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('name').sa, ';AccountKey=', listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('name').sa), '2015-06-15').key1, ';')]"
                         },
                         {
                             "name": "AzureWebJobsDashboard",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('name').sa, ';AccountKey=', variables('sa').key, ';')]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('name').sa, ';AccountKey=', listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('name').sa), '2015-06-15').key1, ';')]"
                         },
                         {
                             "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('name').sa, ';AccountKey=', variables('sa').key, ';')]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('name').sa, ';AccountKey=', listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('name').sa), '2015-06-15').key1, ';')]"
                         },
                         {
                             "name": "WEBSITE_CONTENTSHARE",
