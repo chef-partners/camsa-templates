@@ -57,7 +57,7 @@
     "outputs": {
         "id": {
             "type": "string",
-            "value": "[resourceId('Microsoft.Web/servicefarms', variables('name').servicePlan)]"
+            "value": "[resourceId('Microsoft.Web/serverfarms', variables('name').servicePlan)]"
         }
     }
 }
