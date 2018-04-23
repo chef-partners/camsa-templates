@@ -28,7 +28,8 @@
 
         "servicePlan": {
             "computeMode": "[parameters('computeMode')]",
-            "sku": "[parameters('sku')]"
+            "sku": "[parameters('sku')]",
+            "name": "Y1"
         },
 
         "apiVersions": {
@@ -48,7 +49,8 @@
                 "name": "[variables('name').servicePlan]"
             },
             "sku": {
-                "tier":  "[variables('servicePlan').sku]"
+                "tier":  "[variables('servicePlan').sku]",
+                "name": "[variables('servicePlan').name]"
             }
         }
     ],
