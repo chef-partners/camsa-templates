@@ -58,7 +58,7 @@
                         },
                         {
                             "name": "WEBSITE_CONTENTSHARE",
-                            "value": "[toLower(variables('name').site))]"
+                            "value": "[toLower(variables('name').site)]"
                         },
                         {
                             "name": "FUNCTIONS_EXTENSION_VERSION",
