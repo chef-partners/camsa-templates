@@ -8,13 +8,36 @@
 #
 
 # Declare and initialise variables
+
+# Specify the operation of the script
+MODE=""
+
+# Version of Automate to download
 AUTOMATE_SERVER_VERSION=""
 
+# The download URL for Automate
 AUTOMATE_DOWNLOAD_URL="https://s3-us-west-2.amazonaws.com/chef-automate-artifacts/current/latest/chef-automate-cli/chef-automate_linux_amd64.zip"
 
 AUTOMATE_LICENCE=""
 
+# SPecify the automate command that is used to execute commands
+AUTOMATE_COMMAND="chef-automate"
+
+USERNAME=""
+PASSWORD=""
+EMAILADDRESS=""
+
+FUNCTION_BASE_URL=""
+FUNCTION_APIKEY=""
+FUNCTION_NAME="chefAMAConfigStore"
+
+#
+# Do not modify variables below here
+#
+OIFS=$IFS
+IFS=","
 DRY_RUN=0
+CONFIG_FILE="config.toml"
 
 # FUNCTIONS ------------------------------------
 
@@ -28,7 +51,7 @@ function executeCmd()
     echo $localcmd
   else
     # Output the command to STDOUT as well so that it is logged inline with the error that are being seen
-    echo $localcmd
+    # echo $localcmd
 
     # if a command log does not exist create one
     if [ ! -f commands.log ]
@@ -47,9 +70,9 @@ function executeCmd()
 # Download and install specific package
 function install()
 {
-  comnmand_to_check=$1
+  command_to_check=$1
   url=$2
-  install=$3
+  unzip_dir=$3
 
   # Determine if the specified command exists or not
   COMMAND=`which $command_to_check`
@@ -60,21 +83,36 @@ function install()
     download_file=`basename $url`
     if [ ! -f $download_file ]
     then
-      echo -e "\tdownloading package"
+      echo -e "\t\tdownloading package"
       executeCmd "wget $url"
+    else
+      echo -e "\t\tpackage already exists"
     fi
 
     # Install the package
-    if [ $install -eq 1 ]
+    if [ "X$unzip_dir" == "X" ]
     then
-      echo -e "\tinstalling package"
+      echo -e "\t\tinstalling package"
       executeCmd "dpkg -i $download_file"
+    else
+      echo -e "\t\tunpacking"
+      cmd=$(printf 'gunzip -S .zip < %s > /usr/local/bin/chef-automate && chmod +x /usr/local/bin/chef-automate' $download_file)
+      executeCmd "$cmd"
     fi
   else
-    echo -e "\talready installed"
+    echo -e "\t\talready installed"
   fi
 }
+
+# Function to trim whitespace characters from both ends of string
+function trim() {
+  read -rd '' $1 <<<"${!1}"
+}
 # ----------------------------------------------
+
+# Use the arguments and the name of the script to determine how the script was called
+called="$0 $@"
+echo $called >> commands.log
 
 # Analyse the script arguments and configure the variables accordingly
 while [[ $# -gt 0 ]]
@@ -83,17 +121,45 @@ do
 
   case $key in
 
+    -o|--operation)
+      MODE="$2"
+    ;;
+
     # Get the version of Chef Server to download
     -v|--version)
       AUTOMATE_SERVER_VERSION="$2"
     ;;
 
-    -u|--url)
+    -U|--url)
       AUTOMATE_DOWNLOAD_URL="$2"
     ;;
 
     -l|--licence)
       AUTOMATE_LICENCE="$2"
+    ;;
+
+    -u|--username)
+      USERNAME="$2"
+    ;;
+
+    -p|--password)
+      PASSWORD="$2"
+    ;;
+
+    -e|--email)
+      EMAILADDRESS="$2"
+    ;;
+
+    -b|--functionbaseurl)
+      FUNCTION_BASE_URL="$2"
+    ;;
+
+    -n|--functioname)
+      FUNCTION_NAME="$2"
+    ;;
+
+    -k|--functionapikey)
+      FUNCTION_APIKEY="$2"
     ;;
   esac
 
@@ -101,39 +167,111 @@ do
   shift
 done
 
-echo "Checking Automate server"
+echo "Automate server"
 
-# Download and unpack the Automate server
-install automate-ctl $AUTOMATE_DOWNLOAD_URL 0
-echo -e "\tunpacking"
-download_filename=`basename $AUTOMATE_DOWNLOAD_URL`
-cmd=$(printf 'gunzip -S .zip < %s > /usr/local/bin/chef-automate && chmod +x /usr/local/bin/chef-automate' $download_filename)
-executeCmd "$cmd"
+# Determine what needs to be done
+for operation in $MODE
+do
 
-# Set kernel parameters for the session and permenantly
-echo "Kernel Parameters"
-cmd="sysctl -w vm.max_map_count=262144"
-executeCmd "$cmd"
-cmd="sysctl -w vm.dirty_expire_centisecs=20000"
-executeCmd "$cmd"
-cmd="echo vm.max_map_count=262144 > /etc/sysctl.d/50-chef-automate.conf"
-executeCmd "$cmd"
-cmd="echo vm.dirty_expire_centisecs=20000 >> /etc/sysctl.d/50-chef-automate.conf"
-executeCmd "$cmd"
+  # Run the necessary operations as spcified
+  case $operation in
 
-# Configure automate
+    # Download and install Automate server package or download and unzip from a URL
+    install)
 
-echo "Configure Automate"
-echo -e "\tinitialisation"
-cmd="chef-automate init-config"
-executeCmd "$cmd"
+      echo -e "\tInstallation"
 
-echo -e "\tdeploy"
-cmd="chef-automate deploy config.toml"
-executeCmd "$cmd"
+      # If a version has been specified then download the package,
+      # but if a URL has been specified download that and unpack it
+      if [ "X$AUTOMATE_SERVER_VERSION" != "X" ]
+      then
+        echo "Downloading Automate from a package is not currently supported"
+      elif [ "X$AUTOMATE_DOWNLOAD_URL" != "X" ]
+      then
 
-echo -e "\tapplying licence"
-cmd=$(printf 'chef-automate license apply %s' $AUTOMATE_LICENCE)
-executeCmd "$cmd"
+        # Download and unpack the automate server
+        install $AUTOMATE_COMMAND $AUTOMATE_DOWNLOAD_URL "/usr/local/bin/${AUTOMATE_COMMAND}"
+      fi
+    ;;
 
+    # Configure the kernel parameters as required by Automate
+    kernel)
 
+      echo -e "\tKernel settings"
+      cmd="sysctl -w vm.max_map_count=262144"
+      executeCmd "$cmd"
+      cmd="sysctl -w vm.dirty_expire_centisecs=20000"
+      executeCmd "$cmd"
+      cmd="echo vm.max_map_count=262144 > /etc/sysctl.d/50-chef-automate.conf"
+      executeCmd "$cmd"
+      cmd="echo vm.dirty_expire_centisecs=20000 >> /etc/sysctl.d/50-chef-automate.conf"
+      executeCmd "$cmd"      
+    ;;
+
+    # Initialise Automate
+    config)
+
+      echo -e "\tConfiguration"
+      
+      # If the config.toml file does not exist then run the initialisation
+      if [ ! -f $CONFIG_FILE ]
+      then
+        echo -e "\t\tinitialisation"
+        cmd="chef-automate init-config"
+        executeCmd "$cmd"
+      fi
+
+      # Now edit the confguration file with the settings that have been passed to the script
+      if [ "X$USERNAME" != "X" ] && \
+         [ "X$PASSWORD" != "X" ] && \
+         [ "X$EMAILADDRESS" != "X" ] && \
+         [ "X$AUTOMATE_LICENCE" != "X" ]
+      then
+
+        echo -e "\t\tSetting user information and licence"
+
+        # replace the username in the config.toml file
+        cmd=$(printf 'sed -i.bak -r %ss/(email\\s+=\\s+").*(")/\\1%s\\2/g%s %s' "'" $EMAILADDRESS "'" $CONFIG_FILE)
+        executeCmd "$cmd"
+
+        cmd=$(printf 'sed -i.bak -r %ss/(username\\s+=\\s+").*(")/\\1%s\\2/g%s %s' "'" $USERNAME "'" $CONFIG_FILE)
+        executeCmd "$cmd"
+
+        cmd=$(printf 'sed -i.bak -r %ss/(password\\s+=\\s+").*(")/\\1%s\\2/g%s %s' "'" $PASSWORD "'" $CONFIG_FILE)
+        executeCmd "$cmd"
+
+        cmd=$(printf 'sed -i.bak -r %ss/(license\\s+=\\s+").*(")/\\1%s\\2/g%s %s' "'" $AUTOMATE_LICENCE "'" $CONFIG_FILE)
+        executeCmd "$cmd"          
+      fi      
+    ;;
+
+    # Dpeloy the automate server with the specified settings
+    deploy)
+      echo -e "\tDeployment"
+
+      cmd="chef-automate deploy config.toml"
+      executeCmd "$cmd"
+    ;;
+
+    # Generate API token and post it into the chefAMAConfigStore function
+    token)
+
+      echo -e "\tAPI Token"
+
+      # build up command to get the token from automate
+      cmd="chef-automate admin-token | sed -e 's/^[[:space:]]*//'"
+      automate_api_token=$(executeCmd "$cmd")
+
+      # build up the command to curl information into the function
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_token\": \"%s\"}'" $FUNCTION_BASE_URL $FUNCTION_NAME $FUNCTION_APIKEY $automate_api_token)
+      executeCmd $cmd
+      
+    ;;
+
+  esac
+
+done
+
+exit
+
+IFS=$OIFS

@@ -73,7 +73,7 @@
     "outputs": {
         "baseUrl": {
             "type": "string",
-            "value": "[concat('https://', variables('name').site, '.azurewebsites.net/api/')]"
+            "value": "[concat('https://', variables('name').site, '.azurewebsites.net/api')]"
         }
     }
 }
