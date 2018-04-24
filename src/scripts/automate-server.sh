@@ -16,7 +16,7 @@ MODE=""
 AUTOMATE_SERVER_VERSION=""
 
 # The download URL for Automate
-AUTOMATE_DOWNLOAD_URL="https://s3-us-west-2.amazonaws.com/chef-automate-artifacts/current/latest/chef-automate-cli/chef-automate_linux_amd64.zip"
+AUTOMATE_DOWNLOAD_URL="https://packages.chef.io/files/current/automate/latest/chef-automate_linux_amd64.zip"
 
 AUTOMATE_LICENCE=""
 
