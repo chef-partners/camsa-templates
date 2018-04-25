@@ -1,0 +1,60 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspaceName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the workspace"
+            }
+        },
+        "sku": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]"
+        },
+        "tags": {
+            "type": "object"
+        }
+    },
+    "variables": {
+        "location": "[parameters('location')]",
+        "name": {
+            "workspace": "[parameters('workspaceName')]"
+        },
+
+        "la": {
+            "sku": "[parameters('sku')]",
+            "retention": "[if(equals(toLower(parameters('sku')), 'free'), 7, 30)]"
+        },
+
+        "apiVersions": {
+            "workspace": "2017-03-15-preview"
+        },
+
+        "tags": "[parameters('tags')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.OperationalInsights/workspaces",
+            "name": "[variables('name').workspace]",
+            "apiVersion": "[variables('apiVersions').workspace]",
+            "location": "[variables('location')]",
+            "tags": "[variables('tags')]",
+            "properties": {
+                "sku": {
+                    "name": "[variables('la').sku]"
+                },
+                "retentionInDays": "[variables('la').retention]"
+            }            
+        }
+    ],
+    "outputs": {
+        "key": {
+            "type": "string",
+            "value": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', variables('name').workspace), variables('apiVersions').workspace).primarySharedKey]"
+        }
+    }
+}
