@@ -1,0 +1,35 @@
+{
+    "bindings": [
+      {
+        "authLevel": "function",
+        "name": "req",
+        "type": "httpTrigger",
+        "direction": "in",
+        "methods": [
+          "get",
+          "post"
+        ]
+      },
+      {
+        "name": "$return",
+        "type": "http",
+        "direction": "out"
+      },
+      {
+        "type": "table",
+        "name": "outSettingTable",
+        "tableName": "settings",
+        "connection": "AzureWebJobsDashboard",
+        "direction": "out"
+      },
+      {
+        "type": "table",
+        "name": "settingTable",
+        "tableName": "settings",
+        "take": 50,
+        "connection": "AzureWebJobsDashboard",
+        "direction": "in"
+      }
+    ],
+    "disabled": false
+  }
