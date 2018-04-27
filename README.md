@@ -39,7 +39,16 @@ Now the tests can be executed running the following:
 inspec exec test/integration/very -t azure://
 ```
 
-If you have multiple subscription IDs in your credentials file you will need to add the subscription_id you want to use to the end of the above command.
+If you have multiple ssubscription IDs in your credentials file you will need to add the subscription_id you want to use to the end of the above command.
 
 NOTE: If you have InSpec 2.x installed locally then you do not have to use the Docker image.
 
+## Validation
+
+The Azure command line tool has the ability to perform a validation test on the templates. This will check that parameter names are set and that links to other templates are correct. However even if this passes there is no guarantee that it will work in a deployment - this is because there are some things that are only referenced at runtime which may throw an error that the validation is unable to replicate.
+
+If there are no errors then the response to the command is a JSON object which is the semi-rendered template.
+
+```
+az group deployment validate -g InSpec-AMA --parameters test/integration/build/parameters.json --template-file src/mainTemplate.json
+```
