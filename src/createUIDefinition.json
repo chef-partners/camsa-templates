@@ -10,15 +10,17 @@
                 "label": "Resource Prefix",
                 "toolTip": "A prefix that should be applied to all resources that are created",
                 "constraints": {
-                    "required": true
+                    "required": true,
+                    "regex": "^[a-z0-9]{1,5}$",
+                    "validationMessage": "This must be a lowercase aplhanumeric string and no more than 5 characters"
                 }
             }
         ],
         "steps": [
             {
-                "name": "customerResources",
-                "label": "Chef Automate - Azure Managed Application",
-                "bladeTitle": "Customer Resources",
+                "name": "customerNetworkStep",
+                "label": "Networking",
+                "bladeTitle": "Customer Network",
                 "subLabel": {
                     "preValidation": "Provide network resources for connection",
                     "postValidation": "Networking components have been specified"
@@ -31,25 +33,180 @@
                             "virtualNetwork": "Virtual Network",
                             "subnets": "Subnet"
                         },
+                        "constraints": {
+                            "minAddressPrefixSize": "/24"
+                        },
                         "subnets": {
                             "customer": {
                                 "label": "Subnet",
                                 "constraints": {
-                                    "minAddressPrefixSize": "/24"
+                                    "minAddressPrefixSize": "/25"
                                 }
                             }
                         },
                         "visible": true,
                         "toolTip": {
-                           "virtualNetwork": "Select the virtual network that contains the subnet on which you wish to place the Automate system",
-                           "subnets": "Select the subnet to attach the Automate components to" 
+                            "virtualNetwork": "Select the virtual network that contains the subnet on which you wish to place the Automate system",
+                            "subnets": "Select the subnet to attach the Automate components to" 
                         }
+                    }
+                ]
+            },
+
+            {
+                "name": "chefCredentialsStep",
+                "label": "Chef Credentials",
+                "bladeTitle": "Credentials",
+                "subLabel": {
+                    "preValidation": "Provide username, password and other account details for Chef Automate",
+                    "postValidation": "Credentials have been specified"
+                },
+                "elements": [
+                    {
+                        "name": "username",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Username",
+                        "toolTip": "Username for the Chef and Automate servers",
+                        "constraints": {
+                            "required": true,
+                            "regex": "^[a-z0-9]+$",
+                            "validationMessage": "Only lower case alphanumeric characters are allowed."
+                        },
+                        "visible": true
+                    },
+                    {
+                        "name": "password",
+                        "type": "Microsoft.Common.PasswordBox",
+                        "label": {
+                            "password": "Password",
+                            "confirmPassword": "Confirm password"
+                        },
+                        "toolTip": "Password to be associated with the above user",
+                        "constraints": {
+                            "required": true
+                        },
+                        "visible": true
+                    },
+                    {
+                        "name": "fullname",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Fullname",
+                        "toolTip": "Fullname of the account. This should consist of two words",
+                        "constraints": {
+                            "required": true,
+                            "regex": "^\\w+\\s\\w+$",
+                            "validationMessage": "Only two words are permitted in as the fullname"
+                        },
+                        "visible": true
+                    },
+                    {
+                        "name": "emailaddress",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Email Address",
+                        "toolTip": "Email address to be associated with this account",
+                        "constraints": {
+                            "required": true,
+                            "regex": "^\\w+([-+.']\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$",
+                            "validationMessage": "Please provide a valid email address"
+                        },
+                        "visible": true
+                    },
+                    {
+                        "name": "orgname",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Organisation Name",
+                        "toolTip": "Name of the organisation to create",
+                        "constraints": {
+                            "required": true,
+                            "regex": "^[a-z0-9]+$",
+                            "validationMessage": "The Org name should be in lower case, be one word and only consist of alphanumeric characters"
+                        },
+                        "visible": true
+                    },
+                    {
+                        "name": "orgdescription",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Organisation Description",
+                        "toolTip": "A description of the organization, perhaps the epanded version of the name for example",
+                        "constraints": {
+                            "required": true
+                        },
+                        "visible": true
+                    }
+                ]
+            },
+
+            {
+                "name": "automateLicenceStep",
+                "label": "Automate Licence",
+                "bladeTitle": "Licence",
+                "subLabel": {
+                    "preValidation": "Please provide your supplied Automate licence",
+                    "postValidation": "Automate licence has been specified"
+                },
+                "elements": [
+                    {
+                        "name": "licence",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Automate Licence",
+                        "toolTip": "Please paste your Automate licence file here",
+                        "constraints": {
+                            "required": true
+                        },
+                        "visible": true
+                    }
+                ]
+            },
+
+            {
+                "name": "logAnalyticsStep",
+                "label": "Log Analytics",
+                "bladeTitle": "Log Analytics Tier",
+                "subLabel": {
+                    "preValidation": "Please select the tier you want to use for your Log Analytics workspace",
+                    "postValidation": "Log Analytics tier has been specified"
+                },
+                "elements": [
+                    {
+                        "name": "tier",
+                        "type": "Microsoft.Common.DropDown",
+                        "label": "Tier",
+                        "toolTip": "Please select the appropriate service tier",
+                        "defaultValue": "Free",
+                        "constraints": {
+                            "allowedValues": [
+                                {
+                                    "label": "Free",
+                                    "value": "Free"
+                                },
+                                {
+                                    "label": "PerNode",
+                                    "value": "PerNode"
+                                },
+                                {
+                                    "label": "PerGB2018",
+                                    "value": "PerGB2018"
+                                }
+                            ]
+                        },
+                        "visible": true
                     }
                 ]
             }
         ],
         "outputs": {
-            
+            "prefix": "[basics('prefix')]",
+            "virtualNetworkName": "[steps('customerNetworkStep').virtualNetwork.name]",
+            "customerResourceGroupName": "[steps('customerNetworkStep').virtualNetwork.resourceGroup]",
+            "subnetName": "[steps('customerNetworkStep').virtualNetwork.subnets.customer.name]",
+            "chefUsername": "[steps('chefCredentialsStep').username]",
+            "chefUserFullname": "[steps('chefCredentialsStep').fullname]",
+            "chefUserEmailaddress": "[steps('chefCredentialsStep').emailaddress]",
+            "chefUserPassword": "[steps('chefCredentialsStep').password]",
+            "chefOrg": "[steps('chefCredentialsStep').orgname]",
+            "chefOrgDescription": "[steps('chefCredentialsStep').orgdescription]",
+            "automateLicence": "[steps('automateLicenceStep').licence]",
+            "logAnalyticsTier": "[steps('logAnalyticsStep').tier]"
         }
     }
 }
