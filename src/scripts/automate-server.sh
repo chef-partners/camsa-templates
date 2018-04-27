@@ -228,7 +228,7 @@ do
          [ "X$AUTOMATE_LICENCE" != "X" ]
       then
 
-        echo -e "\t\tSetting user information and licence"
+        echo -e "\t\tSetting user information"
 
         # replace the username in the config.toml file
         cmd=$(printf 'sed -i.bak -r %ss/(email\\s+=\\s+").*(")/\\1%s\\2/g%s %s' "'" $EMAILADDRESS "'" $CONFIG_FILE)
@@ -240,8 +240,9 @@ do
         cmd=$(printf 'sed -i.bak -r %ss/(password\\s+=\\s+").*(")/\\1%s\\2/g%s %s' "'" $PASSWORD "'" $CONFIG_FILE)
         executeCmd "$cmd"
 
-        cmd=$(printf 'sed -i.bak -r %ss/(license\\s+=\\s+").*(")/\\1%s\\2/g%s %s' "'" $AUTOMATE_LICENCE "'" $CONFIG_FILE)
-        executeCmd "$cmd"          
+        # setting the licence in the config.toml does not appear to work
+        # cmd=$(printf 'sed -i.bak -r %ss/(license\\s+=\\s+").*(")/\\1%s\\2/g%s %s' "'" $AUTOMATE_LICENCE "'" $CONFIG_FILE)
+        # executeCmd "$cmd"          
       fi      
     ;;
 
@@ -250,6 +251,14 @@ do
       echo -e "\tDeployment"
 
       cmd="chef-automate deploy config.toml"
+      executeCmd "$cmd"
+    ;;
+
+    # Apply the licence to automate
+    licence)
+      echo -e "Apply licence"
+
+      cmd=$(printf 'chef-automate license apply %s' $AUTOMATE_LICENSE)
       executeCmd "$cmd"
     ;;
 
