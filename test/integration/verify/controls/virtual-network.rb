@@ -14,6 +14,7 @@ control 'Customer Virtual Network' do
   title 'Virtual network has correct address space and has the required number of subnets'
 
   describe azure_generic_resource(group_name: customer_resource_group_name, name: customer_virtual_network_name) do
+    its('type') { should eq 'Microsoft.Network/virtualNetworks' }
     its('location') { should cmp location }
     its('properties.provisioningState') { should cmp 'Succeeded' }
 

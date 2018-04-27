@@ -27,5 +27,11 @@ control 'Azure-Managed-Automate-Resources' do
 
     # There should be two extensions, one for each of the VMs to execute the script
     its('Microsoft.Compute/virtualMachines/extensions') { should eq 2 }
+
+    # Set the counts for the ServerFarm, WebSite and Functions
+    its('Microsoft.Web/serverFarms') { should eq 1 }
+    its('Microsoft.Web/sites') { should eq 1 }
+
+    its('Microsoft.OperationalInsights/workspaces') { should eq 1 }
   end
 end

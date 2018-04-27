@@ -2,6 +2,7 @@ resource_group_name = attribute('resource_group_name', default: 'InSpec-AMA', de
 unique_string = attribute('unique_string', default: '9j2f')
 location = attribute('location', default: 'westeurope')
 ssh_source_addresses = attribute('ssh_source_addresses', default: ['10.1.1.0/24'])
+provider = attribute('provider', default: '33194f91-eb5f-4110-827a-e95f640a9e46')
 
 # Define array that states where the traffic is coming from
 # Both denote access from the Internet
@@ -14,12 +15,18 @@ control 'Automate-Server-NSG' do
   title 'Check the settings of the network security group for the Automate server'
 
   describe azure_generic_resource(group_name: resource_group_name, name: "inspec-automate-#{unique_string}-Customer-NSG") do
+    its('type') { should eq 'Microsoft.Network/networkSecurityGroups' }
     its('location') { should cmp location }
     its('properties.provisioningState') { should cmp 'Succeeded' }
     its('properties.securityRules.count') { should cmp 3 }
 
     # it should be connected to the correct NIC
     its('properties.networkInterfaces.first.id') { should include "inspec-automate-#{unique_string}-Customer-VNet-NIC" }
+
+    its('tags') { should include 'provider' }
+    its('tags') { should include 'description' }
+    its('provider_tag') { should cmp provider }
+    its('description_tag') { should include 'network security group limiting access to the Automate server' }
   end
 end
 
@@ -91,12 +98,18 @@ control 'Chef-Server-NSG' do
   title 'Check the settings of the network security group for the Chef server'
 
   describe azure_generic_resource(group_name: resource_group_name, name: "inspec-chef-#{unique_string}-Customer-NSG") do
+    its('type') { should eq 'Microsoft.Network/networkSecurityGroups' }
     its('location') { should cmp location }
     its('properties.provisioningState') { should cmp 'Succeeded' }
     its('properties.securityRules.count') { should cmp 3 }
 
     # it should be connected to the correct NIC
     its('properties.networkInterfaces.first.id') { should include "inspec-chef-#{unique_string}-Customer-VNet-NIC" }
+
+    its('tags') { should include 'provider' }
+    its('tags') { should include 'description' }
+    its('provider_tag') { should cmp provider }
+    its('description_tag') { should include 'network security group limiting access to the Chef server' }
   end
 end
 
