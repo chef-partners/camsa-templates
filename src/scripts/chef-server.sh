@@ -246,7 +246,7 @@ do
 
       echo -e "\t${CHEF_ORGNAME}-validator"
 
-      cmd=$(printf "curl -XPOST %s -d '{\"%s_validator_key\": \"%s\"}'" $AF_URL $CHEF_ORGNAME `cat ${CHEF_ORG_NAME}-validator.pem | base64 -w 0`)
+      cmd=$(printf "curl -XPOST %s -d '{\"%s_validator_key\": \"%s\"}'" $AF_URL $CHEF_ORGNAME `cat ${CHEF_ORGNAME}-validator.pem | base64 -w 0`)
       executeCmd "$cmd"
     ;;
 
