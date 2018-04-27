@@ -96,7 +96,7 @@
         },
 
         "automateLicence": {
-            "type": "string"
+            "type": "securestring"
         },
 
         "logAnalyticsTier": {
