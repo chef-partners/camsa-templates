@@ -93,6 +93,14 @@
             "metadata": {
                 "description": "Description of the Chef org"
             }
+        },
+
+        "automateLicence": {
+            "type": "string"
+        },
+
+        "logAnalyticsTier": {
+            "type": "string"
         }
     },
     "variables": {
@@ -106,6 +114,10 @@
         "name": {
             "storageAccount": "[variables('unique')]",
             "virtualNetwork": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-VNet')]",
+            "appServicePlan": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-AppServicePlan')]",
+            "appService": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-AppService')]",
+            "sa": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-SA')]",
+            "la": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-LogAnalytics')]",
             "vm": {
                 "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-VM')]",
                 "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-VM')]"
@@ -119,10 +131,6 @@
                 "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-PublicIP')]"
             },
             "nic": {
-                "ama": {
-                    "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-AMA-NIC')]",
-                    "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-AMA-NIC')]"
-                },
                 "customer": {
                     "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-Customer-VNet-NIC')]",
                     "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-Customer-VNet-NIC')]"
@@ -134,7 +142,11 @@
             },
             "resourceGroup": "[parameters('customerResourceGroupName')]",
             "extension": {
-                "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-ScriptExtension')]"
+                "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-ScriptExtension')]",
+                "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-ScriptExtension')]"
+            },
+            "functions": {
+                "configstore": "[concat(parameters('prefix'), '-ConfigStore-AF')]"
             }
         },
 
@@ -159,18 +171,25 @@
             "storageAccount": "[concat(variables('baseUrl'), '/src/templates/storage-account.json')]",
             "virtualNetwork": "[concat(variables('baseUrl'), '/src/templates/virtual-network.json')]",
             "publicIPAddress": "[concat(variables('baseUrl'), '/src/templates/public-ipaddress.json')]",
-            "networkInterfacePrivate": "[concat(variables('baseUrl'), '/src/templates/network-interface-private.json')]",
             "networkInterfacePublic": "[concat(variables('baseUrl'), '/src/templates/network-interface-public.json')]",
             "networkSecurityGroup": "[concat(variables('baseUrl'), '/src/templates/network-security-group.json')]",
             "virtualMachine": "[concat(variables('baseUrl'), '/src/templates/virtual-machine.json')]",
             "scriptExtension": "[concat(variables('baseUrl'), '/src/templates/script-extension.json')]",
+            "appServicePlan": "[concat(variables('baseUrl'), '/src/templates/app-service-plan.json')]",
+            "appService": "[concat(variables('baseUrl'), '/src/templates/app-service.json')]",
+            "logAnalytics": "[concat(variables('baseUrl'), '/src/templates/log-analytics.json')]",
             "scripts": {
-                "chefserver": "[concat(variables('baseUrl'), '/src/scripts/chef-server.sh')]"
+                "chefserver": "[concat(variables('baseUrl'), '/src/scripts/chef-server.sh')]",
+                "automateserver": "[concat(variables('baseUrl'), '/src/scripts/automate-server.sh')]"
+            },
+            "functions": {
+                "configStore": "[concat(variables('baseUrl'), '/src/templates/functions/config-store.json')]"
             }
         },
 
         "apiVersions": {
-            "deployments": "2017-05-10"
+            "deployments": "2017-05-10",
+            "config": "2016-08-01"
         },
 
         "chef": {
@@ -181,13 +200,21 @@
             "password": "[parameters('chefUserPassword')]",
             "org": "[toLower(parameters('chefOrg'))]",
             "orgDescription": "[parameters('chefOrgDescription')]"
+        },
+
+        "automate": {
+            "licence": "[parameters('automateLicence')]"
+        },
+
+        "la": {
+            "sku": "[parameters('logAnalyticsTier')]"
         }
     },
     "resources": [
 
         {
             "type": "Microsoft.Resources/deployments",
-            "name": "[concat(variables('name').storageAccount, '-Deployment')]",
+            "name": "[concat(variables('name').sa, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
             "properties": {
                 "mode": "Incremental",
@@ -201,6 +228,127 @@
                     },
                     "storageAccountName": {
                         "value": "[variables('name').storageAccount]"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "Storage account used for troubleshooting and function storage",
+                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                        }
+                    }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').appServicePlan, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').appServicePlan]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "name": {
+                        "value": "[variables('name').appServicePlan]"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "Service plan to host functions for setup and logging",
+                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                        }
+                    }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').appService, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').sa, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').appServicePlan, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').appService]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "name": {
+                        "value": "[variables('name').appService]"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "Website app service to store the various functions required for the Chef Managed App",
+                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                        }
+                    },
+                    "servicePlanId": {
+                        "value": "[reference(concat(variables('name').appServicePlan, '-Deployment')).outputs.id.value]"
+                    },
+                    "storageAccountName": {
+                        "value": "[variables('name').storageAccount]"
+                    }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').functions.configstore, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').appService, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').functions.configStore]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[variables('name').appService]"
+                    }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').la, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').logAnalytics]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "workspaceName": {
+                        "value": "[variables('name').la]"
+                    },
+                    "sku": {
+                        "value": "[variables('la').sku]"
+                    },
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "Log Analytics workspace to capture information about the health of the Chef Automate Managed App",
+                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                        }
                     }
                 }
             }
@@ -225,6 +373,12 @@
                     },
                     "sshSourceAddresses": {
                         "value": "[variables('sourceAddresses').ssh]"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "network security group limiting access to the Chef server",
+                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                        }
                     }
                 }
             }
@@ -249,6 +403,12 @@
                     },
                     "sshSourceAddresses": {
                         "value": "[variables('sourceAddresses').ssh]"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "network security group limiting access to the Automate server",
+                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                        }
                     }
                 }
             }
@@ -276,6 +436,12 @@
                     },
                     "dnsLabelPrefix": {
                         "value": "[variables('name').computer.chef]"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "Public IP address for the Chef server",
+                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                        }
                     }
                 }
             }
@@ -303,6 +469,12 @@
                     },
                     "dnsLabelPrefix": {
                         "value": "[variables('name').computer.automate]"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "Public IP address for the Automate server",
+                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                        }
                     }
                 }
             }
@@ -334,6 +506,12 @@
                     },
                     "nsgRef": {
                         "value": "[reference(concat(variables('name').nsg.chef, '-Deployment')).outputs.nsgId.value]"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "Network card for the Chef server connected to the customer subnet",
+                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                        }
                     }
                 }
             }
@@ -365,6 +543,12 @@
                     },
                     "nsgRef": {
                         "value": "[reference(concat(variables('name').nsg.automate, '-Deployment')).outputs.nsgId.value]"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "Network card for the Automate server connected to the customer subnet",
+                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                        }
                     }
                 }
             }
@@ -376,7 +560,7 @@
             "apiVersion": "[variables('apiVersions').deployments]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', variables('name').nic.customer.chef, '-Deployment')]",
-                "[concat('Microsoft.Resources/deployments/', variables('name').storageAccount, '-Deployment')]"
+                "[concat('Microsoft.Resources/deployments/', variables('name').sa, '-Deployment')]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -411,6 +595,12 @@
                     },
                     "fqdn": {
                         "value": "[reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value]"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "Chef Server Virtual Machine",
+                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                        }
                     }
                 }
             }
@@ -422,7 +612,7 @@
             "apiVersion": "[variables('apiVersions').deployments]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', variables('name').nic.customer.automate, '-Deployment')]",
-                "[concat('Microsoft.Resources/deployments/', variables('name').storageAccount, '-Deployment')]"
+                "[concat('Microsoft.Resources/deployments/', variables('name').sa, '-Deployment')]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -457,6 +647,12 @@
                     },
                     "fqdn": {
                         "value": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value]"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "Automate Server Virtual Machine",
+                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                        }
                     }
                 }
             }
@@ -464,10 +660,54 @@
         
         {
             "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').extension.automate, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').vm.automate, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').functions.configstore, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').scriptExtension]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "vmname": {
+                        "value": "[variables('name').vm.automate]"
+                    },
+                    "scriptUrl": {
+                        "value": "[variables('urls').scripts.automateserver]"
+                    },
+                    "scriptArguments": {
+                        "value": "[concat('-o install,kernel,config,deploy,licence,token -u \"', variables('chef').username, '\" -p \"', variables('chef').password, '\" -e ', variables('chef').email, ' -l ', variables('automate').licence, ' -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -k ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value)]"
+                    },
+                    "extensionName": {
+                        "value": "InstallAndConfigureAutomate"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "Script to install and configure the Automate server",
+                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                        }
+                    }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').extension.chef, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
             "dependsOn": [
-                "[concat('Microsoft.Resources/deployments/', variables('name').vm.chef, '-Deployment')]"
+                "[concat('Microsoft.Resources/deployments/', variables('name').vm.chef, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').extension.automate, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').functions.configstore, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -486,13 +726,25 @@
                         "value": "[variables('urls').scripts.chefserver]"
                     },
                     "scriptArguments": {
-                        "value": "[concat('-v ', variables('chef').version, ' -u ', variables('chef').username, ' -f \"', variables('chef').fullname. '\" -p \"', variables('chef').password, '\" -a ', variables('chef').email, ' -o ', variable('chef').org, ' -d \"', variables('chef').orgDescription, '\"]'"
+                        "value": "[concat('-o install,config,storekeys,integrate,reconfigure -v ', variables('chef').version, ' -u ', variables('chef').username, ' -f \"', variables('chef').fullname, '\" -p \"', variables('chef').password, '\" -a ', variables('chef').email, ' -O ', variables('chef').org, ' -d \"', variables('chef').orgDescription, '\" -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -k ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, ' -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value)]"
+                    },
+                    "extensionName": {
+                        "value": "InstallAndConfigureChef"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "Script to install and configure the Chef server",
+                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                        }
                     }
                 }
             }
         }
     ],
     "outputs": {
-        
+        "chefServerScriptArguments": {
+            "type": "string",
+            "value": "[reference(concat(variables('name').extension.chef, '-Deployment')).outputs.executedCommand.value]"
+        }
     }
 }
