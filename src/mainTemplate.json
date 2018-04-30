@@ -745,6 +745,10 @@
         "chefServerScriptArguments": {
             "type": "string",
             "value": "[reference(concat(variables('name').extension.chef, '-Deployment')).outputs.executedCommand.value]"
+        },
+        "functionApiKey": {
+            "type": "string",
+            "value": "reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value"
         }
     }
 }
