@@ -42,7 +42,7 @@ program.version('0.0.1')
 
 // The script should have been passed the name of the variable from which
 // to get the JSON object to convert. Parse this as JSON into a local variable
-console.log('Value: %s', process.env[variable_name]);
+console.log('Value: "%s"', process.env[variable_name]);
 process.exit();
 
 let json_object = JSON.parse(process.env[variable_name]);
