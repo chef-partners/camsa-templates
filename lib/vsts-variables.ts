@@ -21,6 +21,7 @@
  * 
  * It is assumed that the JSON object is contained within an environment variable the name
  * of which is passed to the script when run.
+ * 
  */
 
 // Import necessary libraries
