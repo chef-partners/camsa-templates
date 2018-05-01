@@ -42,14 +42,6 @@ program.version('0.0.1')
 
 // The script should have been passed the name of the variable from which
 // to get the JSON object to convert. Parse this as JSON into a local variable
-console.log('Name: %s', variable_name);
-console.log('Value: "%s"', process.env[variable_name]);
-
-for (var key in process.env) {
-    console.log('%s: %s', key, process.env[key]);
-}
-process.exit();
-
 let json_object = JSON.parse(process.env[variable_name]);
 
 // Iterate around the JSON object and output the VSTS variables as required
