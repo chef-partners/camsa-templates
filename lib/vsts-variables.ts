@@ -42,6 +42,9 @@ program.version('0.0.1')
 
 // The script should have been passed the name of the variable from which
 // to get the JSON object to convert. Parse this as JSON into a local variable
+console.log('Value: %s', process.env[variable_name]);
+process.exit();
+
 let json_object = JSON.parse(process.env[variable_name]);
 
 // Iterate around the JSON object and output the VSTS variables as required
@@ -54,7 +57,7 @@ for (var key in json_object) {
 
     // determine the value of the key
     // this is handle the situation where the value maybe an object with a value inside
-    if (typeof json_object[key]) {
+    if (typeof json_object[key] == 'object') {
         if ('value' in json_object[key]) {
             value = json_object[key].value;
         }
