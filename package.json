@@ -7,6 +7,7 @@
     },
     "scripts": {
         "vsts-variables": "node bin/vsts-variables.js",
+        "envvars": "node bin/display-envvars.js",
         "compile:scripts": "tsc --project lib/tsconfig.json"
     },
     "dependencies": {
