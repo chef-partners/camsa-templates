@@ -11,6 +11,7 @@
     },
     "dependencies": {
         "@types/node": "^8.10.11",
-        "commander": "^2.15.1"
+        "commander": "^2.15.1",
+        "typescript": "^2.8.3"
     }
 }
