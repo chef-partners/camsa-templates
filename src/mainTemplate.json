@@ -101,13 +101,18 @@
 
         "logAnalyticsTier": {
             "type": "string"
+        },
+
+        "baseUrl": {
+            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/chef-partners/azure-managed-automate/master"
         }
     },
     "variables": {
         "unique": "[uniqueString(subscription().subscriptionId, resourceGroup().id, deployment().name, parameters('prefix'))]",
         "uniqueShort": "[if(empty(parameters('uniqueShort')), substring(variables('unique'), 0, 4), parameters('uniqueShort'))]",
 
-        "baseUrl": "https://raw.githubusercontent.com/chef-partners/azure-managed-automate/master",
+        "baseUrl": "[parameters('baseUrl')]",
 
         "location": "[resourceGroup().location]",
 
