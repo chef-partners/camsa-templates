@@ -1,0 +1,16 @@
+{
+    "name": "azure-managed-automate",
+    "description": "AMA for Chef Automate. Build and conversion system",
+    "author": {
+        "name": "Russell Seymour",
+        "email": "rseymour@chef.io"
+    },
+    "scripts": {
+        "vsts-variables": "node bin/vsts-variables.js",
+        "compile:scripts": "tsc --project lib/tsconfig.json"
+    },
+    "dependencies": {
+        "@types/node": "^8.10.11",
+        "commander": "^2.15.1"
+    }
+}

@@ -749,6 +749,10 @@
         "functionApiKey": {
             "type": "string",
             "value": "reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value"
+        },
+        "uniqueShort": {
+            "type": "string",
+            "value": "[variables('uniqueShort')]"
         }
     }
 }
