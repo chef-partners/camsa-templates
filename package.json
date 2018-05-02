@@ -7,11 +7,26 @@
     },
     "scripts": {
         "vsts-variables": "node bin/vsts-variables.js",
-        "compile:scripts": "tsc --project lib/tsconfig.json"
+        "envvars": "node bin/display-envvars.js",
+        "compile:scripts": "tsc --project lib/tsconfig.json",
+        "build:init": "node bin\\build.js init --clean",
+        "build:copy": "node bin\\build.js copy",
+        "build:patch": "node bin\\build.js patch",
+        "build:package": "node bin\\build.js package",
+        "build:run": "node bin\\build.js run"
     },
     "dependencies": {
-        "@types/node": "^8.10.11",
         "commander": "^2.15.1",
-        "typescript": "^2.8.3"
+        "fs-extra": "^6.0.0",
+        "rimraf": "^2.6.2",
+        "sprintf-js": "^1.1.1",
+        "typescript": "^2.8.3",
+        "zip-folder": "^1.0.0"
+    },
+    "devDependencies": {
+        "@types/fs-extra": "^5.0.2",
+        "@types/node": "^8.10.11",
+        "@types/rimraf": "^2.0.2",
+        "@types/sprintf-js": "^1.1.0"
     }
 }

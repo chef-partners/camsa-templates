@@ -21,6 +21,7 @@
  * 
  * It is assumed that the JSON object is contained within an environment variable the name
  * of which is passed to the script when run.
+ * 
  */
 
 // Import necessary libraries
@@ -53,7 +54,7 @@ for (var key in json_object) {
 
     // determine the value of the key
     // this is handle the situation where the value maybe an object with a value inside
-    if (typeof json_object[key]) {
+    if (typeof json_object[key] == 'object') {
         if ('value' in json_object[key]) {
             value = json_object[key].value;
         }

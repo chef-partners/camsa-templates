@@ -5,3 +5,4 @@ local/
 *.js
 *.js.map
 node_modules/
+build/

@@ -4,6 +4,7 @@ location = attribute('location', default: 'westeurope')
 apikey = attribute('apikey', default: '')
 username = attribute('username', default: 'inspec')
 org = attribute('org', default: 'ama')
+endpoint_test = attribute('endpoint_test', default: false)
 
 # set the fqdn of the webservice
 website_fqdn = format('inspec-%s-appservice.azurewebsites.net', unique_string)
