@@ -247,6 +247,20 @@ program.command("package")
        })
        .description("Package up the files into a zip file for deployment")
 
+// Command to run all the stages in one go
+program.command("run")
+       .option("-b, --baseurl <base_url>", "Base URL from which the nested templates can be found", "")
+       .option("-v, --version <version>", "Version to be applied to the zip file", "0.0.1")
+       .option("--outputvar <variable_name>", "Name of the variable to output the filename to in VSTS", "AMA_ZIP_PATH")  
+       .option('--clean', 'Optionally remove the build directory if it already exists', true) 
+       .action(function (options) {
+           let build_config = parseBuildConfig(app_root, program.config);
+           init(options, build_config);
+           copy(build_config);
+           patch(options, build_config);
+           packageFiles(options, build_config);
+       })    
+
 program.parse(process.argv)
 
 
