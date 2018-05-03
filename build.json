@@ -12,7 +12,7 @@
             "target": ""
         },
         {
-            "source": "src/createUIDefinition.json",
+            "source": "src/createUiDefinition.json",
             "target": ""
         }
     ],

@@ -46,7 +46,7 @@ function init(options, build_config) {
 
     // clean the build directory if the option to clean it has been specified and
     // the directory exists
-    if (options.parent.clean && fs.existsSync(build_config["dirs"]["build"])) {
+    if (options.clean && fs.existsSync(build_config["dirs"]["build"])) {
         console.log("Removing build directory");
         rimraf.sync(build_config["dirs"]["build"]);
     }

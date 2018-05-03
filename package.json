@@ -9,11 +9,11 @@
         "vsts-variables": "node bin/vsts-variables.js",
         "envvars": "node bin/display-envvars.js",
         "compile:scripts": "tsc --project lib/tsconfig.json",
-        "build:init": "node bin\\build.js init --clean",
-        "build:copy": "node bin\\build.js copy",
-        "build:patch": "node bin\\build.js patch",
-        "build:package": "node bin\\build.js package",
-        "build:run": "node bin\\build.js run"
+        "build:init": "node bin/build.js init --clean",
+        "build:copy": "node bin/build.js copy",
+        "build:patch": "node bin/build.js patch",
+        "build:package": "node bin/build.js package",
+        "build:run": "node bin/build.js run"
     },
     "dependencies": {
         "commander": "^2.15.1",
