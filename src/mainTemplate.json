@@ -50,7 +50,8 @@
             "type": "string",
             "metadata": {
                 "description": "Version of the Chef Server to download and install"
-            }
+            },
+            "defaultValue": "12.17.133"
         },
 
         "chefUsername": {
