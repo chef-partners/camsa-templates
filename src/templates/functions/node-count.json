@@ -1,0 +1,96 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "siteName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the site into which the function should be deployed"
+            }
+        },
+        "functionName": {
+            "type": "string",
+            "metadata": {
+                "description": "name of the function"
+            },
+            "defaultValue": "AutomateLogListener"
+        },
+        "logAnalyticsWorkspaceID": {
+            "type": "string",
+            "metadata": {
+                "description": "The workspace ID to use when adding data to Log Analytics"
+            }
+        },
+        "logAnalyticsSharedKey": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Primary key to use for authentication to Log Analytics"
+            }
+        },
+        "automateFqdn": {
+            "type": "string",
+            "metadata": {
+                "description": "FQDN of the Automate server. This is used to build up the URL from which to get stats"
+            }
+        }
+    },
+    "variables": {
+        "name": {
+            "site": "[parameters('siteName')]",
+            "function": "[parameters('functionName')]"
+        },
+        "apiVersions": {
+            "functions": "2016-08-01"
+        },
+        "code": {
+            "run_csx": "I3IgIk5ld3RvbnNvZnQuSnNvbiINCiNsb2FkICJ3b3Jrc3BhY2UuY3N4Ig0KI2xvYWQgImNvbnN0YW50cy5jc3giDQp1c2luZyBTeXN0ZW07DQp1c2luZyBTeXN0ZW0uTmV0Ow0KdXNpbmcgU3lzdGVtLk5ldC5IdHRwOw0KdXNpbmcgU3lzdGVtLk5ldC5IdHRwLkhlYWRlcnM7DQp1c2luZyBTeXN0ZW0uU2VjdXJpdHkuQ3J5cHRvZ3JhcGh5Ow0KdXNpbmcgU3lzdGVtLlRleHQ7DQp1c2luZyBTeXN0ZW0uVGhyZWFkaW5nLlRhc2tzOw0KdXNpbmcgTmV3dG9uc29mdC5Kc29uOw0KdXNpbmcgTWljcm9zb2Z0LldpbmRvd3NBenVyZS5TdG9yYWdlLlRhYmxlOw0KIA0KLy8gQ2xhc3MgZm9yIHdoYXQgc2hvdWxkIGJlIHNlbnQgdG8gTG9nIEFuYWx5dGljcw0KcHVibGljIGNsYXNzIE5vZGVDb3VudA0Kew0KICAgIHB1YmxpYyBzdHJpbmcgU2VydmVyQWRkcmVzcyB7IGdldDsgc2V0OyB9DQogICAgcHVibGljIHN0cmluZyBTZXJ2ZXJUeXBlIHsgZ2V0O3NldDsgfQ0KICAgIHB1YmxpYyBpbnQgVG90YWwgeyBnZXQ7IHNldDsgfQ0KICAgIHB1YmxpYyBpbnQgU3VjY2VzcyB7IGdldDsgc2V0OyB9DQogICAgcHVibGljIGludCBGYWlsdXJlIHsgZ2V0OyBzZXQ7IH0NCiAgICBwdWJsaWMgaW50IE1pc3NpbmcgeyBnZXQ7IHNldDsgfQ0KfQ0KIA0KcHVibGljIHN0YXRpYyB2b2lkIFJ1bihUaW1lckluZm8gbXlUaW1lciwgQ2xvdWRUYWJsZSBzZXR0aW5nVGFibGUsIFRyYWNlV3JpdGVyIGxvZykNCnsNCiAgICBsb2cuSW5mbygiU3RhcnQgZnVuY3Rpb24gdG8gYWRkIGluZm9ybWF0aW9uIHRvIExvZyBBbmFseXRpY3MiKTsNCiANCiAgICAvLyBMb2dOYW1lIGlzIG5hbWUgb2YgdGhlIGV2ZW50IHR5cGUgdGhhdCBpcyBiZWluZyBzdWJtaXR0ZWQgdG8gTG9nIEFuYWx5dGljcw0KICAgIHN0cmluZyBMb2dOYW1lID0gIkNoZWZBdXRvbWF0ZUFNQUluZnJhTm9kZUNvdW50IjsNCg0KICAgIFJhbmRvbSBnYXJiYWdlID0gbmV3IFJhbmRvbSgpOw0KICAgIHN0cmluZyBTZXJ2ZXJUeXBlID0gIkF1dG9tYXRlIjsNCiAgICBzdHJpbmcgQWRkcmVzcyA9ICJodHRwczovL29wc2NoZWZhdXRvbWF0ZS53ZXN0LmNlbnRyYWx1cy5jbG91ZGFwcC5henVyZS5jb20vIjsNCiAgICBpZihnYXJiYWdlLk5leHQoMSwzKSA9PSAxKXsNCiAgICBTZXJ2ZXJUeXBlID0gIkNoZWYgU2VydmVyIjsNCiAgICBBZGRyZXNzID0gImh0dHBzOi8vb3BzY2hlZnNlcnZlci53ZXN0LmNlbnRyYWx1cy5jbG91ZGFwcC5henVyZS5jb20vIjsNCiAgICB9DQoNCiAgICBsb2cuSW5mbygiU2VydmVyIFR5cGUgaXMgIiArIFNlcnZlclR5cGUgKyAiIGFuZCBhZGRyZXNzIGlzICIgKyBBZGRyZXNzKTsNCg0KICAgIC8vIEdldCB0aGUgYXV0b21hdGUgdG9rZW4gZnJvbSB0aGUgY29uZmlnIHN0b3JlIHRhYmxlDQogICAgVGFibGVPcGVyYXRpb24gb3BlcmF0aW9uID0gVGFibGVPcGVyYXRpb24uUmV0cmlldmU8Q29uZmlnS1Y+KFBhcnRpdGlvbktleSwgQXV0b21hdGVUb2tlbktleU5hbWUpOw0KICAgIFRhYmxlUmVzdWx0IHJlc3VsdCA9IHNldHRpbmdUYWJsZS5FeGVjdXRlKG9wZXJhdGlvbik7DQoNCiAgICAvLyBpZiB0aGVyZSBpcyBhIHJlc3VsdCBnZXQgdGhlIGtleSB2YWx1ZSwgb3RoZXJ3aXNlIGxvZyBlcnJvcg0KICAgIGlmIChyZXN1bHQuUmVzdWx0ICE9IG51bGwpIHsNCg0KICAgICAgICAvLyBnZXQgdGhlIHRva2VuIHZhbHVlDQogICAgICAgIENvbmZpZ0tWIHNldHRpbmcgPSAoQ29uZmlnS1YpcmVzdWx0LlJlc3VsdDsNCiAgICAgICAgc3RyaW5nIGF1dG9tYXRlX3Rva2VuID0gc2V0dGluZy5WYWx1ZTsNCg0KICAgICAgICAvLyBDcmVhdGVzIHRoZSBKU09OIG9iamVjdCwgd2l0aCBrZXkvdmFsdWUgcGFpcnMNCiAgICAgICAgbG9nLkluZm8oR2V0U3RyaW5nRGF0YShsb2csIGF1dG9tYXRlX3Rva2VuKSk7DQogICAgICAgIE5vZGVDb3VudCBqc29uT2JqID0gbmV3IE5vZGVDb3VudCgpOw0KICAgICAgICBqc29uT2JqID0gR2V0RGF0YShhdXRvbWF0ZV90b2tlbik7DQogICAgICAgIGpzb25PYmouU2VydmVyVHlwZSA9IFNlcnZlclR5cGU7DQogICAgICAgIGpzb25PYmouU2VydmVyQWRkcmVzcyA9IEFkZHJlc3M7DQogICAgICAgIC8vIENvbnZlcnQgb2JqZWN0IHRvIGpzb24NCiAgICAgICAgdmFyIGpzb24gPSBKc29uQ29udmVydC5TZXJpYWxpemVPYmplY3QoanNvbk9iaik7DQogICAgDQogICAgICAgIGxvZy5JbmZvKCJqc29uIGZpbGUgc2VudCB0byBMb2cgQW5hbHl0aWNzOiAiICsganNvbik7DQogICAgICAgIA0KICAgICAgICAvLyBDcmVhdGUgYSBoYXNoIGZvciB0aGUgQVBJIHNpZ25hdHVyZQ0KICAgICAgICB2YXIgZGF0ZXN0cmluZyA9IERhdGVUaW1lLlV0Y05vdy5Ub1N0cmluZygiciIpOw0KICAgICAgICBzdHJpbmcgc3RyaW5nVG9IYXNoID0gIlBPU1RcbiIgKyBqc29uLkxlbmd0aCArICJcbmFwcGxpY2F0aW9uL2pzb25cbiIgKyAieC1tcy1kYXRlOiIgKyBkYXRlc3RyaW5nICsgIlxuL2FwaS9sb2dzIjsNCiAgICAgICAgc3RyaW5nIGhhc2hlZFN0cmluZyA9IEJ1aWxkU2lnbmF0dXJlKHN0cmluZ1RvSGFzaCwgc2hhcmVkS2V5KTsNCiAgICAgICAgc3RyaW5nIHNpZ25hdHVyZSA9ICJTaGFyZWRLZXkgIiArIGN1c3RvbWVySWQgKyAiOiIgKyBoYXNoZWRTdHJpbmc7DQogICAgDQogICAgICAgIFBvc3REYXRhKHNpZ25hdHVyZSwgZGF0ZXN0cmluZywganNvbiwgY3VzdG9tZXJJZCwgTG9nTmFtZSk7DQogICAgfSBlbHNlIHsNCiAgICAgICAgbG9nLkluZm8oU3RyaW5nLkZvcm1hdCgiVW5hYmxlIHRvIGZpbmQgc2VsZWN0ZWQgdG9rZW4gaW4gdGFibGU6IHswfSIsIEF1dG9tYXRlVG9rZW5LZXlOYW1lKSk7DQogICAgfQ0KfQ0KIA0KLy8gQnVpbGQgdGhlIEFQSSBzaWduYXR1cmUNCnB1YmxpYyBzdGF0aWMgc3RyaW5nIEJ1aWxkU2lnbmF0dXJlKHN0cmluZyBtZXNzYWdlLCBzdHJpbmcgc2VjcmV0KQ0Kew0KICAgIHZhciBlbmNvZGluZyA9IG5ldyBTeXN0ZW0uVGV4dC5BU0NJSUVuY29kaW5nKCk7DQogICAgYnl0ZVtdIGtleUJ5dGUgPSBDb252ZXJ0LkZyb21CYXNlNjRTdHJpbmcoc2VjcmV0KTsNCiAgICBieXRlW10gbWVzc2FnZUJ5dGVzID0gZW5jb2RpbmcuR2V0Qnl0ZXMobWVzc2FnZSk7DQogICAgdXNpbmcgKHZhciBobWFjc2hhMjU2ID0gbmV3IEhNQUNTSEEyNTYoa2V5Qnl0ZSkpDQogICAgew0KICAgICAgICBieXRlW10gaGFzaCA9IGhtYWNzaGEyNTYuQ29tcHV0ZUhhc2gobWVzc2FnZUJ5dGVzKTsNCiAgICAgICAgcmV0dXJuIENvbnZlcnQuVG9CYXNlNjRTdHJpbmcoaGFzaCk7DQogICAgfQ0KfQ0KIA0KLy8gU2VuZCBhIHJlcXVlc3QgdG8gdGhlIFBPU1QgQVBJIGVuZHBvaW50DQpwdWJsaWMgc3RhdGljIHZvaWQgUG9zdERhdGEoc3RyaW5nIHNpZ25hdHVyZSwgc3RyaW5nIGRhdGUsIHN0cmluZyBqc29uLCBzdHJpbmcgY3VzdG9tZXJJZCwgc3RyaW5nIExvZ05hbWUpDQp7DQogICAgLy8gWW91IGNhbiB1c2UgYW4gb3B0aW9uYWwgZmllbGQgdG8gc3BlY2lmeSB0aGUgdGltZXN0YW1wIGZyb20gdGhlIGRhdGEuIElmIHRoZSB0aW1lIGZpZWxkIGlzIG5vdCBzcGVjaWZpZWQsIExvZyBBbmFseXRpY3MgYXNzdW1lcyB0aGUgdGltZSBpcyB0aGUgbWVzc2FnZSBpbmdlc3Rpb24gdGltZQ0KICAgIHN0cmluZyBUaW1lU3RhbXBGaWVsZCA9ICIiOw0KICAgIHRyeQ0KICAgIHsNCiAgICAgICAgc3RyaW5nIHVybCA9ICJodHRwczovLyIgKyBjdXN0b21lcklkICsgIi5vZHMub3BpbnNpZ2h0cy5henVyZS5jb20vYXBpL2xvZ3M/YXBpLXZlcnNpb249MjAxNi0wNC0wMSI7DQogDQogICAgICAgIFN5c3RlbS5OZXQuSHR0cC5IdHRwQ2xpZW50IGNsaWVudCA9IG5ldyBTeXN0ZW0uTmV0Lkh0dHAuSHR0cENsaWVudCgpOw0KICAgICAgICBjbGllbnQuRGVmYXVsdFJlcXVlc3RIZWFkZXJzLkFkZCgiQWNjZXB0IiwgImFwcGxpY2F0aW9uL2pzb24iKTsNCiAgICAgICAgY2xpZW50LkRlZmF1bHRSZXF1ZXN0SGVhZGVycy5BZGQoIkxvZy1UeXBlIiwgTG9nTmFtZSk7DQogICAgICAgIGNsaWVudC5EZWZhdWx0UmVxdWVzdEhlYWRlcnMuQWRkKCJBdXRob3JpemF0aW9uIiwgc2lnbmF0dXJlKTsNCiAgICAgICAgY2xpZW50LkRlZmF1bHRSZXF1ZXN0SGVhZGVycy5BZGQoIngtbXMtZGF0ZSIsIGRhdGUpOw0KICAgICAgICBjbGllbnQuRGVmYXVsdFJlcXVlc3RIZWFkZXJzLkFkZCgidGltZS1nZW5lcmF0ZWQtZmllbGQiLCBUaW1lU3RhbXBGaWVsZCk7DQogDQogICAgICAgIFN5c3RlbS5OZXQuSHR0cC5IdHRwQ29udGVudCBodHRwQ29udGVudCA9IG5ldyBTdHJpbmdDb250ZW50KGpzb24sIEVuY29kaW5nLlVURjgpOw0KICAgICAgICBodHRwQ29udGVudC5IZWFkZXJzLkNvbnRlbnRUeXBlID0gbmV3IE1lZGlhVHlwZUhlYWRlclZhbHVlKCJhcHBsaWNhdGlvbi9qc29uIik7DQogICAgICAgIFRhc2s8U3lzdGVtLk5ldC5IdHRwLkh0dHBSZXNwb25zZU1lc3NhZ2U+IHJlc3BvbnNlID0gY2xpZW50LlBvc3RBc3luYyhuZXcgVXJpKHVybCksIGh0dHBDb250ZW50KTsNCiANCiAgICAgICAgU3lzdGVtLk5ldC5IdHRwLkh0dHBDb250ZW50IHJlc3BvbnNlQ29udGVudCA9IHJlc3BvbnNlLlJlc3VsdC5Db250ZW50Ow0KICAgICAgICBzdHJpbmcgcmVzdWx0ID0gcmVzcG9uc2VDb250ZW50LlJlYWRBc1N0cmluZ0FzeW5jKCkuUmVzdWx0Ow0KICAgICAgICBDb25zb2xlLldyaXRlTGluZSgiUmV0dXJuIFJlc3VsdDogIiArIHJlc3VsdCk7DQogICAgfQ0KICAgIGNhdGNoIChFeGNlcHRpb24gZXhjZXApDQogICAgew0KICAgICAgICBDb25zb2xlLldyaXRlTGluZSgiQVBJIFBvc3QgRXhjZXB0aW9uOiAiICsgZXhjZXAuTWVzc2FnZSk7DQogICAgfQ0KfQ0KDQovLyBTZW5kIGEgcmVxdWVzdCB0byB0aGUgUE9TVCBBUEkgZW5kcG9pbnQNCnB1YmxpYyBzdGF0aWMgTm9kZUNvdW50IEdldERhdGEoc3RyaW5nIHRva2VuKQ0Kew0KICAgIA0KICAgIE5vZGVDb3VudCBub2RlQ291bnQgPSBudWxsOw0KICAgIHRyeQ0KICAgIHsNCiAgICAgICAgU2VydmljZVBvaW50TWFuYWdlci5TZXJ2ZXJDZXJ0aWZpY2F0ZVZhbGlkYXRpb25DYWxsYmFjayArPSAoc2VuZGVyLCBjZXJ0LCBjaGFpbiwgc3NsUG9saWN5RXJyb3JzKSA9PiB0cnVlOw0KICAgICAgICBzdHJpbmcgdXJsID0gU3RyaW5nLmZvcm1hdCgiaHR0cHM6Ly97MH0vYXBpL3YwL2NmZ21nbXQvc3RhdHMvbm9kZV9jb3VudHMiLCBhdXRvbWF0ZV9mcWRuKTsNCiAgICAgICAgQ29uc29sZS5Xcml0ZUxpbmUoIlBSRVBBUklORyBSRVFVRVNUPT09PT09Iik7DQogICAgICAgIFN5c3RlbS5OZXQuSHR0cC5IdHRwQ2xpZW50IGNsaWVudCA9IG5ldyBTeXN0ZW0uTmV0Lkh0dHAuSHR0cENsaWVudCgpOw0KICAgICAgICBjbGllbnQuRGVmYXVsdFJlcXVlc3RIZWFkZXJzLkFkZCgieC1kYXRhLWNvbGxlY3Rvci10b2tlbiIsIHRva2VuKTsNCg0KICAgICAgICAgVGFzazxIdHRwUmVzcG9uc2VNZXNzYWdlPiByZXNwb25zZSA9IGNsaWVudC5HZXRBc3luYyhuZXcgVXJpKHVybCkpOw0KDQogICAgICAgIGlmIChyZXNwb25zZS5SZXN1bHQuSXNTdWNjZXNzU3RhdHVzQ29kZSkNCiAgICAgICAgICAgIHsNCiAgICAgICAgICAgICAgICBub2RlQ291bnQgPSByZXNwb25zZS5SZXN1bHQuQ29udGVudC5SZWFkQXNBc3luYzxOb2RlQ291bnQ+KCkuUmVzdWx0Ow0KICAgICAgICAgICAgfQ0KDQogICAgICAgIENvbnNvbGUuV3JpdGVMaW5lKCJSZXR1cm4gUmVzdWx0OiAiICsgcmVzcG9uc2UuUmVzdWx0LkNvbnRlbnQpOw0KICAgIH0NCiAgICBjYXRjaCAoRXhjZXB0aW9uIGV4Y2VwKQ0KICAgIHsNCiAgICAgICAgQ29uc29sZS5Xcml0ZUxpbmUoIkFQSSBQb3N0IEV4Y2VwdGlvbjogIiArIGV4Y2VwLk1lc3NhZ2UpOw0KICAgIH0gDQogICAgcmV0dXJuIG5vZGVDb3VudDsNCn0NCg0KcHVibGljIHN0YXRpYyBzdHJpbmcgR2V0U3RyaW5nRGF0YShUcmFjZVdyaXRlciBsb2csIHN0cmluZyB0b2tlbikNCnsNCiAgICANCiAgICBzdHJpbmcgbm9kZUNvdW50ID0gInVuY2hhbmdlZCI7DQogICAgdHJ5DQogICAgew0KICAgICAgICBTZXJ2aWNlUG9pbnRNYW5hZ2VyLlNlcnZlckNlcnRpZmljYXRlVmFsaWRhdGlvbkNhbGxiYWNrICs9IChzZW5kZXIsIGNlcnQsIGNoYWluLCBzc2xQb2xpY3lFcnJvcnMpID0+IHRydWU7DQogICAgICAgIHN0cmluZyB1cmwgPSBTdHJpbmcuZm9ybWF0KCJodHRwczovL3swfS9hcGkvdjAvY2ZnbWdtdC9zdGF0cy9ub2RlX2NvdW50cyIsIGF1dG9tYXRlX2ZxZG4pOw0KICAgICAgICBsb2cuSW5mbygiUFJFUEFSSU5HIFJFUVVFU1Q9PT09PT0iKTsNCiAgICAgICAgU3lzdGVtLk5ldC5IdHRwLkh0dHBDbGllbnQgY2xpZW50ID0gbmV3IFN5c3RlbS5OZXQuSHR0cC5IdHRwQ2xpZW50KCk7DQogICAgICAgIGNsaWVudC5EZWZhdWx0UmVxdWVzdEhlYWRlcnMuQWRkKCJ4LWRhdGEtY29sbGVjdG9yLXRva2VuIiwgdG9rZW4pOw0KDQogICAgICAgIFRhc2s8SHR0cFJlc3BvbnNlTWVzc2FnZT4gcmVzcG9uc2UgPSBjbGllbnQuR2V0QXN5bmMobmV3IFVyaSh1cmwpKTsNCg0KICAgICAgICBpZiAocmVzcG9uc2UuUmVzdWx0LklzU3VjY2Vzc1N0YXR1c0NvZGUpDQogICAgICAgICAgICB7DQogICAgICAgICAgICAgICAgbm9kZUNvdW50ID0gcmVzcG9uc2UuUmVzdWx0LkNvbnRlbnQuUmVhZEFzU3RyaW5nQXN5bmMoKS5SZXN1bHQ7DQogICAgICAgICAgICB9DQoNCiAgICAgICAgbG9nLkluZm8oIlJldHVybiBSZXN1bHQ6ICIgKyByZXNwb25zZS5SZXN1bHQuQ29udGVudCk7DQogICAgfQ0KICAgIGNhdGNoIChFeGNlcHRpb24gZXhjZXApDQogICAgew0KICAgICAgICBsb2cuSW5mbygiQVBJIEdldCBFeGNlcHRpb246ICIgKyBleGNlcC5NZXNzYWdlKTsNCiAgICAgICAgbm9kZUNvdW50ID0gImZhaWxlZCI7DQogICAgfSANCiAgICByZXR1cm4gbm9kZUNvdW50Ow0KfQ0KDQpwdWJsaWMgY2xhc3MgQ29uZmlnS1YgOiBUYWJsZUVudGl0eSB7DQogICAgcHVibGljIHN0cmluZyBWYWx1ZSB7IGdldDsgc2V0OyB9DQp9",
+            "constants_csx": "c3RhdGljIHN0cmluZyBQYXJ0aXRpb25LZXkgPSAiQ2hlZkFNQSI7DQpzdGF0aWMgc3RyaW5nIEF1dG9tYXRlVG9rZW5LZXlOYW1lID0gImF1dG9tYXRlX3Rva2VuIjs="
+        },
+        "logAnalytics": {
+            "workspace_id": "[parameters('logAnalyticsWorkspaceId')]",
+            "shared_key": "[parameters('logAnalyticsSharedKey')]"
+        },
+        "automate": {
+            "fqdn": "[variables('automate').fqdn]"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/sites/functions",
+            "name": "[concat(variables('name').site, '/', variables('name').function)]",
+            "apiVersion": "[variables('apiVersions').functions]",
+            "properties": {
+                "config": {
+                    "bindings": [
+                        {
+                            "name": "myTimer",
+                            "type": "timerTrigger",
+                            "direction": "in",
+                            "schedule": "0 */5 * * * *"
+                        },
+                        {
+                            "type": "table",
+                            "name": "settingTable",
+                            "tableName": "settings",
+                            "take": 50,
+                            "connection": "AzureWebJobsDashboard",
+                            "direction": "in"
+                        }
+                    ],
+                    "disabled": false
+                },
+                "files": {
+                    "run.csx": "[base64ToString(variables('code').run_csx)]",
+                    "constants.csx": "[base64ToString(variables('code').constants_csx)]",
+                    "workspace.csx": "[concat('static string customerId = \"', variables('logAnalytics').workspace_id, '\";\nstatic string shareKey = \"', variables('logAnalytics').shared_key, '\";\nstatic string automate_fqdn = \"', variables('automate').fqdn, '\";')]"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "apiKey": {
+            "type": "string",
+            "value": "[listsecrets(resourceId('Microsoft.Web/sites/functions', variables('name').site, variables('name').function), '2016-08-01').key]"
+        }
+    }
+}

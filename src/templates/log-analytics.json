@@ -52,6 +52,10 @@
         }
     ],
     "outputs": {
+        "workspaceId": {
+            "type": "string",
+            "value": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', variables('name').workspace), variables('apiVersions').workspace).customerId]"
+        },
         "key": {
             "type": "string",
             "value": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', variables('name').workspace), variables('apiVersions').workspace).primarySharedKey]"

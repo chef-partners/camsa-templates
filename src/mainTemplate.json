@@ -152,7 +152,9 @@
                 "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-ScriptExtension')]"
             },
             "functions": {
-                "configstore": "[concat(parameters('prefix'), '-ConfigStore-AF')]"
+                "configstore": "[concat(parameters('prefix'), '-ConfigStore-AF')]",
+                "automatelog": "[concat(parameters('prefix'), '-AutomateLog-AF')]",
+                "nodecount": "[concat(parameters('prefix'), '-NodeCount-AF')]"
             }
         },
 
@@ -189,7 +191,9 @@
                 "automateserver": "[concat(variables('baseUrl'), '/src/scripts/automate-server.sh')]"
             },
             "functions": {
-                "configStore": "[concat(variables('baseUrl'), '/src/templates/functions/config-store.json')]"
+                "configStore": "[concat(variables('baseUrl'), '/src/templates/functions/config-store.json')]",
+                "automateLog": "[concat(variables('baseUrl'), '/src/templates/functions/automate-log.json')]",
+                "nodeCount": "[concat(variables('baseUrl'), '/src/templates/functions/node-count.json')]"
             }
         },
 
@@ -329,6 +333,65 @@
                 }
             }
         },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').functions.automatelog, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').appService, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').functions.automateLog]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[variables('name').appService]"
+                    },
+                    "logAnalyticsWorkspaceId": {
+                        "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.workspaceId.value]"
+                    },
+                    "logAnalyticSharedKey": {
+                        "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.key.value]"
+                    }
+                }
+            }
+        },        
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').functions.nodecount, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').appService, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').functions.nodeCount]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[variables('name').appService]"
+                    },
+                    "logAnalyticsWorkspaceId": {
+                        "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.workspaceId.value]"
+                    },
+                    "logAnalyticSharedKey": {
+                        "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.key.value]"
+                    },
+                    "automateFqdn": {
+                        "value": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value]"
+                    }
+                }
+            }
+        },  
 
         {
             "type": "Microsoft.Resources/deployments",

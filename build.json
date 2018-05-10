@@ -28,6 +28,27 @@
                     "constants": "src/function_files/config_store/constants.csx"
                 },
             "config": "src/function_files/config_store/function.json"
-        }
+        },
+        {
+            "template_file": "templates/functions/automate-log.json",
+            "code_files":
+                {
+                    "AutomateLog_cs": "src/function_files/automate_log/AutomateLog.cs",
+                    "AutomateLog_csx": "src/function_files/automate_log/AutomateLog.csx",
+                    "AutomateLogParser_cs": "src/function_files/automate_log/AutomateLogParser.cs",
+                    "AutomateMessage_cs": "src/function_files/automate_log/AutomateMessage.cs",
+                    "LogAnalyticsWriter_cs": "src/function_files/automate_log/LogAnalyticsWriter.cs"
+                },
+            "config": "src/function_files/automate_log/function.json"
+        },
+        {
+            "template_file": "templates/functions/node-count.json",
+            "code_files":
+                {
+                    "run_csx": "src/function_files/node_count/run.csx",
+                    "constants_csx": "src/function_files/node_count/constants.csx"
+                },
+            "config": "src/function_files/node_count/function.json"
+        }        
     ]
 }
