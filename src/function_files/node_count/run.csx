@@ -40,20 +40,26 @@ public static void Run(TimerInfo myTimer, CloudTable settingTable, TraceWriter l
     log.Info("Server Type is " + ServerType + " and address is " + Address);
 
     // Get the automate token from the config store table
+    // and the automate FQDN
     TableOperation operation = TableOperation.Retrieve<ConfigKV>(PartitionKey, AutomateTokenKeyName);
-    TableResult result = settingTable.Execute(operation);
+    TableResult token_result = settingTable.Execute(operation);
+
+    TableOperation operation = TableOperation.Retrieve<ConfigKV>(PartitionKey, AutomateFQDNKeyName);
+    TableResult fqdn_result = settingTable.Execute(operation);
 
     // if there is a result get the key value, otherwise log error
-    if (result.Result != null) {
+    if (token_result.Result != null && fqdn_result.Result != ) {
 
         // get the token value
-        ConfigKV setting = (ConfigKV)result.Result;
-        string automate_token = setting.Value;
+        ConfigKV token_setting = (ConfigKV)token_result.Result;
+        ConfigKV fqdn_setting = (ConfigKV)fqdn_result.Result;
+        string automate_token = token_setting.Value;
+        string automate_fqdn = fqdn_setting.Value;
 
         // Creates the JSON object, with key/value pairs
-        log.Info(GetStringData(log, automate_token));
+        log.Info(GetStringData(log, automate_fqdn, automate_token));
         NodeCount jsonObj = new NodeCount();
-        jsonObj = GetData(automate_token);
+        jsonObj = GetData(automate_fqdn, automate_token);
         jsonObj.ServerType = ServerType;
         jsonObj.ServerAddress = Address;
         // Convert object to json
@@ -117,7 +123,7 @@ public static void PostData(string signature, string date, string json, string c
 }
 
 // Send a request to the POST API endpoint
-public static NodeCount GetData(string token)
+public static NodeCount GetData(string automate_fqdn, string token)
 {
     
     NodeCount nodeCount = null;
@@ -145,7 +151,7 @@ public static NodeCount GetData(string token)
     return nodeCount;
 }
 
-public static string GetStringData(TraceWriter log, string token)
+public static string GetStringData(TraceWriter log, string automate_fqdn, string token)
 {
     
     string nodeCount = "unchanged";

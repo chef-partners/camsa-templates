@@ -14,6 +14,7 @@ MODE=""
 
 # Version of Automate to download
 AUTOMATE_SERVER_VERSION=""
+AUTOMATE_SERVER_FQDN=""
 
 # The download URL for Automate
 AUTOMATE_DOWNLOAD_URL="https://packages.chef.io/files/current/automate/latest/chef-automate_linux_amd64.zip"
@@ -161,6 +162,10 @@ do
     -k|--functionapikey)
       FUNCTION_APIKEY="$2"
     ;;
+
+    -F|--automatefqdn)
+      AUTOMATE_SERVER_FQDN="$2"
+    ;;    
   esac
 
   # move onto the next argument
@@ -274,6 +279,9 @@ do
       # build up the command to curl information into the function
       cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_token\": \"%s\"}'" $FUNCTION_BASE_URL $FUNCTION_NAME $FUNCTION_APIKEY $automate_api_token)
       executeCmd $cmd
+
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_fqdn\": \"%s\"}'" $FUNCTION_BASE_URL $FUNCTION_NAME $FUNCTION_APIKEY $AUTOMATE_SERVER_FQDN)
+      executeCmd $cmd      
       
     ;;
 

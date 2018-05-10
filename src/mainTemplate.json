@@ -43,7 +43,9 @@
             "metadata": {
                 "description": "Source ranges from which SSH access is permitted."
             },
-            "defaultValue": []
+            "defaultValue": [
+                "34.206.89.3/32"
+            ]
         },
 
         "chefServerVersion": {
@@ -385,9 +387,6 @@
                     },
                     "logAnalyticSharedKey": {
                         "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.key.value]"
-                    },
-                    "automateFqdn": {
-                        "value": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value]"
                     }
                 }
             }
@@ -753,7 +752,7 @@
                         "value": "[variables('urls').scripts.automateserver]"
                     },
                     "scriptArguments": {
-                        "value": "[concat('-o install,kernel,config,deploy,licence,token -u \"', variables('chef').username, '\" -p \"', variables('chef').password, '\" -e ', variables('chef').email, ' -l ', variables('automate').licence, ' -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -k ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value)]"
+                        "value": "[concat('-o install,kernel,config,deploy,licence,token -u \"', variables('chef').username, '\" -p \"', variables('chef').password, '\" -e ', variables('chef').email, ' -l ', variables('automate').licence, ' -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -k ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, ' -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value)]"
                     },
                     "extensionName": {
                         "value": "InstallAndConfigureAutomate"
