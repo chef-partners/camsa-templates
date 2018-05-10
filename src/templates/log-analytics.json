@@ -31,7 +31,7 @@
         },
 
         "apiVersions": {
-            "workspace": "2015-11-01-preview"
+            "workspace": "2015-03-20"
         },
 
         "tags": "[parameters('tags')]"
