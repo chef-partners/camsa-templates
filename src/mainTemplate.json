@@ -109,13 +109,21 @@
         "baseUrl": {
             "type": "string",
             "defaultValue": "https://raw.githubusercontent.com/chef-partners/azure-managed-automate/master"
+        },
+
+        "azureStorageSASToken": {
+            "type": "string",
+            "metadata": {
+                "description": "SAS token that has been generated if the templates are to be read from azure table storage"
+            },
+            "defaultValue": ""            
         }
     },
     "variables": {
         "unique": "[uniqueString(subscription().subscriptionId, resourceGroup().id, deployment().name, parameters('prefix'))]",
         "uniqueShort": "[if(empty(parameters('uniqueShort')), substring(variables('unique'), 0, 4), parameters('uniqueShort'))]",
 
-        "baseUrl": "[parameters('baseUrl')]",
+        "baseUrl": "[if(contains(deployment().properties, 'templateLink'), uri(deployment().properties.templateLink.uri, '.'), if(endsWith(parameters('baseUrl'), '/'), parameters('baseUrl'), concat(parameters('baseUrl'), '/')))]",
 
         "location": "[resourceGroup().location]",
 
@@ -177,25 +185,27 @@
             "ssh": "[parameters('sshSourceAddresses')]"
         },
 
+        "templateUrlQueryString": "[if(empty(parameters('azureStorageSASToken')), '', concat('?', parameters('azureStorageSASToken')))]",
+
         "urls": {
-            "storageAccount": "[concat(variables('baseUrl'), '/src/templates/storage-account.json')]",
-            "virtualNetwork": "[concat(variables('baseUrl'), '/src/templates/virtual-network.json')]",
-            "publicIPAddress": "[concat(variables('baseUrl'), '/src/templates/public-ipaddress.json')]",
-            "networkInterfacePublic": "[concat(variables('baseUrl'), '/src/templates/network-interface-public.json')]",
-            "networkSecurityGroup": "[concat(variables('baseUrl'), '/src/templates/network-security-group.json')]",
-            "virtualMachine": "[concat(variables('baseUrl'), '/src/templates/virtual-machine.json')]",
-            "scriptExtension": "[concat(variables('baseUrl'), '/src/templates/script-extension.json')]",
-            "appServicePlan": "[concat(variables('baseUrl'), '/src/templates/app-service-plan.json')]",
-            "appService": "[concat(variables('baseUrl'), '/src/templates/app-service.json')]",
-            "logAnalytics": "[concat(variables('baseUrl'), '/src/templates/log-analytics.json')]",
+            "storageAccount": "[concat(variables('baseUrl'), 'templates/storage-account.json', variables('templateUrlQueryString'))]",
+            "virtualNetwork": "[concat(variables('baseUrl'), 'templates/virtual-network.json', variables('templateUrlQueryString'))]",
+            "publicIPAddress": "[concat(variables('baseUrl'), 'templates/public-ipaddress.json', variables('templateUrlQueryString'))]",
+            "networkInterfacePublic": "[concat(variables('baseUrl'), 'templates/network-interface-public.json', variables('templateUrlQueryString'))]",
+            "networkSecurityGroup": "[concat(variables('baseUrl'), 'templates/network-security-group.json', variables('templateUrlQueryString'))]",
+            "virtualMachine": "[concat(variables('baseUrl'), 'templates/virtual-machine.json', variables('templateUrlQueryString'))]",
+            "scriptExtension": "[concat(variables('baseUrl'), 'templates/script-extension.json', variables('templateUrlQueryString'))]",
+            "appServicePlan": "[concat(variables('baseUrl'), 'templates/app-service-plan.json', variables('templateUrlQueryString'))]",
+            "appService": "[concat(variables('baseUrl'), 'templates/app-service.json', variables('templateUrlQueryString'))]",
+            "logAnalytics": "[concat(variables('baseUrl'), 'templates/log-analytics.json', variables('templateUrlQueryString'))]",
             "scripts": {
-                "chefserver": "[concat(variables('baseUrl'), '/src/scripts/chef-server.sh')]",
-                "automateserver": "[concat(variables('baseUrl'), '/src/scripts/automate-server.sh')]"
+                "chefserver": "[concat(variables('baseUrl'), 'scripts/chef-server.sh', variables('templateUrlQueryString'))]",
+                "automateserver": "[concat(variables('baseUrl'), 'scripts/automate-server.sh', variables('templateUrlQueryString'))]"
             },
             "functions": {
-                "configStore": "[concat(variables('baseUrl'), '/src/templates/functions/config-store.json')]",
-                "automateLog": "[concat(variables('baseUrl'), '/src/templates/functions/automate-log.json')]",
-                "nodeCount": "[concat(variables('baseUrl'), '/src/templates/functions/node-count.json')]"
+                "configStore": "[concat(variables('baseUrl'), 'templates/functions/config-store.json', variables('templateUrlQueryString'))]",
+                "automateLog": "[concat(variables('baseUrl'), 'templates/functions/automate-log.json', variables('templateUrlQueryString'))]",
+                "nodeCount": "[concat(variables('baseUrl'), 'templates/functions/node-count.json', variables('templateUrlQueryString'))]"
             }
         },
 
