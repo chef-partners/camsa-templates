@@ -1,6 +1,8 @@
 #r "Newtonsoft.Json"
+#r "Microsoft.WindowsAzure.Storage"
 #load "workspace.csx"
 #load "constants.csx"
+
 using System;
 using System.Net;
 using System.Net.Http;

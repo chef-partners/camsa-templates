@@ -19,6 +19,13 @@
             }
         },
 
+        "scriptName": {
+            "type": "string",
+            "metadata": {
+                "description": "Filename of the script to execute"
+            }
+        },
+
         "scriptArguments": {
             "type": "string",
             "metadata": {
@@ -46,7 +53,7 @@
         },
 
         "arguments": "[parameters('scriptArguments')]",
-        "command": "[concat('./', last(split(parameters('scriptUrl'), '/')), ' ', variables('arguments'))]",
+        "command": "[concat('./', parameters('scriptName'), ' ', variables('arguments'))]",
 
         "urls": {
             "script": "[parameters('scriptUrl')]"

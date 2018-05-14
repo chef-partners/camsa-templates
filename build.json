@@ -8,6 +8,10 @@
             "target": "templates"
         },
         {
+            "source": "src/scripts",
+            "target": "scripts"
+        },
+        {
             "source": "src/mainTemplate.json",
             "target": ""
         },
@@ -34,7 +38,7 @@
             "code_files":
                 {
                     "AutomateLog_cs": "src/function_files/automate_log/AutomateLog.cs",
-                    "AutomateLog_csx": "src/function_files/automate_log/AutomateLog.csx",
+                    "run_csx": "src/function_files/automate_log/AutomateLog.csx",
                     "AutomateLogParser_cs": "src/function_files/automate_log/AutomateLogParser.cs",
                     "AutomateMessage_cs": "src/function_files/automate_log/AutomateMessage.cs",
                     "LogAnalyticsWriter_cs": "src/function_files/automate_log/LogAnalyticsWriter.cs"

@@ -185,7 +185,8 @@
             "ssh": "[parameters('sshSourceAddresses')]"
         },
 
-        "templateUrlQueryString": "[if(empty(parameters('azureStorageSASToken')), '', concat('?', parameters('azureStorageSASToken')))]",
+        "sasTokenFromDeployment": "[if(equals(length(split(deployment().properties.templateLink.uri, '?')), 2), last(split(deployment().properties.templateLink.uri, '?')), '')]",
+        "templateUrlQueryString": "[if(empty(parameters('azureStorageSASToken')), if(empty(variables('sasTokenFromDeployment')), '', concat('?', variables('sasTokenFromDeployment'))), concat('?', parameters('azureStorageSASToken')))]",
 
         "urls": {
             "storageAccount": "[concat(variables('baseUrl'), 'templates/storage-account.json', variables('templateUrlQueryString'))]",
@@ -367,7 +368,7 @@
                     "logAnalyticsWorkspaceId": {
                         "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.workspaceId.value]"
                     },
-                    "logAnalyticSharedKey": {
+                    "logAnalyticsSharedKey": {
                         "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.key.value]"
                     }
                 }
@@ -395,7 +396,7 @@
                     "logAnalyticsWorkspaceId": {
                         "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.workspaceId.value]"
                     },
-                    "logAnalyticSharedKey": {
+                    "logAnalyticsSharedKey": {
                         "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.key.value]"
                     }
                 }
@@ -761,6 +762,9 @@
                     "scriptUrl": {
                         "value": "[variables('urls').scripts.automateserver]"
                     },
+                    "scriptName": {
+                        "value": "automate-server.sh"
+                    },                    
                     "scriptArguments": {
                         "value": "[concat('-o install,kernel,config,deploy,licence,token -u \"', variables('chef').username, '\" -p \"', variables('chef').password, '\" -e ', variables('chef').email, ' -l ', variables('automate').licence, ' -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -k ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, ' -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value)]"
                     },
@@ -802,6 +806,9 @@
                     },
                     "scriptUrl": {
                         "value": "[variables('urls').scripts.chefserver]"
+                    },
+                    "scriptName": {
+                        "value": "chef-server.sh"
                     },
                     "scriptArguments": {
                         "value": "[concat('-o install,config,storekeys,integrate,reconfigure -v ', variables('chef').version, ' -u ', variables('chef').username, ' -f \"', variables('chef').fullname, '\" -p \"', variables('chef').password, '\" -a ', variables('chef').email, ' -O ', variables('chef').org, ' -d \"', variables('chef').orgDescription, '\" -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -k ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, ' -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value)]"
