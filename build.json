@@ -18,6 +18,10 @@
         {
             "source": "src/createUiDefinition.json",
             "target": ""
+        },
+        {
+            "source": "src/viewDefinition.json",
+            "target": ""
         }
     ],
     "package": {
