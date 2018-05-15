@@ -1,42 +1,36 @@
-#r "Newtonsoft.Json"
-#load "AutomateLog.cs"
-#load "AutomateMessage.cs"
-#load "AutomateLogParser.cs"
-#load "LogAnalyticsWriter.cs"
-#load "workspace.csx"
 using System.Net;
-using Newtonsoft.Json;
-public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, TraceWriter log)
-{
-    log.Info("C# HTTP trigger function processed a request.");
 
-	// Get request body
-	var body = await req.Content.ReadAsStringAsync();
-    string[] logs = body.Split('}');
-
-    LogAnalyticsWriter law = new LogAnalyticsWriter(customerId, sharedKey, log);
-    AutomateLog data = new AutomateLog();
-    foreach(string item in logs){
-        string appendedItem = item;
-        if(!appendedItem.EndsWith("}")){
-            appendedItem = appendedItem + '}';
-        }
-        log.Info(item);
-        if(item != string.Empty){
-	        data = JsonConvert.DeserializeObject<AutomateLog>(appendedItem as string);
-            AutomateMessage automateMessage = AutomateLogParser.ParseGenericLogMessage(data.MESSAGE_s);
-            log.Info(automateMessage.sourcePackage);
-            if(automateMessage.sourcePackage != "Unknown Entry"){
-                string logName = automateMessage.sourcePackage + "log";
-                law.Submit(automateMessage, logName);
-            }
+public class AutomateLog {
+	public string __CURSOR { get; set; }
+	public string __REALTIME_TIMESTAMP { get; set; }
+	public string __MONOTONIC_TIMESTAMP { get; set; }
+	public string _BOOT_ID { get; set; }
+	public string _TRANSPORT { get; set; }
+	public string PRIORITY { get; set; }
+	public string SYSLOG_FACILITY { get; set; }
+	public string SYSLOG_IDENTIFIER { get; set; }
+	public string _PID { get; set; }
+	public string _UID { get; set; }
+	public string _GID { get; set; }
+	public string _COMM { get; set; }
+	public string _EXE { get; set; }
+	public string _CMDLINE { get; set; }
+	public string _CAP_EFFECTIVE { get; set; }
+	public string _SYSTEMD_CGROUP { get; set; }
+	public string _SYSTEMD_UNIT { get; set; }
+	public string _SYSTEMD_SLICE { get; set; }
+	public string _SYSTEMD_INVOCATION_ID { get; set; }
+	public string _MACHINE_ID { get; set; }
+	public string _HOSTNAME { get; set; }
+    private string _MESSAGE_s;
+    public string MESSAGE_s { get{
+        return _MESSAGE_s; 
         }
     }
-	log.Info(data._HOSTNAME);
-
-
-    return data.MESSAGE_s == null
-        ? req.CreateResponse(HttpStatusCode.BadRequest, "Please pass a name on the query string or in the request body")
-        : req.CreateResponse(HttpStatusCode.OK, "Hello " + data.MESSAGE_s);
+    private byte[] _MESSAGE_b;
+	public byte[] MESSAGE { set{
+        _MESSAGE_b = value;
+        _MESSAGE_s = System.Text.Encoding.UTF8.GetString(value);
+        }
+    }  
 }
-

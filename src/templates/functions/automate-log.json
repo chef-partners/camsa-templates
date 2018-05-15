@@ -37,11 +37,11 @@
             "functions": "2016-08-01"
         },
         "code": {
-            "AutomateLog_cs": "",
+            "AutomateLog_csx": "",
             "run_csx": "",
-            "AutomateLogParser_cs": "",
-            "AutomateMessage_cs": "",
-            "LogAnalyticsWriter_cs": ""
+            "AutomateLogParser_csx": "",
+            "AutomateMessage_csx": "",
+            "LogAnalyticsWriter_csx": ""
         },
         "logAnalytics": {
             "workspace_id": "[parameters('logAnalyticsWorkspaceId')]",
@@ -75,10 +75,10 @@
                     "disabled": false
                 },
                 "files": {
-                    "AutomateLog.cs": "[base64ToString(variables('code').AutomateLog_cs)]",
-                    "AutomateLogParser.cs": "[base64ToString(variables('code').AutomateLogParser_cs)]",
-                    "AutomateMessage.cs": "[base64ToString(variables('code').AutomateMessage_cs)]",
-                    "LogAnalyticsWriter.cs": "[base64ToString(variables('code').LogAnalyticsWriter_cs)]",
+                    "AutomateLog.csx": "[base64ToString(variables('code').AutomateLog_csx)]",
+                    "AutomateLogParser.csx": "[base64ToString(variables('code').AutomateLogParser_csx)]",
+                    "AutomateMessage.csx": "[base64ToString(variables('code').AutomateMessage_csx)]",
+                    "LogAnalyticsWriter.csx": "[base64ToString(variables('code').LogAnalyticsWriter_csx)]",
                     "workspace.csx": "[concat('static string customerId = \"', variables('logAnalytics').workspace_id, '\";\nstatic string sharedKey = \"', variables('logAnalytics').shared_key, '\";')]",
                     "run.csx": "[base64ToString(variables('code').run_csx)]"
                 }
@@ -86,6 +86,10 @@
         }
     ],
     "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[parameters('functionName')]"
+        },
         "apiKey": {
             "type": "string",
             "value": "[listsecrets(resourceId('Microsoft.Web/sites/functions', variables('name').site, variables('name').function), '2016-08-01').key]"

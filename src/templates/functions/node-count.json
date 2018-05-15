@@ -79,6 +79,10 @@
         }
     ],
     "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[parameters('functionName')]"
+        },        
         "apiKey": {
             "type": "string",
             "value": "[listsecrets(resourceId('Microsoft.Web/sites/functions', variables('name').site, variables('name').function), '2016-08-01').key]"

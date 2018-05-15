@@ -28,9 +28,16 @@ USERNAME=""
 PASSWORD=""
 EMAILADDRESS=""
 
+# Define the variables that hold information about the Azure functions
 FUNCTION_BASE_URL=""
-FUNCTION_APIKEY=""
-FUNCTION_NAME="chefAMAConfigStore"
+CONFIGSTORE_FUNCTION_APIKEY=""
+CONFIGSTORE_FUNCTION_NAME="chefAMAConfigStore"
+
+AUTOMATELOG_FUNCTION_APIKEY=""
+AUTOMATELOG_FUNCTION_NAME="AutomateLog"
+
+# Define where the script called by the cronjob should be saved
+SCRIPT_LOCATION="/usr/local/bin/azurefunctionlog.sh"
 
 #
 # Do not modify variables below here
@@ -155,17 +162,30 @@ do
       FUNCTION_BASE_URL="$2"
     ;;
 
-    -n|--functioname)
-      FUNCTION_NAME="$2"
+    -n|--configstorefunctioname)
+      CONFIGSTORE_FUNCTION_NAME="$2"
     ;;
 
-    -k|--functionapikey)
-      FUNCTION_APIKEY="$2"
+    -k|--configstorefunctionapikey)
+      CONFIGSTORE_FUNCTION_APIKEY="$2"
+    ;;
+
+    -N|--automatelogfunctionname)
+      AUTOMATELOG_FUNCTION_NAME="$2"
+    ;;
+
+    -K|--automatelogfunctionkey)
+      AUTOMATELOG_FUNCTION_APIKEY="$2"
     ;;
 
     -F|--automatefqdn)
       AUTOMATE_SERVER_FQDN="$2"
-    ;;    
+    ;;
+
+    # Specify the location of the script, this must be a full path
+    --scriptlocation)
+      SCRIPT_LOCATION="$2"
+    ;;
   esac
 
   # move onto the next argument
@@ -277,12 +297,38 @@ do
       automate_api_token=$(executeCmd "$cmd")
 
       # build up the command to curl information into the function
-      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_token\": \"%s\"}'" $FUNCTION_BASE_URL $FUNCTION_NAME $FUNCTION_APIKEY $automate_api_token)
-      executeCmd $cmd
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_token\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $automate_api_token)
+      executeCmd "$cmd"
 
-      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_fqdn\": \"%s\"}'" $FUNCTION_BASE_URL $FUNCTION_NAME $FUNCTION_APIKEY $AUTOMATE_SERVER_FQDN)
-      executeCmd $cmd      
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_fqdn\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $AUTOMATE_SERVER_FQDN)
+      executeCmd "$cmd"      
       
+    ;;
+
+    # Setup the cronjob to send data to Log Analytics
+    cron)
+
+      echo -e "Configuring CronJob for Log Analytics data"
+
+      echo -e "\tCreating script: $SCRIPT_LOCATION"
+      # Create the script that will be called by the cronjob
+      cat << EOF > $SCRIPT_LOCATION
+#!/usr/bin/env bash
+
+journalctl -fu chef-automate --since "5 minutes ago" --until "now" -o json > /var/log/jsondump.json
+curl -H "Content-Type: application/json" -X POST -d @/var/log/jsondump.json ${FUNCTION_BASE_URL}/${AUTOMATELOG_FUNCTION_NAME}?code=${AUTOMATELOG_FUNCTION_APIKEY}      
+EOF
+
+      # Ensure that the script is executable
+      cmd=$(printf "chmod +x %s" $SCRIPT_LOCATION)
+      executeCmd "$cmd"
+
+      echo -e "\tAdding cron entry"
+
+      # Add the script to cron
+      cmd=$(printf '(crontab -l; echo "*/5 * * * * %s") | crontab -' $SCRIPT_LOCATION)
+      executeCmd "$cmd"
+
     ;;
 
   esac

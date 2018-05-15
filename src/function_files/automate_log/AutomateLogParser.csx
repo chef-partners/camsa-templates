@@ -1,5 +1,5 @@
 #r "Newtonsoft.Json"
-#load "AutomateMessage.cs"
+#load "AutomateMessage.csx"
 using System.Net;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;

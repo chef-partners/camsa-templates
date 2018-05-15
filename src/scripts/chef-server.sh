@@ -22,8 +22,8 @@ CHEF_ORG_DESCRIPTION=""
 AUTOMATE_SERVER_FQDN=""
 
 FUNCTION_BASE_URL=""
-FUNCTION_APIKEY=""
-FUNCTION_NAME="chefAMAConfigStore"
+CONFIGSTORE_FUNCTION_APIKEY=""
+CONFIGSTORE_FUNCTION_NAME="chefAMAConfigStore"
 
 #
 # Do not modify variables below here
@@ -143,11 +143,11 @@ do
     ;;
 
     -n|--functioname)
-      FUNCTION_NAME="$2"
+      CONFIGSTORE_FUNCTION_NAME="$2"
     ;;
 
     -k|--functionapikey)
-      FUNCTION_APIKEY="$2"
+      CONFIGSTORE_FUNCTION_APIKEY="$2"
     ;;
 
     -F|--automatefqdn)
@@ -173,7 +173,7 @@ then
 fi
 
 # Determine the full URL for the Azure function
-AF_URL=$(printf '%s/%s?code=%s' $FUNCTION_BASE_URL $FUNCTION_NAME $FUNCTION_APIKEY)
+AF_URL=$(printf '%s/%s?code=%s' $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY)
 
 # Determine the necessary operations
 for operation in $MODE

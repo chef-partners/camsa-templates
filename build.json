@@ -37,11 +37,11 @@
             "template_file": "templates/functions/automate-log.json",
             "code_files":
                 {
-                    "AutomateLog_cs": "src/function_files/automate_log/AutomateLog.cs",
-                    "run_csx": "src/function_files/automate_log/AutomateLog.csx",
-                    "AutomateLogParser_cs": "src/function_files/automate_log/AutomateLogParser.cs",
-                    "AutomateMessage_cs": "src/function_files/automate_log/AutomateMessage.cs",
-                    "LogAnalyticsWriter_cs": "src/function_files/automate_log/LogAnalyticsWriter.cs"
+                    "AutomateLog_csx": "src/function_files/automate_log/AutomateLog.csx",
+                    "run_csx": "src/function_files/automate_log/run.csx",
+                    "AutomateLogParser_csx": "src/function_files/automate_log/AutomateLogParser.csx",
+                    "AutomateMessage_csx": "src/function_files/automate_log/AutomateMessage.csx",
+                    "LogAnalyticsWriter_csx": "src/function_files/automate_log/LogAnalyticsWriter.csx"
                 },
             "config": "src/function_files/automate_log/function.json"
         },
