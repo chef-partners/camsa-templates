@@ -117,6 +117,16 @@
                 "description": "SAS token that has been generated if the templates are to be read from azure table storage"
             },
             "defaultValue": ""            
+        },
+
+        "sshPublicKeys": {
+            "type": "array",
+            "metadata": {
+                "description": "SSH public keys that should be applied to the user on the machines"
+            },
+            "defaultValue": [
+                "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDP2kmdeomWaf4jzSEx2TmW43tTkWYJafn5jj6qN9cMkgY5tFhLu2vmTlzeLL7m9A7rmR6Dn8kYFmpvnHy/nT3dZfmkIJbVBr4aQjPdhYC95+8VTR1gPQjQRrm/VbQoaTle4dHRPPMjM0/w9hXD+yelLQl6Npk6rE+N/+4ykDdKBFY+LYFsz68tjOjaEIkGJHZ2A8tDJNKA9BOXVB9hwWKBA4slzaoti5/EgTP0ToFlTn2+WtPWkkcSWZFjPJpenHfLHKZY38PrYrK1yoQlELAihv+6+Gkg4m0QwhbpQz6thG6PVdBMF6dXKCO8HoMusSMSoN/Q21aQHQh9pJ2q9fUF automate-azure"
+            ]
         }
     },
     "variables": {
@@ -175,7 +185,16 @@
 
         "admin": {
             "username": "azureama",
-            "sshPublicKey": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDU56RXZd2AbthjPXKc6dWs9kBxBeUQjQsiJHu5rHaAqKBWvS3XtgYDnWg8p0U2wvkQGGHpowPaP0AGhyRgE2xvsglaT0OnV1vF7zt/24zhoYkfbWtRuEsQCI9ZKs/q2Fg8Wf6q//eRaAi7iH4/MPMuYr+pBVVZp+bcYhne8CJOi4w0VIcSIk462WyqOEKZJk+f7gdkqxk+2yzo3Rqh25+C5j4NuXPmw8H4ccjPeL2E5snfLSZHIe/iCwXnVEdmpsqvaMuVs/LuQ/mJ0Rv8rjwtd8HKPlZJN/M4bt4U8CB8a0dsn+skZXsu7CUHEVwrol/jNzF1hTOA6Fy1jJFvy2yP"
+            "copy": [
+                {
+                    "name": "sshPublicKeys",
+                    "count": "[length(parameters('sshPublicKeys'))]",
+                    "input": {
+                        "path": "[concat('/home/', variables('admin').username, '/.ssh/authorized_keys')]",
+                        "keyData": "[parameters('sshPublicKeys')[copyIndex('sshPublicKeys')]]"
+                    }
+                }
+            ]
         },
 
         "customerVNetID": "[resourceId(parameters('customerResourceGroupName'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
@@ -660,8 +679,8 @@
                     "adminUsername": {
                         "value": "[variables('admin').username]"
                     },
-                    "sshPublicKey": {
-                        "value": "[variables('admin').sshPublicKey]"
+                    "sshPublicKeys": {
+                        "value": "[variables('admin').sshPublicKeys]"
                     },
                     "authenticationType": {
                         "value": "sshPublicKey"
@@ -712,8 +731,8 @@
                     "adminUsername": {
                         "value": "[variables('admin').username]"
                     },
-                    "sshPublicKey": {
-                        "value": "[variables('admin').sshPublicKey]"
+                    "sshPublicKeys": {
+                        "value": "[variables('admin').sshPublicKeys]"
                     },
                     "authenticationType": {
                         "value": "sshPublicKey"
