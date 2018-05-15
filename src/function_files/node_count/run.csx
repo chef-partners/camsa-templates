@@ -43,14 +43,14 @@ public static void Run(TimerInfo myTimer, CloudTable settingTable, TraceWriter l
 
     // Get the automate token from the config store table
     // and the automate FQDN
-    TableOperation operation = TableOperation.Retrieve<ConfigKV>(PartitionKey, AutomateTokenKeyName);
-    TableResult token_result = settingTable.Execute(operation);
+    TableOperation token_operation = TableOperation.Retrieve<ConfigKV>(PartitionKey, AutomateTokenKeyName);
+    TableResult token_result = settingTable.Execute(token_operation);
 
-    TableOperation operation = TableOperation.Retrieve<ConfigKV>(PartitionKey, AutomateFQDNKeyName);
-    TableResult fqdn_result = settingTable.Execute(operation);
+    TableOperation fqdn_operation = TableOperation.Retrieve<ConfigKV>(PartitionKey, AutomateFQDNKeyName);
+    TableResult fqdn_result = settingTable.Execute(fqdn_operation);
 
     // if there is a result get the key value, otherwise log error
-    if (token_result.Result != null && fqdn_result.Result != ) {
+    if (token_result.Result != null && fqdn_result.Result != null) {
 
         // get the token value
         ConfigKV token_setting = (ConfigKV)token_result.Result;
@@ -132,7 +132,7 @@ public static NodeCount GetData(string automate_fqdn, string token)
     try
     {
         ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
-        string url = String.format("https://{0}/api/v0/cfgmgmt/stats/node_counts", automate_fqdn);
+        string url = String.Format("https://{0}/api/v0/cfgmgmt/stats/node_counts", automate_fqdn);
         Console.WriteLine("PREPARING REQUEST======");
         System.Net.Http.HttpClient client = new System.Net.Http.HttpClient();
         client.DefaultRequestHeaders.Add("x-data-collector-token", token);
@@ -160,7 +160,7 @@ public static string GetStringData(TraceWriter log, string automate_fqdn, string
     try
     {
         ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
-        string url = String.format("https://{0}/api/v0/cfgmgmt/stats/node_counts", automate_fqdn);
+        string url = String.Format("https://{0}/api/v0/cfgmgmt/stats/node_counts", automate_fqdn);
         log.Info("PREPARING REQUEST======");
         System.Net.Http.HttpClient client = new System.Net.Http.HttpClient();
         client.DefaultRequestHeaders.Add("x-data-collector-token", token);
