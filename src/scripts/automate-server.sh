@@ -275,7 +275,7 @@ do
     deploy)
       echo -e "\tDeployment"
 
-      cmd="chef-automate deploy config.toml"
+      cmd="GRPC_GO_LOG_SEVERITY_LEVEL=info GRPC_GO_LOG_VERBOSITY_LEVEL=2 chef-automate deploy config.toml --debug"
       executeCmd "$cmd"
     ;;
 
