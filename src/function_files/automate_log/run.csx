@@ -27,7 +27,7 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, TraceW
             AutomateMessage automateMessage = AutomateLogParser.ParseGenericLogMessage(data.MESSAGE_s, log);
             log.Info(automateMessage.sourcePackage);
             if(automateMessage.sourcePackage != "Unknown Entry"){
-                string logName = automateMessage.sourcePackage + "log";
+                string logName = automateMessage.sourcePackage.Replace("-", "") + "log";
                 law.Submit(automateMessage, logName);
             }
         }
