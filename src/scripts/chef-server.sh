@@ -241,10 +241,16 @@ do
       echo "Storing Keys"
       echo -e "\t$CHEF_USER_NAME"
 
+      cmd=$(printf "curl -XPOST %s -d '{\"user\": \"%s\"}'" $AF_URL $CHEF_USER_NAME)
+      executeCmd "$cmd"
+
       cmd=$(printf "curl -XPOST %s -d '{\"%s_key\": \"%s\"}'" $AF_URL $CHEF_USER_NAME `cat ${CHEF_USER_NAME}.pem | base64 -w 0`)
       executeCmd "$cmd"
 
       echo -e "\t${CHEF_ORGNAME}-validator"
+
+      cmd=$(printf "curl -XPOST %s -d '{\"org\": \"%s\"}'" $AF_URL $CHEF_ORGNAME)
+      executeCmd "$cmd"
 
       cmd=$(printf "curl -XPOST %s -d '{\"%s_validator_key\": \"%s\"}'" $AF_URL $CHEF_ORGNAME `cat ${CHEF_ORGNAME}-validator.pem | base64 -w 0`)
       executeCmd "$cmd"
@@ -272,11 +278,11 @@ do
 
       # Now set the data collector and profiles in the Chef server configuration file
       setting=$(printf "data_collector['root_url'] = 'https://%s/data-collector/v0/'" $AUTOMATE_SERVER_FQDN)
-      cmd="echo $setting >> /etc/opscode/chef-server.rb"
+      cmd="echo \"$setting\" >> /etc/opscode/chef-server.rb"
       executeCmd "$cmd"
 
       setting=$(printf "profiles['root_url'] = 'https://%s'" $AUTOMATE_SERVER_FQDN)
-      cmd="echo $setting >> /etc/opscode/chef-server.rb"
+      cmd="echo \"$setting\" >> /etc/opscode/chef-server.rb"
       executeCmd "$cmd"      
     ;;
 
