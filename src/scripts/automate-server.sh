@@ -298,7 +298,7 @@ do
     deploy)
       log "Deployment" 1
 
-      cmd="GRPC_GO_LOG_SEVERITY_LEVEL=info GRPC_GO_LOG_VERBOSITY_LEVEL=2 chef-automate deploy config.toml --debug"
+      cmd="GRPC_GO_LOG_SEVERITY_LEVEL=info GRPC_GO_LOG_VERBOSITY_LEVEL=2 chef-automate deploy config.toml --accept-terms-and-mlsa --debug"
       executeCmd "$cmd"
     ;;
 

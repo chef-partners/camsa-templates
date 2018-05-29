@@ -22,13 +22,17 @@
             "metadata": {
                 "description": "Name of the virtual machine that this extension should be attached to"
             }
+        },
+        "extensionName": {
+            "type": "string"
         }
     },
     "variables": {
         "location": "[parameters('location')]",
 
         "name": {
-            "vm": "[parameters('vmname')]"
+            "vm": "[parameters('vmname')]",
+            "extension": "[parameters('extensionName')]"
         },
 
         "workspace": {
@@ -43,7 +47,7 @@
     "resources": [
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(variables('name').vm, '/Microsoft.EnterpriseCloud.Monitoring')]",
+            "name": "[concat(variables('name').vm, '/', variables('name').extension)]",
             "apiVersion": "[variables('apiVersions').cloudMonitoring]",
             "location": "[variables('location')]",
             "properties": {

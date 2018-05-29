@@ -787,6 +787,9 @@
                     },
                     "vmname": {
                         "value": "[variables('name').vm.automate]"
+                    },
+                    "extensionName": {
+                        "value": "MonitorAutomateServer"
                     }
                 }
             }
@@ -818,6 +821,9 @@
                     },
                     "vmname": {
                         "value": "[variables('name').vm.chef]"
+                    },
+                    "extensionName": {
+                        "value": "MonitorChefServer"
                     }
                 }
             }
