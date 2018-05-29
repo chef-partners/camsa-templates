@@ -114,7 +114,7 @@ function install()
     if [ ! -f $download_file ]
     then
       log "downloading package" 2
-      executeCmd "wget $url"
+      executeCmd "wget -nv $url"
     else
       log "package already exists" 2
     fi

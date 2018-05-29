@@ -102,7 +102,7 @@ function install()
     if [ ! -f $download_file ]
     then
       log "downloading package" 1
-      executeCmd "wget $url"
+      executeCmd "wget -nv $url"
     fi
 
     # Install the package
@@ -281,7 +281,7 @@ do
       # Create a user that can be used to monitor the Chef server using the API
       monitor_password=`openssl rand -hex 8`
       log "create monitor user: monitor" 1
-      cmd=$(printf 'chef-server-ctl user-create %s "Monitoring User" %s "%s" -o %s --filename %s.pem' \
+      cmd=$(printf 'chef-server-ctl user-create %s Monitoring User %s "%s" -o %s --filename %s.pem' \
             $MONITOR_USER \
             $MONITOR_EMAIL \
             $monitor_password \
