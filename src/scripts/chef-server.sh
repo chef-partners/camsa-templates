@@ -34,6 +34,28 @@ DRY_RUN=0
 
 # FUNCTIONS ------------------------------------
 
+# Function to output information
+# This will be to the screen and to syslog
+function log() {
+  message=$1
+  tabs=$2
+  level=$3
+  
+  if [ "X$level" == "X" ]
+  then
+    level="notice" 
+  fi
+
+  if [ "X$tabs" != "X" ]
+  then
+    tabs=$(printf '\t%.0s' {0..$tabs})
+  fi
+
+  echo -e "${tabs}${message}"
+
+  logger -t "CHEF_SETUP" -p "user.${level}" $message
+}
+
 # Execute commands and keep a log of the commands that were executed
 function executeCmd()
 {
@@ -75,15 +97,15 @@ function install()
     download_file=`basename $url`
     if [ ! -f $download_file ]
     then
-      echo -e "\tdownloading package"
+      log "downloading package" 1
       executeCmd "wget $url"
     fi
 
     # Install the package
-    echo -e "\tinstalling package"
+    log "installing package" 1
     executeCmd "dpkg -i $download_file"
   else
-    echo -e "\talready installed"
+    log "already installed" 1
   fi
 }
 # ----------------------------------------------
@@ -159,15 +181,15 @@ do
   shift
 done
 
-echo "Chef server"
+log "Chef server"
 
 # Install necessary pre-requisites for the script
 # In this case jq is required to read data from the function
-echo -e "\tPre-requisites"
+log "Pre-requisites" 1
 jq=`which jq`
 if [ "X$jq" == "X" ]
 then
-  echo "\t\tinstalling jq"
+  log "installing jq" 2
   cmd="apt-get install -y jq"
   executeCmd "$cmd"
 fi
@@ -192,7 +214,7 @@ do
         download_url=$(printf 'https://packages.chef.io/files/stable/chef-server/%s/ubuntu/16.04/chef-server-core_%s-1_amd64.deb' $CHEF_SERVER_VERSION $CHEF_SERVER_VERSION)
         install chef-server-ctl $download_url
       else
-        echo -e "Not installing Chef server as not version specified. Use -v and rerun the command if this is required"
+        log "Not installing Chef server as not version specified. Use -v and rerun the command if this is required" 0 err
       fi
 
     ;;
@@ -208,14 +230,14 @@ do
           [ "X$CHEF_ORG_DESCRIPTION" != "X" ]
       then
 
-        echo "Configuration"
+        log "Configuration"
 
         # Configure the Chef server for the first time
-        echo -e "\treconfigure"
+        log "reconfigure" 1
         executeCmd "chef-server-ctl reconfigure"
 
         # Build up the command to create the new user
-        echo -e "\tcreate user: ${CHEF_USER_NAME}"
+        log "create user: ${CHEF_USER_NAME}" 1
         cmd=$(printf 'chef-server-ctl user-create %s %s %s "%s" --filename %s.pem' \
               $CHEF_USER_NAME \
               "$CHEF_USER_FULLNAME" \
@@ -225,7 +247,7 @@ do
         executeCmd "${cmd}"
 
         # Create the named organisation
-        echo -e "\tcreate organisation: ${CHEF_ORGNAME}"
+        log "create organisation: ${CHEF_ORGNAME}" 1
         cmd=$(printf 'chef-server-ctl org-create %s "%s" --association-user %s --filename %s-validator.pem' \
               $CHEF_ORGNAME \
               "$CHEF_ORG_DESCRIPTION" \
@@ -238,8 +260,8 @@ do
     # Store the user and organisation keys in the storage
     storekeys)
 
-      echo "Storing Keys"
-      echo -e "\t$CHEF_USER_NAME"
+      log "Storing Keys"
+      log "$CHEF_USER_NAME" 1
 
       cmd=$(printf "curl -XPOST %s -d '{\"user\": \"%s\"}'" $AF_URL $CHEF_USER_NAME)
       executeCmd "$cmd"
@@ -247,7 +269,7 @@ do
       cmd=$(printf "curl -XPOST %s -d '{\"%s_key\": \"%s\"}'" $AF_URL $CHEF_USER_NAME `cat ${CHEF_USER_NAME}.pem | base64 -w 0`)
       executeCmd "$cmd"
 
-      echo -e "\t${CHEF_ORGNAME}-validator"
+      log "${CHEF_ORGNAME}-validator" 1
 
       cmd=$(printf "curl -XPOST %s -d '{\"org\": \"%s\"}'" $AF_URL $CHEF_ORGNAME)
       executeCmd "$cmd"
@@ -259,10 +281,10 @@ do
     # Integrate the Chef server with the automate server
     integrate)
 
-      echo -e "Integrate"
+      log "Integrate"
 
       # Get the token from the azure function
-      echo -e "\tRetrieving token"
+      log "Retrieving token" 1
       cmd=$(printf "curl -s -XGET '%s&key=automate_token' | jq -r .automate_token " $AF_URL)
       automate_token=$(executeCmd "$cmd")
 
@@ -288,7 +310,7 @@ do
 
     reconfigure)
       # Reconfigure the server after creating user and organisation
-      echo -e "Reconfigure"
+      log "Reconfigure"
       executeCmd "chef-server-ctl reconfigure"  
     ;;
 

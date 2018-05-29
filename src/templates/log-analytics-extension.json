@@ -1,0 +1,65 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspaceId": {
+            "type": "string",
+            "metadata": {
+                "description": "ID of the workspace into which the data will be sent"
+            }
+        },
+        "workspaceKey": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Key associated with specified workspace"
+            }
+        },
+        "location": {
+            "type": "string"
+        },
+        "vmname": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the virtual machine that this extension should be attached to"
+            }
+        }
+    },
+    "variables": {
+        "location": "[parameters('location')]",
+
+        "name": {
+            "vm": "[parameters('vmname')]"
+        },
+
+        "workspace": {
+            "id": "[parameters('workspaceId')]",
+            "key": "[parameters('workspaceKey')]"
+        },
+
+        "apiVersions": {
+            "cloudMonitoring": "2015-06-15"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('name').vm, '/Microsoft.EnterpriseCloud.Monitoring')]",
+            "apiVersion": "[variables('apiVersions').cloudMonitoring]",
+            "location": "[variables('location')]",
+            "properties": {
+                "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+                "type": "OmsAgentForLinux",
+                "typeHandlerVersion": "1.6",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "workspaceId": "[variables('workspace').id]"
+                },
+                "protectedSettings": {
+                    "workspaceKey": "[variables('workspace').key]"
+                }
+            }
+        }
+    ],
+    "outputs": {    
+    }
+}

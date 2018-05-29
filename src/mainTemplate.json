@@ -171,6 +171,10 @@
                 "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-ScriptExtension')]",
                 "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-ScriptExtension')]"
             },
+            "laExtension": {
+                "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-LAExtension')]",
+                "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-LAExtension')]"                
+            },
             "functions": {
                 "configstore": "[concat(parameters('prefix'), '-ConfigStore-AF')]",
                 "automatelog": "[concat(parameters('prefix'), '-AutomateLog-AF')]",
@@ -218,6 +222,7 @@
             "appServicePlan": "[concat(variables('baseUrl'), 'templates/app-service-plan.json', variables('templateUrlQueryString'))]",
             "appService": "[concat(variables('baseUrl'), 'templates/app-service.json', variables('templateUrlQueryString'))]",
             "logAnalytics": "[concat(variables('baseUrl'), 'templates/log-analytics.json', variables('templateUrlQueryString'))]",
+            "logAnalyticsExtension": "[concat(variables('baseUrl'), 'templates/log-analytics-extension.json', variables('templateUrlQueryString'))]",
             "scripts": {
                 "chefserver": "[concat(variables('baseUrl'), 'scripts/chef-server.sh', variables('templateUrlQueryString'))]",
                 "automateserver": "[concat(variables('baseUrl'), 'scripts/automate-server.sh', variables('templateUrlQueryString'))]"
@@ -755,6 +760,68 @@
                 }
             }
         },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').laExtension.automate, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').vm.automate, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').logAnalyticsExtension]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "workspaceId": {
+                        "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.workspaceId.value]"
+                    },
+                    "workspaceKey": {
+                        "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.key.value]"
+                    },
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "vmname": {
+                        "value": "[variables('name').vm.automate]"
+                    }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').laExtension.chef, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').vm.chef, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').logAnalyticsExtension]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "workspaceId": {
+                        "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.workspaceId.value]"
+                    },
+                    "workspaceKey": {
+                        "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.key.value]"
+                    },
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "vmname": {
+                        "value": "[variables('name').vm.chef]"
+                    }
+                }
+            }
+        },        
         
         {
             "type": "Microsoft.Resources/deployments",
@@ -763,7 +830,8 @@
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', variables('name').vm.automate, '-Deployment')]",
                 "[concat('Microsoft.Resources/deployments/', variables('name').functions.configstore, '-Deployment')]",
-                "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]"
+                "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').laExtension.automate, '-Deployment')]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -808,7 +876,8 @@
                 "[concat('Microsoft.Resources/deployments/', variables('name').vm.chef, '-Deployment')]",
                 "[concat('Microsoft.Resources/deployments/', variables('name').extension.automate, '-Deployment')]",
                 "[concat('Microsoft.Resources/deployments/', variables('name').functions.configstore, '-Deployment')]",
-                "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]"
+                "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').laExtension.chef, '-Deployment')]"
             ],
             "properties": {
                 "mode": "Incremental",
