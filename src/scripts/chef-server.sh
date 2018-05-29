@@ -20,10 +20,14 @@ CHEF_ORGNAME=""
 CHEF_ORG_DESCRIPTION=""
 
 AUTOMATE_SERVER_FQDN=""
+CHEF_SERVER_FQDN=""
 
 FUNCTION_BASE_URL=""
 CONFIGSTORE_FUNCTION_APIKEY=""
 CONFIGSTORE_FUNCTION_NAME="chefAMAConfigStore"
+
+MONITOR_USER="monitor"
+MONITOR_EMAIL="monitor@chef.io"
 
 #
 # Do not modify variables below here
@@ -108,6 +112,12 @@ function install()
     log "already installed" 1
   fi
 }
+
+# Function to trim whitespace characters from both ends of string
+function trim() {
+  read -rd '' $1 <<<"${!1}"
+}
+
 # ----------------------------------------------
 
 # Use the arguments and the name of the script to determine how the script was called
@@ -174,6 +184,18 @@ do
 
     -F|--automatefqdn)
       AUTOMATE_SERVER_FQDN="$2"
+    ;;
+
+    -C|--chefserverfqdn)
+      CHEF_SERVER_FQDN="$2"
+    ;;
+
+    -m|--monitoruser)
+      MONITOR_USER="$2"
+    ;;
+
+    -M|--monitoremail)
+      MONITOR_EMAIL="$2"
     ;;
   esac
 
@@ -255,6 +277,17 @@ do
               $CHEF_ORGNAME)
         executeCmd "${cmd}"
       fi
+
+      # Create a user that can be used to monitor the Chef server using the API
+      monitor_password=`openssl rand -hex 8`
+      log "create monitor user: monitor" 1
+      cmd=$(printf 'chef-server-ctl user-create %s "Monitoring User" %s "%s" -o %s --filename %s.pem' \
+            $MONITOR_USER \
+            $MONITOR_EMAIL \
+            $monitor_password \
+            $CHEF_ORGNAME \
+            $MONITOR_USER)
+      executeCmd "${cmd}"
     ;;
 
     # Store the user and organisation keys in the storage
@@ -266,16 +299,32 @@ do
       cmd=$(printf "curl -XPOST %s -d '{\"user\": \"%s\"}'" $AF_URL $CHEF_USER_NAME)
       executeCmd "$cmd"
 
-      cmd=$(printf "curl -XPOST %s -d '{\"%s_key\": \"%s\"}'" $AF_URL $CHEF_USER_NAME `cat ${CHEF_USER_NAME}.pem | base64 -w 0`)
+      cmd=$(printf "curl -XPOST %s -d '{\"user_key\": \"%s\"}'" $AF_URL `cat ${CHEF_USER_NAME}.pem | base64 -w 0`)
       executeCmd "$cmd"
+
+      cmd=$(printf "curl -XPOST %s -d '{\"user_password\": \"%s\"}'" $AF_URL $CHEF_USER_PASSWORD)
+      executeCmd "$cmd"      
 
       log "${CHEF_ORGNAME}-validator" 1
 
       cmd=$(printf "curl -XPOST %s -d '{\"org\": \"%s\"}'" $AF_URL $CHEF_ORGNAME)
       executeCmd "$cmd"
 
-      cmd=$(printf "curl -XPOST %s -d '{\"%s_validator_key\": \"%s\"}'" $AF_URL $CHEF_ORGNAME `cat ${CHEF_ORGNAME}-validator.pem | base64 -w 0`)
+      cmd=$(printf "curl -XPOST %s -d '{\"org_validator_key\": \"%s\"}'" $AF_URL `cat ${CHEF_ORGNAME}-validator.pem | base64 -w 0`)
       executeCmd "$cmd"
+
+      # Set extra information in the configuration store such as the server FQDN and monitor key
+      cmd=$(printf "curl -XPOST %s -d '{\"chefserver_fqdn\": \"%s\"}'" $AF_URL $CHEF_SERVER_FQDN)
+      executeCmd "$cmd"
+
+      cmd=$(printf "curl -XPOST %s -d '{\"monitor_user\": \"%s\"}'" $AF_URL $MONITOR_USER)
+      executeCmd "$cmd"
+
+      cmd=$(printf "curl -XPOST %s -d '{\"monitor_user_password\": \"%s\"}'" $AF_URL $monitor_password)
+      executeCmd "$cmd"      
+
+      cmd=$(printf "curl -XPOST %s -d '{\"monitor_key\": \"%s\"}'" $AF_URL `cat ${MONITOR_USER}.pem | base64 -w 0`)
+      executeCmd "$cmd"      
     ;;
 
     # Integrate the Chef server with the automate server

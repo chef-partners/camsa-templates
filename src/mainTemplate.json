@@ -790,6 +790,12 @@
                     },
                     "extensionName": {
                         "value": "MonitorAutomateServer"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "Script to install and configure the Automate server",
+                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                        }
                     }
                 }
             }
@@ -824,6 +830,12 @@
                     },
                     "extensionName": {
                         "value": "MonitorChefServer"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "Log Analytics monitoring extension for Chef Server",
+                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                        }
                     }
                 }
             }
@@ -905,7 +917,7 @@
                         "value": "chef-server.sh"
                     },
                     "scriptArguments": {
-                        "value": "[concat('-o install,config,storekeys,integrate,reconfigure -v ', variables('chef').version, ' -u ', variables('chef').username, ' -f \"', variables('chef').fullname, '\" -p \"', variables('chef').password, '\" -a ', variables('chef').email, ' -O ', variables('chef').org, ' -d \"', variables('chef').orgDescription, '\" -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -n ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.name.value, ' -k ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, ' -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value)]"
+                        "value": "[concat('-o install,config,storekeys,integrate,reconfigure -v ', variables('chef').version, ' -u ', variables('chef').username, ' -f \"', variables('chef').fullname, '\" -p \"', variables('chef').password, '\" -a ', variables('chef').email, ' -O ', variables('chef').org, ' -d \"', variables('chef').orgDescription, '\" -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -n ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.name.value, ' -k ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, ' -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value, ' -C ', reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value)]"
                     },
                     "extensionName": {
                         "value": "InstallAndConfigureChef"

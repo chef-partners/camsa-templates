@@ -25,6 +25,9 @@
         },
         "extensionName": {
             "type": "string"
+        },
+        "tags": {
+            "type": "object"
         }
     },
     "variables": {
@@ -42,13 +45,15 @@
 
         "apiVersions": {
             "cloudMonitoring": "2015-06-15"
-        }
+        },
+        "tags": "[parameters('tags')]"
     },
     "resources": [
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('name').vm, '/', variables('name').extension)]",
             "apiVersion": "[variables('apiVersions').cloudMonitoring]",
+            "tags": "[variables('tags')]",
             "location": "[variables('location')]",
             "properties": {
                 "publisher": "Microsoft.EnterpriseCloud.Monitoring",
