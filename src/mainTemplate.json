@@ -178,7 +178,8 @@
             "functions": {
                 "configstore": "[concat(parameters('prefix'), '-ConfigStore-AF')]",
                 "automatelog": "[concat(parameters('prefix'), '-AutomateLog-AF')]",
-                "nodecount": "[concat(parameters('prefix'), '-NodeCount-AF')]"
+                "nodecount": "[concat(parameters('prefix'), '-NodeCount-AF')]",
+                "starterkit": "[concat(parameters('prefix'), '-StarterKit-AF')]"
             }
         },
 
@@ -230,7 +231,8 @@
             "functions": {
                 "configStore": "[concat(variables('baseUrl'), 'templates/functions/config-store.json', variables('templateUrlQueryString'))]",
                 "automateLog": "[concat(variables('baseUrl'), 'templates/functions/automate-log.json', variables('templateUrlQueryString'))]",
-                "nodeCount": "[concat(variables('baseUrl'), 'templates/functions/node-count.json', variables('templateUrlQueryString'))]"
+                "nodeCount": "[concat(variables('baseUrl'), 'templates/functions/node-count.json', variables('templateUrlQueryString'))]",
+                "starterKit": "[concat(variables('baseUrl'), 'templates/functions/starter-kit.json', variables('templateUrlQueryString'))]"
             }
         },
 
@@ -361,6 +363,27 @@
                 "mode": "Incremental",
                 "templateLink": {
                     "uri": "[variables('urls').functions.configStore]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[variables('name').appService]"
+                    }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').functions.starterkit, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').appService, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').functions.starterKit]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -933,17 +956,9 @@
         }
     ],
     "outputs": {
-        "chefServerScriptArguments": {
+        "starterKitDownloadUrl": {
             "type": "string",
-            "value": "[reference(concat(variables('name').extension.chef, '-Deployment')).outputs.executedCommand.value]"
-        },
-        "functionApiKey": {
-            "type": "string",
-            "value": "[reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value]"
-        },
-        "uniqueShort": {
-            "type": "string",
-            "value": "[variables('uniqueShort')]"
+            "value": "[concat(reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, 'api/', reference(concat(variables('name').functions.starterkit, '-Deployment')).outputs.name.value, '?code=', reference(concat(variables('name').functions.starterkit, '-Deployment')).outputs.apiKey.value)]"
         }
     }
 }

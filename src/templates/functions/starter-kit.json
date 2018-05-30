@@ -1,0 +1,59 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "siteName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the site into which the function should be deployed"
+            }
+        },
+        "functionName": {
+            "type": "string",
+            "metadata": {
+                "description": "name of the function"
+            },
+            "defaultValue": "starterKit"
+        }
+    },
+    "variables": {
+        "name": {
+            "site": "[parameters('siteName')]",
+            "function": "[parameters('functionName')]"
+        },
+        "apiVersions": {
+            "functions": "2016-08-01"
+        },        
+        "code": {
+            "run_csx": "",
+            "constants_csx": "",
+            "knife_rb": ""
+        }     
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/sites/functions",
+            "name": "[concat(variables('name').site, '/', variables('name').function)]",
+            "apiVersion": "[variables('apiVersions').functions]",
+            "properties": {
+                "config": {
+                },
+                "files": {
+                    "run.csx": "[base64ToString(variables('code').run_csx)]",
+                    "constants.csx": "[base64ToString(variables('code').constants_csx)]",
+                    "knife.rb": "[base64ToString(variables('code').knife_rb]"
+                }
+            }
+        }      
+    ],
+    "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[parameters('functionName')]"
+        },        
+        "apiKey": {
+            "type": "string",
+            "value": "[listsecrets(resourceId('Microsoft.Web/sites/functions', variables('name').site, variables('name').function), '2016-08-01').key]"
+        }
+    }
+}
