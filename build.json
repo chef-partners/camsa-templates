@@ -38,6 +38,16 @@
             "config": "src/function_files/config_store/function.json"
         },
         {
+            "template_file": "templates/functions/starter-kit.json",
+            "code_files":
+                {
+                    "run_csx": "src/function_files/starter_kit/run.csx",
+                    "constants_csx": "src/function_files/starter_kit/constants.csx",
+                    "knife_rb": "src/function_files/starter_kit.knife.rb"
+                },
+            "config": "src/function_files/starter_kit/function.json"
+        },        
+        {
             "template_file": "templates/functions/automate-log.json",
             "code_files":
                 {

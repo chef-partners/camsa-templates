@@ -958,7 +958,7 @@
     "outputs": {
         "starterKitDownloadUrl": {
             "type": "string",
-            "value": "[concat(reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, 'api/', reference(concat(variables('name').functions.starterkit, '-Deployment')).outputs.name.value, '?code=', reference(concat(variables('name').functions.starterkit, '-Deployment')).outputs.apiKey.value)]"
+            "value": "[concat(reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, '/', reference(concat(variables('name').functions.starterkit, '-Deployment')).outputs.name.value, '?code=', reference(concat(variables('name').functions.starterkit, '-Deployment')).outputs.apiKey.value)]"
         }
     }
 }
