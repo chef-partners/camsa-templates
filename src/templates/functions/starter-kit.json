@@ -41,7 +41,7 @@
                 "files": {
                     "run.csx": "[base64ToString(variables('code').run_csx)]",
                     "constants.csx": "[base64ToString(variables('code').constants_csx)]",
-                    "knife.rb": "[base64ToString(variables('code').knife_rb]"
+                    "knife.rb": "[base64ToString(variables('code').knife_rb)]"
                 }
             }
         }      
