@@ -9,7 +9,7 @@ static string OrgKey = "org";
 static string OrgKeyKey = "org_validator_key";
 
 // Define automate server keys
-static string AutomateFQDNKey = "automate_fqdn";
+static string AutomateServerFQDNKey = "automate_fqdn";
 
 // Define the monitoring user keys
 static string MonitorUserPasswordKey = "monitor_user_password";
