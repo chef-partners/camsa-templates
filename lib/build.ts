@@ -14,7 +14,7 @@ import * as zip from "zip-folder";
 
 // Functions --------------------------------------------------------------
 
-function parseBuildConfig(app_root, build_config_file) {
+function parseBuildConfig(app_root, build_config_file, workdir = null) {
     let build_config = {};
 
     // Check if the build configuration file exists
@@ -30,8 +30,17 @@ function parseBuildConfig(app_root, build_config_file) {
 
             // add in the extra directories below the build dir
             build_config["dirs"]["app_root"] = app_root;
-            build_config["dirs"]["working"] = path.join(build_config["dirs"]["build"], "working");
             build_config["dirs"]["output"] = path.join(build_config["dirs"]["build"], "output");
+
+            // set the work directory based on whether it has been set in options
+            if (workdir == null) {
+                build_config["dirs"]["working"] = path.join(build_config["dirs"]["build"], "working");
+            } else {
+                if (!path.isAbsolute(workdir)) {
+                    workdir = path.join(app_root, workdir);
+                }
+                build_config["dirs"]["working"] = workdir;
+            }
         });
     } else {
         console.log("##vso[task.logissue type=error]Build configuration file not found: %s", build_config_file)
@@ -234,8 +243,9 @@ program.command("copy")
 program.command("patch")
        .description("Patch the output files with functions")
        .option("-b, --baseurl [base_url]", "Base URL from which the nested templates can be found", "")
+       .option("-d, --directory [directory]", "Directory which contains the files to patch", null)
        .action(function (options) {
-           patch(options, parseBuildConfig(app_root, program.config));
+           patch(options, parseBuildConfig(app_root, program.config, options.directory));
        })
 
 // Package up the files into a zip file
@@ -252,7 +262,7 @@ program.command("run")
        .option("-b, --baseurl <base_url>", "Base URL from which the nested templates can be found", "")
        .option("-v, --version <version>", "Version to be applied to the zip file", "0.0.1")
        .option("--outputvar <variable_name>", "Name of the variable to output the filename to in VSTS", "AMA_ZIP_PATH")  
-       .option('--clean', 'Optionally remove the build directory if it already exists', true) 
+       .option('--clean', 'Optionally remove the build directory if it already exists', true)
        .action(function (options) {
            let build_config = parseBuildConfig(app_root, program.config);
            init(options, build_config);

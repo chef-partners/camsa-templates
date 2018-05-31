@@ -14,6 +14,7 @@ MODE=""
 
 # Version of Automate to download
 AUTOMATE_SERVER_VERSION=""
+AUTOMATE_SERVER_FQDN=""
 
 # The download URL for Automate
 AUTOMATE_DOWNLOAD_URL="https://packages.chef.io/files/current/automate/latest/chef-automate_linux_amd64.zip"
@@ -27,9 +28,16 @@ USERNAME=""
 PASSWORD=""
 EMAILADDRESS=""
 
+# Define the variables that hold information about the Azure functions
 FUNCTION_BASE_URL=""
-FUNCTION_APIKEY=""
-FUNCTION_NAME="chefAMAConfigStore"
+CONFIGSTORE_FUNCTION_APIKEY=""
+CONFIGSTORE_FUNCTION_NAME="chefAMAConfigStore"
+
+AUTOMATELOG_FUNCTION_APIKEY=""
+AUTOMATELOG_FUNCTION_NAME="AutomateLog"
+
+# Define where the script called by the cronjob should be saved
+SCRIPT_LOCATION="/usr/local/bin/azurefunctionlog.sh"
 
 #
 # Do not modify variables below here
@@ -40,6 +48,28 @@ DRY_RUN=0
 CONFIG_FILE="config.toml"
 
 # FUNCTIONS ------------------------------------
+
+# Function to output information
+# This will be to the screen and to syslog
+function log() {
+  message=$1
+  tabs=$2
+  level=$3
+  
+  if [ "X$level" == "X" ]
+  then
+    level="notice" 
+  fi
+
+  if [ "X$tabs" != "X" ]
+  then
+    tabs=$(printf '\t%.0s' {0..$tabs})
+  fi
+
+  echo -e "${tabs}${message}"
+
+  logger -t "AUTOMATE_SETUP" -p "user.${level}" $message
+}
 
 # Execute commands and keep a log of the commands that were executed
 function executeCmd()
@@ -83,24 +113,24 @@ function install()
     download_file=`basename $url`
     if [ ! -f $download_file ]
     then
-      echo -e "\t\tdownloading package"
-      executeCmd "wget $url"
+      log "downloading package" 2
+      executeCmd "wget -nv $url"
     else
-      echo -e "\t\tpackage already exists"
+      log "package already exists" 2
     fi
 
     # Install the package
     if [ "X$unzip_dir" == "X" ]
     then
-      echo -e "\t\tinstalling package"
+      log "installing package" 2
       executeCmd "dpkg -i $download_file"
     else
-      echo -e "\t\tunpacking"
+      log "unpacking" 2
       cmd=$(printf 'gunzip -S .zip < %s > /usr/local/bin/chef-automate && chmod +x /usr/local/bin/chef-automate' $download_file)
       executeCmd "$cmd"
     fi
   else
-    echo -e "\t\talready installed"
+    log "already installed" 2
   fi
 }
 
@@ -108,6 +138,7 @@ function install()
 function trim() {
   read -rd '' $1 <<<"${!1}"
 }
+
 # ----------------------------------------------
 
 # Use the arguments and the name of the script to determine how the script was called
@@ -154,12 +185,29 @@ do
       FUNCTION_BASE_URL="$2"
     ;;
 
-    -n|--functioname)
-      FUNCTION_NAME="$2"
+    -n|--configstorefunctioname)
+      CONFIGSTORE_FUNCTION_NAME="$2"
     ;;
 
-    -k|--functionapikey)
-      FUNCTION_APIKEY="$2"
+    -k|--configstorefunctionapikey)
+      CONFIGSTORE_FUNCTION_APIKEY="$2"
+    ;;
+
+    -N|--automatelogfunctionname)
+      AUTOMATELOG_FUNCTION_NAME="$2"
+    ;;
+
+    -K|--automatelogfunctionkey)
+      AUTOMATELOG_FUNCTION_APIKEY="$2"
+    ;;
+
+    -F|--automatefqdn)
+      AUTOMATE_SERVER_FQDN="$2"
+    ;;
+
+    # Specify the location of the script, this must be a full path
+    --scriptlocation)
+      SCRIPT_LOCATION="$2"
     ;;
   esac
 
@@ -167,7 +215,7 @@ do
   shift
 done
 
-echo "Automate server"
+log "Automate server"
 
 # Determine what needs to be done
 for operation in $MODE
@@ -179,13 +227,13 @@ do
     # Download and install Automate server package or download and unzip from a URL
     install)
 
-      echo -e "\tInstallation"
+      log "Installation" 1
 
       # If a version has been specified then download the package,
       # but if a URL has been specified download that and unpack it
       if [ "X$AUTOMATE_SERVER_VERSION" != "X" ]
       then
-        echo "Downloading Automate from a package is not currently supported"
+        log "Downloading Automate from a package is not currently supported" 0 err
       elif [ "X$AUTOMATE_DOWNLOAD_URL" != "X" ]
       then
 
@@ -197,7 +245,7 @@ do
     # Configure the kernel parameters as required by Automate
     kernel)
 
-      echo -e "\tKernel settings"
+      log "Kernel settings" 1
       cmd="sysctl -w vm.max_map_count=262144"
       executeCmd "$cmd"
       cmd="sysctl -w vm.dirty_expire_centisecs=20000"
@@ -211,12 +259,12 @@ do
     # Initialise Automate
     config)
 
-      echo -e "\tConfiguration"
+      log "Configuration" 1
       
       # If the config.toml file does not exist then run the initialisation
       if [ ! -f $CONFIG_FILE ]
       then
-        echo -e "\t\tinitialisation"
+        log "initialisation" 2
         cmd="chef-automate init-config"
         executeCmd "$cmd"
       fi
@@ -228,7 +276,7 @@ do
          [ "X$AUTOMATE_LICENCE" != "X" ]
       then
 
-        echo -e "\t\tSetting user information"
+        log "Setting user information" 2
 
         # replace the username in the config.toml file
         cmd=$(printf 'sed -i.bak -r %ss/(email\\s+=\\s+").*(")/\\1%s\\2/g%s %s' "'" $EMAILADDRESS "'" $CONFIG_FILE)
@@ -248,15 +296,15 @@ do
 
     # Dpeloy the automate server with the specified settings
     deploy)
-      echo -e "\tDeployment"
+      log "Deployment" 1
 
-      cmd="chef-automate deploy config.toml"
+      cmd="GRPC_GO_LOG_SEVERITY_LEVEL=info GRPC_GO_LOG_VERBOSITY_LEVEL=2 chef-automate deploy config.toml --accept-terms-and-mlsa --debug"
       executeCmd "$cmd"
     ;;
 
     # Apply the licence to automate
     licence)
-      echo -e "Apply licence"
+      log "Apply licence"
 
       cmd=$(printf 'chef-automate license apply %s' $AUTOMATE_LICENSE)
       executeCmd "$cmd"
@@ -265,16 +313,45 @@ do
     # Generate API token and post it into the chefAMAConfigStore function
     token)
 
-      echo -e "\tAPI Token"
+      log "API Token"
 
       # build up command to get the token from automate
       cmd="chef-automate admin-token | sed -e 's/^[[:space:]]*//'"
       automate_api_token=$(executeCmd "$cmd")
 
       # build up the command to curl information into the function
-      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_token\": \"%s\"}'" $FUNCTION_BASE_URL $FUNCTION_NAME $FUNCTION_APIKEY $automate_api_token)
-      executeCmd $cmd
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_token\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $automate_api_token)
+      executeCmd "$cmd"
+
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_fqdn\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $AUTOMATE_SERVER_FQDN)
+      executeCmd "$cmd"      
       
+    ;;
+
+    # Setup the cronjob to send data to Log Analytics
+    cron)
+
+      log "Configuring CronJob for Log Analytics data"
+
+      log "Creating script: $SCRIPT_LOCATION" 1
+      # Create the script that will be called by the cronjob
+      cat << EOF > $SCRIPT_LOCATION
+#!/usr/bin/env bash
+
+journalctl -fu chef-automate --since "5 minutes ago" --until "now" -o json > /var/log/jsondump.json
+curl -H "Content-Type: application/json" -X POST -d @/var/log/jsondump.json ${FUNCTION_BASE_URL}/${AUTOMATELOG_FUNCTION_NAME}?code=${AUTOMATELOG_FUNCTION_APIKEY}      
+EOF
+
+      # Ensure that the script is executable
+      cmd=$(printf "chmod +x %s" $SCRIPT_LOCATION)
+      executeCmd "$cmd"
+
+      log "Adding cron entry" 1
+
+      # Add the script to cron
+      cmd=$(printf '(crontab -l; echo "*/5 * * * * %s") | crontab -' $SCRIPT_LOCATION)
+      executeCmd "$cmd"
+
     ;;
 
   esac

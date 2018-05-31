@@ -3,20 +3,20 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "workspaceName": {
-            "type": "string",
+            "type": "String",
             "metadata": {
                 "description": "The name of the workspace"
             }
         },
         "sku": {
-            "type": "string"
+            "type": "String"
         },
         "location": {
-            "type": "string",
-            "defaultValue": "[resourceGroup().location]"
+            "defaultValue": "[resourceGroup().location]",
+            "type": "String"
         },
         "tags": {
-            "type": "object"
+            "type": "Object"
         }
     },
     "variables": {
@@ -24,16 +24,13 @@
         "name": {
             "workspace": "[parameters('workspaceName')]"
         },
-
         "la": {
             "sku": "[parameters('sku')]",
             "retention": "[if(equals(toLower(parameters('sku')), 'free'), 7, 30)]"
         },
-
         "apiVersions": {
-            "workspace": "2017-03-15-preview"
+            "workspace": "2015-03-20"
         },
-
         "tags": "[parameters('tags')]"
     },
     "resources": [
@@ -48,12 +45,16 @@
                     "name": "[variables('la').sku]"
                 },
                 "retentionInDays": "[variables('la').retention]"
-            }            
+            }
         }
     ],
     "outputs": {
+        "workspaceId": {
+            "type": "String",
+            "value": "[reference(concat('Microsoft.OperationalInsights/workspaces/', variables('name').workspace)).customerId]"
+        },
         "key": {
-            "type": "string",
+            "type": "String",
             "value": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', variables('name').workspace), variables('apiVersions').workspace).primarySharedKey]"
         }
     }

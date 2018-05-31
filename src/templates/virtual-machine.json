@@ -33,12 +33,12 @@
         "defaultValue": ""
       },
   
-      "sshPublicKey": {
-        "defaultValue": "",
+      "sshPublicKeys": {
+        "defaultValue": [],
         "metadata": {
-          "description": "Administrator SSH public key"
+          "description": "Administrator user SSH public keys"
         },
-        "type": "string"
+        "type": "array"
       },
   
       "authenticationType": {
@@ -108,12 +108,7 @@
         "linuxConfiguration": {
           "disablePasswordAuthentication": "true",
           "ssh": {
-            "publicKeys": [
-              {
-                "keyData": "[parameters('sshPublicKey')]",
-                "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]"
-              }
-            ]
+            "publicKeys": "[parameters('sshPublicKeys')]"
           }
         }
       },

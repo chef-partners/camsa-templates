@@ -8,11 +8,19 @@
             "target": "templates"
         },
         {
+            "source": "src/scripts",
+            "target": "scripts"
+        },
+        {
             "source": "src/mainTemplate.json",
             "target": ""
         },
         {
             "source": "src/createUiDefinition.json",
+            "target": ""
+        },
+        {
+            "source": "src/viewDefinition.json",
             "target": ""
         }
     ],
@@ -28,6 +36,37 @@
                     "constants": "src/function_files/config_store/constants.csx"
                 },
             "config": "src/function_files/config_store/function.json"
-        }
+        },
+        {
+            "template_file": "templates/functions/starter-kit.json",
+            "code_files":
+                {
+                    "run_csx": "src/function_files/starter_kit/run.csx",
+                    "constants_csx": "src/function_files/starter_kit/constants.csx",
+                    "knife_rb": "src/function_files/starter_kit/knife.rb"
+                },
+            "config": "src/function_files/starter_kit/function.json"
+        },        
+        {
+            "template_file": "templates/functions/automate-log.json",
+            "code_files":
+                {
+                    "AutomateLog_csx": "src/function_files/automate_log/AutomateLog.csx",
+                    "run_csx": "src/function_files/automate_log/run.csx",
+                    "AutomateLogParser_csx": "src/function_files/automate_log/AutomateLogParser.csx",
+                    "AutomateMessage_csx": "src/function_files/automate_log/AutomateMessage.csx",
+                    "LogAnalyticsWriter_csx": "src/function_files/automate_log/LogAnalyticsWriter.csx"
+                },
+            "config": "src/function_files/automate_log/function.json"
+        },
+        {
+            "template_file": "templates/functions/node-count.json",
+            "code_files":
+                {
+                    "run_csx": "src/function_files/node_count/run.csx",
+                    "constants_csx": "src/function_files/node_count/constants.csx"
+                },
+            "config": "src/function_files/node_count/function.json"
+        }        
     ]
 }

@@ -5,14 +5,11 @@
       "prefix": {
         "value": "inspec"
       },
-      "uniqueShort": {
-        "value": "9j2f"
-      },
       "virtualNetworkName": {
         "value": "InSpec-Customer-Network"
       },
       "customerResourceGroupName": {
-        "value": "InSpec-AMA-Customer"
+        "value": "rjs-ama-Customer-Network"
       },
       "subnetName": {
         "value": "InSpec-Customer-Subnet"
@@ -20,7 +17,8 @@
       "sshSourceAddresses": {
         "value": [
           "10.1.1.0/24",
-          "86.176.196.44/32"
+          "86.176.196.44/32",
+          "212.250.191.68/32"
         ]
       },
       "chefServerVersion": {
@@ -43,6 +41,15 @@
       },
       "chefOrgDescription": {
         "value": "Azure Managed Automate"
+      },
+      "automateLicence": {
+        "value": "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA3YTFkOWRjLWY2YzktNDIxMi1iMmQxLWMyNDgyNmY4MDVmNiIsInZlcnNpb24iOiIxIiwidHlwZSI6ImNvbW1lcmNpYWwiLCJnZW5lcmF0b3IiOiJjaGVmL2xpY2Vuc2UtMi4wLjAiLCJrZXlfc2hhMjU2IjoiZTBkZjI4YzhiYzY4MTUwZWRiZmVmOThjZDZiN2RjNDM5YzFmODBjN2U3ZWY3NDc4OTNhNjg5M2EyZjdiNjBmNyIsImdlbmVyYXRpb25fZGF0ZSI6eyJzZWNvbmRzIjoxNTIzOTc2NDc0fSwiY3VzdG9tZXIiOiJBenVyZSBNYW5hZ2VkIEFwcCIsImN1c3RvbWVyX2lkIjoiMDAwMDAwMDAwMDAwMDAwMCIsImN1c3RvbWVyX2lkX3ZlcnNpb24iOiIxIiwiZW50aXRsZW1lbnRzIjpbeyJuYW1lIjoiYmFzZSIsIm1lYXN1cmUiOiJub2RlcyIsImxpbWl0IjoxMDAsInN0YXJ0Ijp7InNlY29uZHMiOjE1MjM5MjMyMDB9LCJlbmQiOnsic2Vjb25kcyI6MTUzMDQwMzE5OX19XX0.AWU9-wb0kYq7vGiZy7vSBmimSybVxAJETe518ZcbA51KtF-I2vY_gReDvsEu4QO_3F9eO8HD5ap5Vh2sd5yOIh5FAeez4DtOGib2Nqm27OUNnlDCqT46q5VbfgywO5cF0CaWMmdHAmNvo17t1pATdjqs12NMvdxi0AlCoag2JatM4Z9c"
+      },
+      "logAnalyticsTier": {
+        "value": "Free"
+      },
+      "baseUrl": {
+        "value": "https://chefamadeploy1.blob.core.windows.net/templates"
       }
     }
 }

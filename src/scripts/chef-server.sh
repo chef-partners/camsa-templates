@@ -20,10 +20,14 @@ CHEF_ORGNAME=""
 CHEF_ORG_DESCRIPTION=""
 
 AUTOMATE_SERVER_FQDN=""
+CHEF_SERVER_FQDN=""
 
 FUNCTION_BASE_URL=""
-FUNCTION_APIKEY=""
-FUNCTION_NAME="chefAMAConfigStore"
+CONFIGSTORE_FUNCTION_APIKEY=""
+CONFIGSTORE_FUNCTION_NAME="chefAMAConfigStore"
+
+MONITOR_USER="monitor"
+MONITOR_EMAIL="monitor@chef.io"
 
 #
 # Do not modify variables below here
@@ -33,6 +37,28 @@ IFS=","
 DRY_RUN=0
 
 # FUNCTIONS ------------------------------------
+
+# Function to output information
+# This will be to the screen and to syslog
+function log() {
+  message=$1
+  tabs=$2
+  level=$3
+  
+  if [ "X$level" == "X" ]
+  then
+    level="notice" 
+  fi
+
+  if [ "X$tabs" != "X" ]
+  then
+    tabs=$(printf '\t%.0s' {0..$tabs})
+  fi
+
+  echo -e "${tabs}${message}"
+
+  logger -t "CHEF_SETUP" -p "user.${level}" $message
+}
 
 # Execute commands and keep a log of the commands that were executed
 function executeCmd()
@@ -75,17 +101,23 @@ function install()
     download_file=`basename $url`
     if [ ! -f $download_file ]
     then
-      echo -e "\tdownloading package"
-      executeCmd "wget $url"
+      log "downloading package" 1
+      executeCmd "wget -nv $url"
     fi
 
     # Install the package
-    echo -e "\tinstalling package"
+    log "installing package" 1
     executeCmd "dpkg -i $download_file"
   else
-    echo -e "\talready installed"
+    log "already installed" 1
   fi
 }
+
+# Function to trim whitespace characters from both ends of string
+function trim() {
+  read -rd '' $1 <<<"${!1}"
+}
+
 # ----------------------------------------------
 
 # Use the arguments and the name of the script to determine how the script was called
@@ -143,15 +175,27 @@ do
     ;;
 
     -n|--functioname)
-      FUNCTION_NAME="$2"
+      CONFIGSTORE_FUNCTION_NAME="$2"
     ;;
 
     -k|--functionapikey)
-      FUNCTION_APIKEY="$2"
+      CONFIGSTORE_FUNCTION_APIKEY="$2"
     ;;
 
     -F|--automatefqdn)
       AUTOMATE_SERVER_FQDN="$2"
+    ;;
+
+    -C|--chefserverfqdn)
+      CHEF_SERVER_FQDN="$2"
+    ;;
+
+    -m|--monitoruser)
+      MONITOR_USER="$2"
+    ;;
+
+    -M|--monitoremail)
+      MONITOR_EMAIL="$2"
     ;;
   esac
 
@@ -159,21 +203,21 @@ do
   shift
 done
 
-echo "Chef server"
+log "Chef server"
 
 # Install necessary pre-requisites for the script
 # In this case jq is required to read data from the function
-echo -e "\tPre-requisites"
+log "Pre-requisites" 1
 jq=`which jq`
 if [ "X$jq" == "X" ]
 then
-  echo "\t\tinstalling jq"
+  log "installing jq" 2
   cmd="apt-get install -y jq"
   executeCmd "$cmd"
 fi
 
 # Determine the full URL for the Azure function
-AF_URL=$(printf '%s/%s?code=%s' $FUNCTION_BASE_URL $FUNCTION_NAME $FUNCTION_APIKEY)
+AF_URL=$(printf '%s/%s?code=%s' $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY)
 
 # Determine the necessary operations
 for operation in $MODE
@@ -192,7 +236,7 @@ do
         download_url=$(printf 'https://packages.chef.io/files/stable/chef-server/%s/ubuntu/16.04/chef-server-core_%s-1_amd64.deb' $CHEF_SERVER_VERSION $CHEF_SERVER_VERSION)
         install chef-server-ctl $download_url
       else
-        echo -e "Not installing Chef server as not version specified. Use -v and rerun the command if this is required"
+        log "Not installing Chef server as not version specified. Use -v and rerun the command if this is required" 0 err
       fi
 
     ;;
@@ -208,14 +252,14 @@ do
           [ "X$CHEF_ORG_DESCRIPTION" != "X" ]
       then
 
-        echo "Configuration"
+        log "Configuration"
 
         # Configure the Chef server for the first time
-        echo -e "\treconfigure"
+        log "reconfigure" 1
         executeCmd "chef-server-ctl reconfigure"
 
         # Build up the command to create the new user
-        echo -e "\tcreate user: ${CHEF_USER_NAME}"
+        log "create user: ${CHEF_USER_NAME}" 1
         cmd=$(printf 'chef-server-ctl user-create %s %s %s "%s" --filename %s.pem' \
               $CHEF_USER_NAME \
               "$CHEF_USER_FULLNAME" \
@@ -225,7 +269,7 @@ do
         executeCmd "${cmd}"
 
         # Create the named organisation
-        echo -e "\tcreate organisation: ${CHEF_ORGNAME}"
+        log "create organisation: ${CHEF_ORGNAME}" 1
         cmd=$(printf 'chef-server-ctl org-create %s "%s" --association-user %s --filename %s-validator.pem' \
               $CHEF_ORGNAME \
               "$CHEF_ORG_DESCRIPTION" \
@@ -233,30 +277,63 @@ do
               $CHEF_ORGNAME)
         executeCmd "${cmd}"
       fi
+
+      # Create a user that can be used to monitor the Chef server using the API
+      monitor_password=`openssl rand -hex 8`
+      log "create monitor user: monitor" 1
+      cmd=$(printf 'chef-server-ctl user-create %s Monitoring User %s "%s" -o %s --filename %s.pem' \
+            $MONITOR_USER \
+            $MONITOR_EMAIL \
+            $monitor_password \
+            $CHEF_ORGNAME \
+            $MONITOR_USER)
+      executeCmd "${cmd}"
     ;;
 
     # Store the user and organisation keys in the storage
     storekeys)
 
-      echo "Storing Keys"
-      echo -e "\t$CHEF_USER_NAME"
+      log "Storing Keys"
+      log "$CHEF_USER_NAME" 1
 
-      cmd=$(printf "curl -XPOST %s -d '{\"%s_key\": \"%s\"}'" $AF_URL $CHEF_USER_NAME `cat ${CHEF_USER_NAME}.pem | base64 -w 0`)
+      cmd=$(printf "curl -XPOST %s -d '{\"user\": \"%s\"}'" $AF_URL $CHEF_USER_NAME)
       executeCmd "$cmd"
 
-      echo -e "\t${CHEF_ORGNAME}-validator"
-
-      cmd=$(printf "curl -XPOST %s -d '{\"%s_validator_key\": \"%s\"}'" $AF_URL $CHEF_ORGNAME `cat ${CHEF_ORGNAME}-validator.pem | base64 -w 0`)
+      cmd=$(printf "curl -XPOST %s -d '{\"user_key\": \"%s\"}'" $AF_URL `cat ${CHEF_USER_NAME}.pem | base64 -w 0`)
       executeCmd "$cmd"
+
+      cmd=$(printf "curl -XPOST %s -d '{\"user_password\": \"%s\"}'" $AF_URL $CHEF_USER_PASSWORD)
+      executeCmd "$cmd"      
+
+      log "${CHEF_ORGNAME}-validator" 1
+
+      cmd=$(printf "curl -XPOST %s -d '{\"org\": \"%s\"}'" $AF_URL $CHEF_ORGNAME)
+      executeCmd "$cmd"
+
+      cmd=$(printf "curl -XPOST %s -d '{\"org_validator_key\": \"%s\"}'" $AF_URL `cat ${CHEF_ORGNAME}-validator.pem | base64 -w 0`)
+      executeCmd "$cmd"
+
+      # Set extra information in the configuration store such as the server FQDN and monitor key
+      cmd=$(printf "curl -XPOST %s -d '{\"chefserver_fqdn\": \"%s\"}'" $AF_URL $CHEF_SERVER_FQDN)
+      executeCmd "$cmd"
+
+      cmd=$(printf "curl -XPOST %s -d '{\"monitor_user\": \"%s\"}'" $AF_URL $MONITOR_USER)
+      executeCmd "$cmd"
+
+      cmd=$(printf "curl -XPOST %s -d '{\"monitor_user_password\": \"%s\"}'" $AF_URL $monitor_password)
+      executeCmd "$cmd"      
+
+      cmd=$(printf "curl -XPOST %s -d '{\"monitor_key\": \"%s\"}'" $AF_URL `cat ${MONITOR_USER}.pem | base64 -w 0`)
+      executeCmd "$cmd"      
     ;;
 
     # Integrate the Chef server with the automate server
     integrate)
 
-      echo -e "Integrate"
+      log "Integrate"
 
       # Get the token from the azure function
-      echo -e "\tRetrieving token"
+      log "Retrieving token" 1
       cmd=$(printf "curl -s -XGET '%s&key=automate_token' | jq -r .automate_token " $AF_URL)
       automate_token=$(executeCmd "$cmd")
 
@@ -272,17 +349,17 @@ do
 
       # Now set the data collector and profiles in the Chef server configuration file
       setting=$(printf "data_collector['root_url'] = 'https://%s/data-collector/v0/'" $AUTOMATE_SERVER_FQDN)
-      cmd="echo $setting >> /etc/opscode/chef-server.rb"
+      cmd="echo \"$setting\" >> /etc/opscode/chef-server.rb"
       executeCmd "$cmd"
 
       setting=$(printf "profiles['root_url'] = 'https://%s'" $AUTOMATE_SERVER_FQDN)
-      cmd="echo $setting >> /etc/opscode/chef-server.rb"
+      cmd="echo \"$setting\" >> /etc/opscode/chef-server.rb"
       executeCmd "$cmd"      
     ;;
 
     reconfigure)
       # Reconfigure the server after creating user and organisation
-      echo -e "Reconfigure"
+      log "Reconfigure"
       executeCmd "chef-server-ctl reconfigure"  
     ;;
 

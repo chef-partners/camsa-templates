@@ -41,7 +41,7 @@ control 'AMA Functions Server (Web site)' do
     its('kind') { should cmp 'functionapp' }
 
     its('properties.hostNames') { should include format('%s.azurewebsites.net', app_service_name.downcase) }
-    its('properties.webSpace') { should cmp format('inspec-ama-%swebspace', location_name.gsub(/\s/, '')) }
+    its('properties.webSpace') { should cmp format('%s-%swebspace', resource_group_name, location_name.gsub(/\s/, '')) }
     its('properties.repositorySiteName') { should cmp app_service_name }
 
     its('properties.enabled') { should be true }
