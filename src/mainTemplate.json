@@ -8,28 +8,24 @@
                 "description": "Prefix to be applied to the name and hostname of the Chef and Automate servers"
             }
         },
-
         "customerResourceGroupName": {
             "type": "string",
             "metadata": {
                 "description": "Name of the resource group that contains the Virtual network to which the Chef and Automate servers should be connected to"
             }
         },
-
         "virtualNetworkName": {
             "type": "string",
             "metadata": {
                 "description": "Name of the Virtual Network which contains the Subnet to which the machines should be connected"
             }
         },
-
         "subnetName": {
             "type": "string",
             "metadata": {
                 "description": "Name of the subnet to which the machines should be connected to"
             }
         },
-
         "uniqueShort": {
             "type": "string",
             "metadata": {
@@ -37,7 +33,6 @@
             },
             "defaultValue": ""
         },
-
         "sshSourceAddresses": {
             "type": "array",
             "metadata": {
@@ -47,7 +42,6 @@
                 "34.206.89.3/32"
             ]
         },
-
         "chefServerVersion": {
             "type": "string",
             "metadata": {
@@ -55,70 +49,59 @@
             },
             "defaultValue": "12.17.33"
         },
-
         "chefUsername": {
             "type": "string",
             "metadata": {
                 "description": "Username when creating the Chef user"
             }
         },
-
         "chefUserFullname": {
             "type": "string",
             "metadata": {
                 "description": "Ful name of the Chef user"
             }
         },
-
         "chefUserPassword": {
             "type": "securestring",
             "metadata": {
                 "description": "Password to be associated with the Chef user"
             }
         },
-
         "chefUserEmailaddress": {
             "type": "string",
             "metadata": {
                 "description": "Email address associated with the chef user"
             }
         },
-
         "chefOrg": {
             "type": "string",
             "metadata": {
                 "description": "Org that should be created and the user associated with"
             }
         },
-
         "chefOrgDescription": {
             "type": "string",
             "metadata": {
                 "description": "Description of the Chef org"
             }
         },
-
         "automateLicence": {
             "type": "securestring"
         },
-
         "logAnalyticsTier": {
             "type": "string"
         },
-
         "baseUrl": {
             "type": "string",
-            "defaultValue": "https://raw.githubusercontent.com/chef-partners/azure-managed-automate/master"
+            "defaultValue": "https://raw.githubusercontent.com/chef-partners/azure-managed-automate/release"
         },
-
         "azureStorageSASToken": {
             "type": "string",
             "metadata": {
                 "description": "SAS token that has been generated if the templates are to be read from azure table storage"
             },
-            "defaultValue": ""            
+            "defaultValue": ""
         },
-
         "sshPublicKeys": {
             "type": "array",
             "metadata": {
@@ -132,11 +115,8 @@
     "variables": {
         "unique": "[uniqueString(subscription().subscriptionId, resourceGroup().id, deployment().name, parameters('prefix'))]",
         "uniqueShort": "[if(empty(parameters('uniqueShort')), substring(variables('unique'), 0, 4), parameters('uniqueShort'))]",
-
         "baseUrl": "[if(not(empty(parameters('baseUrl'))), if(endsWith(parameters('baseUrl'), '/'), parameters('baseUrl'), concat(parameters('baseUrl'), '/')), if(contains(deployment().properties, 'templateLink'), uri(deployment().properties.templateLink.uri, '.'), ''))]",
-
         "location": "[resourceGroup().location]",
-
         "name": {
             "storageAccount": "[variables('unique')]",
             "virtualNetwork": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-VNet')]",
@@ -173,7 +153,7 @@
             },
             "laExtension": {
                 "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-LAExtension')]",
-                "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-LAExtension')]"                
+                "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-LAExtension')]"
             },
             "functions": {
                 "configstore": "[concat(parameters('prefix'), '-ConfigStore-AF')]",
@@ -182,12 +162,10 @@
                 "starterkit": "[concat(parameters('prefix'), '-StarterKit-AF')]"
             }
         },
-
         "vmSize": {
             "chef": "Standard_DS2_V2",
             "automate": "Standard_DS2_V2"
         },
-
         "admin": {
             "username": "azureama",
             "copy": [
@@ -201,17 +179,13 @@
                 }
             ]
         },
-
         "customerVNetID": "[resourceId(parameters('customerResourceGroupName'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
         "customerSubnetRef": "[concat(variables('customerVNetID'), '/subnets/', parameters('subnetName'))]",
-
         "sourceAddresses": {
             "ssh": "[parameters('sshSourceAddresses')]"
         },
-
         "sasTokenFromDeployment": "[if(equals(length(split(deployment().properties.templateLink.uri, '?')), 2), last(split(deployment().properties.templateLink.uri, '?')), '')]",
         "templateUrlQueryString": "[if(empty(parameters('azureStorageSASToken')), if(empty(variables('sasTokenFromDeployment')), '', concat('?', variables('sasTokenFromDeployment'))), concat('?', parameters('azureStorageSASToken')))]",
-
         "urls": {
             "storageAccount": "[concat(variables('baseUrl'), 'templates/storage-account.json', variables('templateUrlQueryString'))]",
             "virtualNetwork": "[concat(variables('baseUrl'), 'templates/virtual-network.json', variables('templateUrlQueryString'))]",
@@ -235,12 +209,10 @@
                 "starterKit": "[concat(variables('baseUrl'), 'templates/functions/starter-kit.json', variables('templateUrlQueryString'))]"
             }
         },
-
         "apiVersions": {
             "deployments": "2017-05-10",
             "config": "2016-08-01"
         },
-
         "chef": {
             "version": "[parameters('chefServerVersion')]",
             "username": "[parameters('chefUsername')]",
@@ -250,17 +222,14 @@
             "org": "[toLower(parameters('chefOrg'))]",
             "orgDescription": "[parameters('chefOrgDescription')]"
         },
-
         "automate": {
             "licence": "[parameters('automateLicence')]"
         },
-
         "la": {
             "sku": "[parameters('logAnalyticsTier')]"
         }
     },
     "resources": [
-
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').sa, '-Deployment')]",
@@ -287,7 +256,6 @@
                 }
             }
         },
-
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').appServicePlan, '-Deployment')]",
@@ -314,7 +282,6 @@
                 }
             }
         },
-
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').appService, '-Deployment')]",
@@ -351,7 +318,6 @@
                 }
             }
         },
-
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').functions.configstore, '-Deployment')]",
@@ -372,7 +338,6 @@
                 }
             }
         },
-
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').functions.starterkit, '-Deployment')]",
@@ -393,7 +358,6 @@
                 }
             }
         },
-
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').functions.automatelog, '-Deployment')]",
@@ -420,8 +384,7 @@
                     }
                 }
             }
-        },        
-
+        },
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').functions.nodecount, '-Deployment')]",
@@ -448,8 +411,7 @@
                     }
                 }
             }
-        },  
-
+        },
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').la, '-Deployment')]",
@@ -479,13 +441,12 @@
                 }
             }
         },
-
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').nsg.chef, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
             "properties": {
-                "mode":"Incremental",
+                "mode": "Incremental",
                 "templateLink": {
                     "uri": "[variables('urls').networkSecurityGroup]",
                     "contentVersion": "1.0.0.0"
@@ -509,13 +470,12 @@
                 }
             }
         },
-
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').nsg.automate, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
             "properties": {
-                "mode":"Incremental",
+                "mode": "Incremental",
                 "templateLink": {
                     "uri": "[variables('urls').networkSecurityGroup]",
                     "contentVersion": "1.0.0.0"
@@ -539,7 +499,6 @@
                 }
             }
         },
-
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').publicIPAddress.chef, '-Deployment')]",
@@ -572,7 +531,6 @@
                 }
             }
         },
-
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').publicIPAddress.automate, '-Deployment')]",
@@ -605,7 +563,6 @@
                 }
             }
         },
-        
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').nic.customer.chef, '-Deployment')]",
@@ -642,7 +599,6 @@
                 }
             }
         },
-        
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').nic.customer.automate, '-Deployment')]",
@@ -679,7 +635,6 @@
                 }
             }
         },
-
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').vm.chef, '-Deployment')]",
@@ -731,7 +686,6 @@
                 }
             }
         },
-
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').vm.automate, '-Deployment')]",
@@ -783,7 +737,6 @@
                 }
             }
         },
-
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').laExtension.automate, '-Deployment')]",
@@ -823,7 +776,6 @@
                 }
             }
         },
-
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').laExtension.chef, '-Deployment')]",
@@ -862,8 +814,7 @@
                     }
                 }
             }
-        },        
-        
+        },
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').extension.automate, '-Deployment')]",
@@ -892,7 +843,7 @@
                     },
                     "scriptName": {
                         "value": "automate-server.sh"
-                    },                    
+                    },
                     "scriptArguments": {
                         "value": "[concat('-o install,kernel,config,deploy,licence,token,cron -u \"', variables('chef').username, '\" -p \"', variables('chef').password, '\" -e ', variables('chef').email, ' -l ', variables('automate').licence, ' -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -n ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.name.value, ' -k ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, ' -N ', reference(concat(variables('name').functions.automatelog, '-Deployment')).outputs.name.value, ' -K ', reference(concat(variables('name').functions.automatelog, '-Deployment')).outputs.apiKey.value, ' -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value)]"
                     },
@@ -908,7 +859,6 @@
                 }
             }
         },
-
         {
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').extension.chef, '-Deployment')]",
