@@ -264,7 +264,7 @@
             "chefOrgDescription": "[steps('chefCredentialsStep').orgdescription]",
             "automateLicence": "[steps('automateLicenceStep').licence]",
             "logAnalyticsTier": "[steps('logAnalyticsStep').tier]",
-            "logAnalytcisLocation": "[steps('logAnalyticsStep').location]"
+            "logAnalyticsLocation": "[steps('logAnalyticsStep').location]"
         }
     }
 }
