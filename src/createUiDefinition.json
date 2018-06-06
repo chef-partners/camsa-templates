@@ -190,6 +190,63 @@
                             ]
                         },
                         "visible": true
+                    },
+                    {
+                        "name": "location",
+                        "type": "Microsoft.Common.DropDown",
+                        "label": "Location",
+                        "toolTip": "Location that the Log Analytcis should be deployed into",
+                        "defaultValue": "eastus",
+                        "constraints": {
+                            "allowedValues": [
+                                {
+                                    "label": "Australia Central",
+                                    "value": "australiacentral"
+                                },
+                                {
+                                    "label": "Australia Central 2",
+                                    "value": "australiacentral2"
+                                },
+                                {
+                                    "label": "Australia South East",
+                                    "value": "australiasoutheast"
+                                },
+                                {
+                                    "label": "Canada Central",
+                                    "value": "canadacentral"
+                                },
+                                {
+                                    "label": "Central India",
+                                    "value": "centralindia"
+                                },
+                                {
+                                    "label": "East US",
+                                    "value": "eastus"
+                                },
+                                {
+                                    "label": "Japan East",
+                                    "value": "japaneast"
+                                },
+                                {
+                                    "label": "South East Asia",
+                                    "value": "southeastasia"
+                                },
+                                {
+                                    "label": "UK South",
+                                    "value": "uksouth"
+                                },
+                                {
+                                    "label": "West Central US",
+                                    "value": "westcentralus"
+                                },
+                                {
+                                    "label": "West Europe",
+                                    "value": "westeurope"
+                                }                                
+                            ],
+                            "required": true 
+                        },
+                        "visible": true
                     }
                 ]
             }
@@ -206,7 +263,8 @@
             "chefOrg": "[steps('chefCredentialsStep').orgname]",
             "chefOrgDescription": "[steps('chefCredentialsStep').orgdescription]",
             "automateLicence": "[steps('automateLicenceStep').licence]",
-            "logAnalyticsTier": "[steps('logAnalyticsStep').tier]"
+            "logAnalyticsTier": "[steps('logAnalyticsStep').tier]",
+            "logAnalytcisLocation": "[steps('logAnalyticsStep').location]"
         }
     }
 }

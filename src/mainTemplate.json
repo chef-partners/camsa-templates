@@ -106,6 +106,10 @@
             "type": "string"
         },
 
+        "logAnalyticsLocation": {
+            "type": "string"
+        },
+
         "baseUrl": {
             "type": "string",
             "defaultValue": "https://raw.githubusercontent.com/chef-partners/azure-managed-automate/master"
@@ -136,6 +140,7 @@
         "baseUrl": "[if(not(empty(parameters('baseUrl'))), if(endsWith(parameters('baseUrl'), '/'), parameters('baseUrl'), concat(parameters('baseUrl'), '/')), if(contains(deployment().properties, 'templateLink'), uri(deployment().properties.templateLink.uri, '.'), ''))]",
 
         "location": "[resourceGroup().location]",
+        "logAnalyticsLocation": "[if(empty(parameters('logAnalyticsLocation')), variables('location'), parameters('logAnalyticsLocation'))]",
 
         "name": {
             "storageAccount": "[variables('unique')]",
@@ -468,7 +473,7 @@
                         "value": "[variables('la').sku]"
                     },
                     "location": {
-                        "value": "[variables('location')]"
+                        "value": "[variables('logAnalyticsLocation')]"
                     },
                     "tags": {
                         "value": {
