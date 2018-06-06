@@ -107,7 +107,8 @@
         },
 
         "logAnalyticsLocation": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": ""
         },
 
         "baseUrl": {
