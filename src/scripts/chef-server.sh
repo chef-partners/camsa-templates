@@ -363,6 +363,17 @@ do
       executeCmd "chef-server-ctl reconfigure"  
     ;;
 
+    # Extract the external IP address to add to the config store
+    internalip)
+
+      # Get the IP address
+      internal_ip=`ip addr show eth0 | grep -Po 'inet \K[\d.]+'`
+
+      # set the address in the config store
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"chef_internal_ip\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $internal_ip)
+      executeCmd "$cmd" 
+    ;;    
+
   esac
 
 done
