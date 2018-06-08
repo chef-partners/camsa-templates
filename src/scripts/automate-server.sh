@@ -306,7 +306,7 @@ do
     licence)
       log "Apply licence"
 
-      cmd=$(printf 'chef-automate license apply %s' $AUTOMATE_LICENSE)
+      cmd=$(printf 'chef-automate license apply %s' $AUTOMATE_LICENCE)
       executeCmd "$cmd"
     ;;
 
