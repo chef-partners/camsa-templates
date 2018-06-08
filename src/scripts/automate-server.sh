@@ -27,6 +27,7 @@ AUTOMATE_COMMAND="chef-automate"
 USERNAME=""
 PASSWORD=""
 EMAILADDRESS=""
+FULLNAME=""
 
 # Define the variables that hold information about the Azure functions
 FUNCTION_BASE_URL=""
@@ -181,6 +182,11 @@ do
       EMAILADDRESS="$2"
     ;;
 
+    # Get the full name of the user
+    -f|--fullname)
+      FULLNAME="$2"
+    ;;    
+
     -b|--functionbaseurl)
       FUNCTION_BASE_URL="$2"
     ;;
@@ -267,31 +273,7 @@ do
         log "initialisation" 2
         cmd="chef-automate init-config"
         executeCmd "$cmd"
-      fi
-
-      # Now edit the confguration file with the settings that have been passed to the script
-      if [ "X$USERNAME" != "X" ] && \
-         [ "X$PASSWORD" != "X" ] && \
-         [ "X$EMAILADDRESS" != "X" ] && \
-         [ "X$AUTOMATE_LICENCE" != "X" ]
-      then
-
-        log "Setting user information" 2
-
-        # replace the username in the config.toml file
-        cmd=$(printf 'sed -i.bak -r %ss/(email\\s+=\\s+").*(")/\\1%s\\2/g%s %s' "'" $EMAILADDRESS "'" $CONFIG_FILE)
-        executeCmd "$cmd"
-
-        cmd=$(printf 'sed -i.bak -r %ss/(username\\s+=\\s+").*(")/\\1%s\\2/g%s %s' "'" $USERNAME "'" $CONFIG_FILE)
-        executeCmd "$cmd"
-
-        cmd=$(printf 'sed -i.bak -r %ss/(password\\s+=\\s+").*(")/\\1%s\\2/g%s %s' "'" $PASSWORD "'" $CONFIG_FILE)
-        executeCmd "$cmd"
-
-        # setting the licence in the config.toml does not appear to work
-        # cmd=$(printf 'sed -i.bak -r %ss/(license\\s+=\\s+").*(")/\\1%s\\2/g%s %s' "'" $AUTOMATE_LICENCE "'" $CONFIG_FILE)
-        # executeCmd "$cmd"          
-      fi      
+      fi   
     ;;
 
     # Dpeloy the automate server with the specified settings
@@ -300,17 +282,32 @@ do
 
       cmd="GRPC_GO_LOG_SEVERITY_LEVEL=info GRPC_GO_LOG_VERBOSITY_LEVEL=2 chef-automate deploy config.toml --accept-terms-and-mlsa --debug"
       executeCmd "$cmd"
+
+      # Get information from the automate-credentials.toml file to add to the config store
+      cat automate-credentials.toml | while read line
+      do
+        [[ "$line" =~ ^#.*$ ]] && continue
+
+        # Get the name of the parameter and the value
+        name=${line%=*}
+        value=${line#*=}
+
+        # add each value to the config store
+        cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_credentials_%s\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $name $value)
+        executeCmd "$cmd"
+      done
     ;;
 
     # Apply the licence to automate
     licence)
       log "Apply licence"
 
-      cmd=$(printf 'chef-automate license apply %s' $AUTOMATE_LICENSE)
+      cmd=$(printf 'chef-automate license apply %s' $AUTOMATE_LICENCE)
       executeCmd "$cmd"
     ;;
 
     # Generate API token and post it into the chefAMAConfigStore function
+    # This operation now creates the user as the token is required
     token)
 
       log "API Token"
@@ -324,7 +321,11 @@ do
       executeCmd "$cmd"
 
       cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_fqdn\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $AUTOMATE_SERVER_FQDN)
-      executeCmd "$cmd"      
+      executeCmd "$cmd"
+
+      # Create the user using the Automate Server API
+      cmd=$(printf "curl -H 'api-token: %s' -H 'Content-Type: application/json' -d '{\"name\": \"%s\", \"username\": \"%s\", \"password\": \"%s\"}' --insecure https://localhost/api/v0/auth/users", $automate_api_token $FULLNAME $USERNAME $PASSWORD)
+      executeCmd "$cmd"
       
     ;;
 
@@ -354,6 +355,17 @@ EOF
 
     ;;
 
+    # Extract the external IP address to add to the config store
+    internalip)
+
+      # Get the IP address
+      internal_ip=`ip addr show eth0 | grep -Po 'inet \K[\d.]+'`
+
+      # set the address in the config store
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_internal_ip\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $internal_ip)
+      executeCmd "$cmd" 
+    ;;
+  
   esac
 
 done

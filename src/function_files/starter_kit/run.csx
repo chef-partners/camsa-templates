@@ -48,10 +48,16 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, CloudT
     // Create the Chef Automate credentials file
     string credentials_path = Path.Combine(chef_repo_path, "credentials.txt");
     StringBuilder sb = new StringBuilder();
-    sb.AppendLine(String.Format("Automate URL: https://{0}", AMA[AutomateServerFQDNKey]));
     sb.AppendLine(String.Format("Chef Server URL: https://{0}/organizations/{1}", AMA[ChefServerFQDNKey], AMA[OrgKey]));
     sb.AppendLine(String.Format("User username: {0}", AMA[UserKey]));
     sb.AppendLine(String.Format("User password: {0}", AMA[UserPasswordKey]));
+    sb.AppendLine();
+    sb.AppendLine(String.Format("Automate URL: https://{0}", AMA[AutomateServerFQDNKey]));
+    sb.AppendLine(String.Format("Automate admin username: {0}", AMA[AutomateCredentialsAdminUsernameKey]));
+    sb.AppendLine(String.Format("Automate admin password: {0}", AMA[AutomateCredentialsAdminPasswordKey]));
+    sb.AppendLine();
+    sb.AppendLine(String.Format("Chef Server Internal IP Address: {0}", AMA[ChefServerInternalIPAddress]));
+    sb.AppendLine(String.Format("Automate Server Internal IP Address: {0}", AMA[AutomateServerInternalIPAddressKey]));
     File.WriteAllText(credentials_path, sb.ToString());
     
 
