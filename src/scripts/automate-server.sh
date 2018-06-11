@@ -293,7 +293,7 @@ do
         value=${line#*=}
 
         # add each value to the config store
-        cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_credentials_%s\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $name $value)
+        cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_credentials_%s\": %s}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $name $value)
         executeCmd "$cmd"
       done
     ;;
