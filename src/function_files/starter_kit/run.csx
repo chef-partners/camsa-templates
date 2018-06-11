@@ -56,7 +56,7 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, CloudT
     sb.AppendLine(String.Format("Automate admin username: {0}", AMA[AutomateCredentialsAdminUsernameKey]));
     sb.AppendLine(String.Format("Automate admin password: {0}", AMA[AutomateCredentialsAdminPasswordKey]));
     sb.AppendLine();
-    sb.AppendLine(String.Format("Chef Server Internal IP Address: {0}", AMA[ChefServerInternalIPAddress]));
+    sb.AppendLine(String.Format("Chef Server Internal IP Address: {0}", AMA[ChefServerInternalIPAddressKey]));
     sb.AppendLine(String.Format("Automate Server Internal IP Address: {0}", AMA[AutomateServerInternalIPAddressKey]));
     File.WriteAllText(credentials_path, sb.ToString());
     

@@ -289,7 +289,7 @@ do
         [[ "$line" =~ ^#.*$ ]] && continue
 
         # Get the name of the parameter and the value
-        name=${line%=*}
+        name="$(echo "${line%=*}" | tr -d '[:space:]')"
         value=${line#*=}
 
         # add each value to the config store

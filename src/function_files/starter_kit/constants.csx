@@ -3,7 +3,7 @@ static string PartitionKey = "ChefAMA";
 // Define chef server keys
 static string ChefServerFQDNKey = "chefserver_fqdn";
 
-static string ChefServerInternalIPAddress = "chef_internal_ip";
+static string ChefServerInternalIPAddressKey = "chef_internal_ip";
 static string UserKey = "user";
 static string UserKeyKey = "user_key";
 static string UserPasswordKey = "user_password";
