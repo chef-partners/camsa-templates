@@ -6,3 +6,7 @@ local/
 *.js.map
 node_modules/
 build/
+test/integration/build/parameters.json
+*.pdf
+inspec.out
+package-lock.json
