@@ -91,9 +91,9 @@ function executeCmd()
     fi
 
     # Output the commands to the log file
-    echo $localcmd >> commands.log
+    echo "$localcmd" >> commands.log
 
-    eval $localcmd
+    eval "$localcmd"
 
   fi
 }
@@ -324,7 +324,7 @@ do
       executeCmd "$cmd"
 
       # Create the user using the Automate Server API
-      cmd=$(printf "curl -H 'api-token: %s' -H 'Content-Type: application/json' -d '{\"name\": \"%s\", \"username\": \"%s\", \"password\": \"%s\"}' --insecure https://localhost/api/v0/auth/users", $automate_api_token $FULLNAME $USERNAME $PASSWORD)
+      cmd=$(printf "curl -H 'api-token: %s' -H 'Content-Type: application/json' -d '{\"name\": \"%s\", \"username\": \"%s\", \"password\": \"%s\"}' --insecure https://localhost/api/v0/auth/users" $automate_api_token $FULLNAME $USERNAME $PASSWORD)
       executeCmd "$cmd"
       
     ;;
