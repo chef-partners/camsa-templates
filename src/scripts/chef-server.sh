@@ -542,10 +542,10 @@ EOF
       executeCmd "$cmd"
 
       # Enable statsd output from the chef server
-      cmd="echo estatsd['enable'] = true >> /etc/opscode/chef-server.rb"
+      cmd="echo estatsd['''enable'''] = true >> /etc/opscode/chef-server.rb"
       executeCmd "$cmd"
 
-      cmd="echo estatsd['protocol'] = 'statsd' >> /etc/opscode/chef-server.rb"
+      cmd="echo estatsd['''protocol'''] = '''statsd''' >> /etc/opscode/chef-server.rb"
       executeCmd "$cmd"      
     ;;
 
