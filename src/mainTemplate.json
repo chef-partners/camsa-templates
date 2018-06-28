@@ -294,6 +294,9 @@
                 "automateLog": "[concat(variables('baseUrl'), 'templates/functions/automate-log.json', variables('templateUrlQueryString'))]",
                 "nodeCount": "[concat(variables('baseUrl'), 'templates/functions/node-count.json', variables('templateUrlQueryString'))]",
                 "starterKit": "[concat(variables('baseUrl'), 'templates/functions/starter-kit.json', variables('templateUrlQueryString'))]"
+            },
+            "statsd": {
+                "azureStorage": "[concat(variables('baseUrl'), 'scripts/statsd-azure-queue.js', variables('templateUrlQueryString'))]"
             }
         },
 
