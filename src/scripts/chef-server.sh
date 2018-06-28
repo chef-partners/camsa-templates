@@ -528,7 +528,7 @@ Description=StatsD daemon for Chef Server monitoring
 [Service]
 User=statsd
 Type=simple
-ExecStart=node /usr/local/statsd/statsd/stats.js /etc/statsd/config.js
+ExecStart=/usr/bin/node /usr/local/statsd/statsd/stats.js /etc/statsd/config.js
 Restart=on-failure
 
 [Install]
