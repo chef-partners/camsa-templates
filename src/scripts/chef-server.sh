@@ -476,7 +476,7 @@ EOF
       executeCmd "$cmd"
 
       # Clone the statsd repo to the machine
-      cmd="md -p /usr/local/statsd"
+      cmd="mkdir -p /usr/local/statsd"
       executeCmd "$cmd"
 
       cmd="pushd /usr/local/statsd"
@@ -507,7 +507,7 @@ EOF
       executeCmd "$cmd"
 
       # Create directory for statsd configuration
-      cmd="md /etc/statsd"
+      cmd="mkdir /etc/statsd"
       executeCmd "$cmd"
 
       # create configuration file for statsd
