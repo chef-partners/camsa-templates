@@ -203,7 +203,7 @@ do
       MONITOR_EMAIL="$2"
     ;;
 
-    --sa_name) 
+    --sa-name) 
       STORAGE_ACCOUNT_NAME="$2"
     ;;
 
@@ -472,7 +472,7 @@ Description=StatsD daemon for Chef Server monitoring
 [Service]
 User=statsd
 Type=simple
-ExecStart=node /usr/local/statsd/statsd/stats.js /etc/statsd/config.js
+ExecStart=/usr/bin/node /usr/local/statsd/statsd/stats.js /etc/statsd/config.js
 Restart=on-failure
 
 [Install]
