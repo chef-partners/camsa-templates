@@ -29,6 +29,11 @@ CONFIGSTORE_FUNCTION_NAME="chefAMAConfigStore"
 MONITOR_USER="monitor"
 MONITOR_EMAIL="monitor@chef.io"
 
+STORAGE_ACCOUNT_NAME=""
+STORAGE_ACCOUNT_KEY=""
+
+STATSD_BACKEND_SCRIPT_URL=""
+
 #
 # Do not modify variables below here
 #
@@ -197,6 +202,18 @@ do
     -M|--monitoremail)
       MONITOR_EMAIL="$2"
     ;;
+
+    --sa_name) 
+      STORAGE_ACCOUNT_NAME="$2"
+    ;;
+
+    --sa-key)
+      STORAGE_ACCOUNT_KEY="$2"
+    ;;
+
+    --backend-script-url)
+      STATSD_BACKEND_SCRIPT_URL="$s"
+    ;;
   esac
 
   # move onto the next argument
@@ -218,6 +235,13 @@ fi
 
 # Determine the full URL for the Azure function
 AF_URL=$(printf '%s/%s?code=%s' $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY)
+
+# Download rmate for remote editing
+cmd="wget -O /usr/local/bin/rmate https://raw.github.com/aurora/rmate/master/rmate"
+executeCmd "$cmd"
+
+cmd="chmod a+x /usr/local/bin/rmate"
+executeCmd "$cmd"
 
 # Determine the necessary operations
 for operation in $MODE
@@ -372,7 +396,102 @@ do
       # set the address in the config store
       cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"chef_internal_ip\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $internal_ip)
       executeCmd "$cmd" 
-    ;;    
+    ;;
+
+    # Install and configure Statsd for Chef Server monitoring
+    metrics)
+
+      log "Metrics - statsd"
+
+      # create the user that statsd will run under
+      cmd="adduser statsd"
+      executeCmd "$cmd"
+
+      # install necessary packages to support statsd
+      # configure PPA for node, which is required by statsd
+      cmd="curl -sL https://deb.nodesource.com/setup_8.x -o nodesource_setup.sh"
+      executeCmd "$cmd"
+
+      cmd="bash ./nodesource_setup.sh"
+      executeCmd "$cmd"
+
+      # Install git and nodejs
+      cmd="apt-get install git-core nodejs -y"
+      executeCmd "$cmd"
+
+      # Clone the statsd repo to the machine
+      cmd="md -p /usr/local/statsd"
+      executeCmd "$cmd"
+
+      cmd="pushd /usr/local/statsd"
+      executeCmd "$cmd"
+
+      cmd="git clone https://github.com/etsy/statsd.git"
+      executeCmd "$cmd"
+
+      cmd="mkdir azure-queue"
+      executeCmd "$cmd"
+
+      # Download the backend script
+      cmd="pushd azure-queue"
+      executeCmd "$cmd"
+
+      cmd=$(printf "wget %s" $STATSD_BACKEND_SCRIPT_URL)
+      executeCmd "$cmd"
+
+      # Install script dependencies
+      cmd="npm install azure-storage sprintf-js"
+      executeCmd "$cmd"
+
+      cmd="popd; popd"
+      executeCmd "$cmd"
+
+      # Set the permissions of the statsd directory
+      cmd="chown -R statsd /usr/local/statsd"
+      executeCmd "$cmd"
+
+      # Create directory for statsd configuration
+      cmd="md /etc/statsd"
+      executeCmd "$cmd"
+
+      # create configuration file for statsd
+      cat << EOF > /etc/statsd/config.js
+{
+  storageAccountName: "${STORAGE_ACCOUNT_NAME}",
+  storageAccountKey: "${STORAGE_ACCOUNT_KEY}",
+  queueName: "chef-statsd",
+  backends: [ "/usr/local/stastd/azure-storage" ]
+}
+EOF
+
+      # Create the systemd service file
+      cat << EOF > /etc/systemd/system/statsd.service
+[Unit]
+Description=StatsD daemon for Chef Server monitoring
+
+[Service]
+User=statsd
+Type=simple
+ExecStart=node /usr/local/statsd/statsd/stats.js /etc/statsd/config.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+      cmd="systemctl enable statsd.service"
+      executeCmd "$cmd"
+
+      cmd="systemctl start statsd.service"
+      executeCmd "$cmd"
+
+      # Enable statsd output from the chef server
+      cmd="echo estatsd['enable'] = true >> /etc/opscode/chef-server.rb"
+      executeCmd "$cmd"
+
+      cmd="echo estatsd['protocol'] = 'statsd' >> /etc/opscode/chef-server.rb"
+      executeCmd "$cmd"      
+    ;;
 
   esac
 
