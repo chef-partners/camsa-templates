@@ -479,7 +479,7 @@ EOF
       cmd="mkdir -p /usr/local/statsd/azure-queue"
       executeCmd "$cmd"
 
-      cmd="git clone https://github.com/etsy/statsd.git /usr/local/statsd"
+      cmd="git clone https://github.com/etsy/statsd.git /usr/local/statsd/statsd"
       executeCmd "$cmd"
 
       cmd=$(printf "wget -P /usr/local/statsd/azure-queue %s" $STATSD_BACKEND_SCRIPT_URL)
@@ -529,11 +529,12 @@ EOF
       executeCmd "$cmd"
 
       # Enable statsd output from the chef server
-      cmd="echo estatsd['''enable'''] = true >> /etc/opscode/chef-server.rb"
-      executeCmd "$cmd"
+      cat << EOF >> /etc/opscode/chef-server.rb
 
-      cmd="echo estatsd['''protocol'''] = '''statsd''' >> /etc/opscode/chef-server.rb"
-      executeCmd "$cmd"      
+# Enable statsd metrics
+estatsd["enable"] = true
+estatsd["protocol"] = "statsd"      
+EOF 
     ;;
 
   esac
