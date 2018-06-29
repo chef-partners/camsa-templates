@@ -4,5 +4,8 @@ local/
 .byebug_history
 *.js
 *.js.map
+!src/scripts/statsd-azure-queue.js
 node_modules/
 build/
+test/integration/build/parameters.json
+*.pdf
