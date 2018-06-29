@@ -476,30 +476,17 @@ EOF
       executeCmd "$cmd"
 
       # Clone the statsd repo to the machine
-      cmd="mkdir -p /usr/local/statsd"
+      cmd="mkdir -p /usr/local/statsd/azure-queue"
       executeCmd "$cmd"
 
-      cmd="pushd /usr/local/statsd"
+      cmd="git clone https://github.com/etsy/statsd.git /usr/local/statsd"
       executeCmd "$cmd"
 
-      cmd="git clone https://github.com/etsy/statsd.git"
-      executeCmd "$cmd"
-
-      cmd="mkdir azure-queue"
-      executeCmd "$cmd"
-
-      # Download the backend script
-      cmd="pushd azure-queue"
-      executeCmd "$cmd"
-
-      cmd=$(printf "wget %s" $STATSD_BACKEND_SCRIPT_URL)
+      cmd=$(printf "wget -P /usr/local/statsd/azure-queue %s" $STATSD_BACKEND_SCRIPT_URL)
       executeCmd "$cmd"
 
       # Install script dependencies
-      cmd="npm install azure-storage sprintf-js"
-      executeCmd "$cmd"
-
-      cmd="popd; popd"
+      cmd="npm install --prefix /usr/local/statsd/azure-queue azure-storage sprintf-js"
       executeCmd "$cmd"
 
       # Set the permissions of the statsd directory
@@ -516,7 +503,7 @@ EOF
   storageAccountName: "${STORAGE_ACCOUNT_NAME}",
   storageAccountKey: "${STORAGE_ACCOUNT_KEY}",
   queueName: "chef-statsd",
-  backends: [ "/usr/local/stastd/azure-storage" ]
+  backends: [ "/usr/local/stastd/azure-queue/statsd-azure-queue" ]
 }
 EOF
 
