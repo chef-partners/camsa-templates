@@ -477,8 +477,8 @@ EOF
 
 # Enable statsd metrics
 estatsd["enable"] = true
-estatsd["protocol"] = "statsd"      
-EOF 
+estatsd["protocol"] = "statsd"
+EOF
     ;;
 
   esac
