@@ -447,7 +447,7 @@ do
   storageAccountName: "${STORAGE_ACCOUNT_NAME}",
   storageAccountKey: "${STORAGE_ACCOUNT_KEY}",
   queueName: "chef-statsd",
-  backends: [ "/usr/local/stastd/azure-queue/statsd-azure-queue" ]
+  backends: [ "/usr/local/statsd/azure-queue/statsd-azure-queue" ]
 }
 EOF
 
