@@ -30,6 +30,7 @@ MONITOR_USER="monitor"
 MONITOR_EMAIL="monitor@chef.io"
 
 BACKUP_SCRIPT_URL=""
+BACKUP_CRON="0 1 * * *"
 
 SA_NAME=""
 SA_CONTAINER_NAME=""
@@ -207,6 +208,10 @@ do
     # Specify the url to the backup script
     --backupscripturl)
       BACKUP_SCRIPT_URL="$2"
+    ;;
+
+    --backupcron)
+      BACKUP_CRON="$2"
     ;;
 
     # Get the storage account settings
@@ -406,7 +411,7 @@ ACCESS_KEY="${SA_KEY}"
 EOF
 
       # Add the script to the crontab for backup
-      cmd=$(printf '("crontab -l; echo "0 1 * * * %s -t chef") | crontab -' $BACKUP_SCRIPT_PATH)
+      cmd=$(printf '("crontab -l; echo "%s %s -t chef") | crontab -' $BACKUP_CRON $BACKUP_SCRIPT_PATH)
       executeCmd "$cmd"
     ;;
 

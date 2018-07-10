@@ -38,6 +38,7 @@ AUTOMATELOG_FUNCTION_APIKEY=""
 AUTOMATELOG_FUNCTION_NAME="AutomateLog"
 
 BACKUP_SCRIPT_URL=""
+BACKUP_CRON="0 1 * * *"
 
 SA_NAME=""
 SA_CONTAINER_NAME=""
@@ -227,6 +228,10 @@ do
       BACKUP_SCRIPT_URL="$2"
     ;;
 
+    --backupcron)
+      BACKUP_CRON="$2"
+    ;;
+
     # Get the storage account settings
     --saname)
       SA_NAME="$2"
@@ -404,7 +409,7 @@ ACCESS_KEY="${SA_KEY}"
 EOF
 
       # Add the script to the crontab for backup
-      cmd=$(printf '("crontab -l; echo "0 1 * * * %s -t automate") | crontab -' $BACKUP_SCRIPT_PATH)
+      cmd=$(printf '(crontab -l; echo "%s %s -t automate") | crontab -' $BACKUP_CRON $BACKUP_SCRIPT_PATH)
       executeCmd "$cmd"
     ;;
 
