@@ -29,6 +29,12 @@ CONFIGSTORE_FUNCTION_NAME="chefAMAConfigStore"
 MONITOR_USER="monitor"
 MONITOR_EMAIL="monitor@chef.io"
 
+BACKUP_SCRIPT_URL=""
+
+SA_NAME=""
+SA_CONTAINER_NAME=""
+SA_KEY=""
+
 #
 # Do not modify variables below here
 #
@@ -197,6 +203,24 @@ do
     -M|--monitoremail)
       MONITOR_EMAIL="$2"
     ;;
+
+    # Specify the url to the backup script
+    --backupscripturl)
+      BACKUP_SCRIPT_URL="$2"
+    ;;
+
+    # Get the storage account settings
+    --saname)
+      SA_NAME="$2"
+    ;;
+
+    --sacontainer)
+      SA_CONTAINER_NAME="$2"
+    ;;
+
+    --sakey)
+      SA_KEY="$2"
+    ;;    
   esac
 
   # move onto the next argument
@@ -355,6 +379,35 @@ do
       setting=$(printf "profiles['root_url'] = 'https://%s'" $AUTOMATE_SERVER_FQDN)
       cmd="echo \"$setting\" >> /etc/opscode/chef-server.rb"
       executeCmd "$cmd"      
+    ;;
+
+    # Configure backup for the server
+    backup)
+
+      BACKUP_SCRIPT_PATH="/usr/local/bin/backup.sh"
+
+      log "Configuring Backup"
+
+      # Ensure that the directories are 
+      log "Creating necessary directories" 1
+      cmd="mkdir -p /etc/managed_app /var/log/managed_app"
+      executeCmd "$cmd"
+
+      # Download the script to the correct location
+      log "Downloading backup script" 1
+      cmd="curl -o ${BACKUP_SCRIPT_PATH} ${BACKUP_SCRIPT_URL} && chown +x ${BACKUP_SCRIPT_PATH}"
+      executeCmd "$cmd"
+
+      # Write out the configuration file
+      cat << EOF > /etc/managed_app/backup_config
+STORAGE_ACCOUNT="${SA_NAME}"
+CONTAINER_NAME="${SA_CONTAINER_NAME}"
+ACCESS_KEY="${SA_KEY}"
+EOF
+
+      # Add the script to the crontab for backup
+      cmd=$(printf '("crontab -l; echo "0 1 * * * %s -t chef") | crontab -' $BACKUP_SCRIPT_PATH)
+      executeCmd "$cmd"
     ;;
 
     reconfigure)

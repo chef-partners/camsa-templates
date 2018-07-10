@@ -37,6 +37,12 @@ CONFIGSTORE_FUNCTION_NAME="chefAMAConfigStore"
 AUTOMATELOG_FUNCTION_APIKEY=""
 AUTOMATELOG_FUNCTION_NAME="AutomateLog"
 
+BACKUP_SCRIPT_URL=""
+
+SA_NAME=""
+SA_CONTAINER_NAME=""
+SA_KEY=""
+
 # Define where the script called by the cronjob should be saved
 SCRIPT_LOCATION="/usr/local/bin/azurefunctionlog.sh"
 
@@ -215,6 +221,24 @@ do
     --scriptlocation)
       SCRIPT_LOCATION="$2"
     ;;
+
+    # Specify the url to the backup script
+    --backupscripturl)
+      BACKUP_SCRIPT_URL="$2"
+    ;;
+
+    # Get the storage account settings
+    --saname)
+      SA_NAME="$2"
+    ;;
+
+    --sacontainer)
+      SA_CONTAINER_NAME="$2"
+    ;;
+
+    --sakey)
+      SA_KEY="$2"
+    ;;
   esac
 
   # move onto the next argument
@@ -353,6 +377,35 @@ EOF
       cmd=$(printf '(crontab -l; echo "*/5 * * * * %s") | crontab -' $SCRIPT_LOCATION)
       executeCmd "$cmd"
 
+    ;;
+
+    # Configure backup for the server
+    backup)
+
+      BACKUP_SCRIPT_PATH="/usr/local/bin/backup.sh"
+
+      log "Configuring Backup"
+
+      # Ensure that the directories are 
+      log "Creating necessary directories" 1
+      cmd="mkdir -p /etc/managed_app /var/log/managed_app"
+      executeCmd "$cmd"
+
+      # Download the script to the correct location
+      log "Downloading backup script" 1
+      cmd="curl -o ${BACKUP_SCRIPT_PATH} ${BACKUP_SCRIPT_URL} && chown +x ${BACKUP_SCRIPT_PATH}"
+      executeCmd "$cmd"
+
+      # Write out the configuration file
+      cat << EOF > /etc/managed_app/backup_config
+STORAGE_ACCOUNT="${SA_NAME}"
+CONTAINER_NAME="${SA_CONTAINER_NAME}"
+ACCESS_KEY="${SA_KEY}"
+EOF
+
+      # Add the script to the crontab for backup
+      cmd=$(printf '("crontab -l; echo "0 1 * * * %s -t automate") | crontab -' $BACKUP_SCRIPT_PATH)
+      executeCmd "$cmd"
     ;;
 
     # Extract the external IP address to add to the config store
