@@ -998,7 +998,7 @@
         },
         "functionApiKey": {
             "type": "string",
-            "value": "[reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value]"
+            "value": "[if(variables('enabled').logAnalytics, reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, '')]"
         },
         "uniqueShort": {
             "type": "string",
