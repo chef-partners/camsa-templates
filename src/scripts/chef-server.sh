@@ -413,6 +413,10 @@ EOF
       # Add the script to the crontab for backup
       cmd=$(printf '(crontab -l; echo "%s %s -t chef") | crontab -' $BACKUP_CRON $BACKUP_SCRIPT_PATH)
       executeCmd "$cmd"
+
+      # Perform an initial backup
+      cmd="${BACKUP_SCRIPT_PATH} -t chef"
+      executeCmd "$cmd"      
     ;;
 
     reconfigure)

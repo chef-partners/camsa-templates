@@ -50,12 +50,12 @@ function urlencode() {
 function signature() {
 
   # Set variables from parameters passed to the function
-  request_method=$1
-  blob_name=$2
-  resource=$3
-  content_length=$4
-  content_type=$5
-  x_ms_blob_type=$6
+  local request_method=$1
+  local blob_name=$2
+  local resource=$3
+  local content_length=$4
+  local content_type=$5
+  local x_ms_blob_type=$6
 
   # Determine the date for the header
   request_date=$(TZ=GMT date "+%a, %d %h %Y %H:%M:%S %Z")
@@ -353,12 +353,6 @@ do
 
   # Determine the length of the file
   content_length=`stat -c%s ${path}`
-
-  # if the blob_name is empty set it
-  if [ "X$blob_name" == "X" ]
-  then
-    blob_name=`basename $BACKUP_PATH`
-  fi
 
   # Create the necessary signature
   signature "PUT" $blob_name "blockid:${block_id}\ncomp:block" $content_length #"" "x-ms-blob-type:BlockBlob"
