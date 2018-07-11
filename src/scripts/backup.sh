@@ -48,6 +48,7 @@ function urlencode() {
 }
 
 function signature() {
+
   # Set variables from parameters passed to the function
   request_method=$1
   blob_name=$2
@@ -71,7 +72,14 @@ function signature() {
   fi
 
   canonicalized_headers="${canonicalized_headers}${x_ms_date}\n${x_ms_version}"
-  canonicalized_resources="/${STORAGE_ACCOUNT}/${CONTAINER_NAME}/${blob_name}\n${resource}"
+  canonicalized_resources="/${STORAGE_ACCOUNT}/${CONTAINER_NAME}"
+
+  if [ ! "X$blob_name" == "X" ]
+  then
+    canonicalized_resources+="/${blob_name}"
+  fi
+
+  canonicalized_resources+="\n${resource}"
 
   # Determine the string that requires signing
   string_to_sign="${request_method}\n\n\n${content_length}\n\n${content_type}\n\n\n\n\n\n\n${canonicalized_headers}\n${canonicalized_resources}"
@@ -169,6 +177,10 @@ do
       STORAGE_API_VERSION="$2"
     ;;
 
+    -f|--file)
+      BACKUP_PATH="$2"
+    ;;
+
   esac
 
   shift
@@ -196,7 +208,7 @@ then
   do
     if [ -f $location ]
     then
-      $CONFIG_FILE=$location
+      CONFIG_FILE=$location
       break
     fi
   done
@@ -217,7 +229,7 @@ then
 fi
 
 # Ensure that the backup type has been specified
-if [ "X$BACKUP_TYPE" == "X" ]
+if [ "X$BACKUP_TYPE" == "X" ] && [ "X$BACKUP_PATH" == "X" ]
 then
   log "Please specify a backup type, either 'automate' or 'chef' using the -t option" "" "error"
   exit 2
@@ -233,62 +245,91 @@ then
   mkdir -p $WORKING_DIR/files
 fi
 
-# Based on the backup type run the necessary commands and zip up the backups
-# These will then be uploaded to Azure Storage
-case $BACKUP_TYPE in
-  automate)
+if [ "X$BACKUP_PATH" == "X" ]
+then
+  # Based on the backup type run the necessary commands and zip up the backups
+  # These will then be uploaded to Azure Storage
+  case $BACKUP_TYPE in
+    automate)
 
-      # Ensure jq is installed
-      jq_exists=`which jq`
-      if [ "X$jq_exists" == "X" ]
-      then
-        cmd="apt-get install jq -y"
+        # Ensure jq is installed
+        jq_exists=`which jq`
+        if [ "X$jq_exists" == "X" ]
+        then
+          cmd="apt-get install jq -y"
+          executeCmd "$cmd"
+        fi
+
+        # Run an automate backup, with the JSON output going to a file
+        # This is so that the ID of the backup can be retrieved and thus the filename
+        log "Running Automate Server backup"
+        BACKUP_RESULTS_PATH="${WORKING_DIR}/backup_result.json"
+        cmd="chef-automate backup create --result-json ${BACKUP_RESULTS_PATH} > /dev/null"
         executeCmd "$cmd"
-      fi
 
-      # Run an automate backup, with the JSON output going to a file
-      # This is so that the ID of the backup can be retrieved and thus the filename
-      log "Running Automate Server backup"
-      BACKUP_RESULTS_PATH="${WORKING_DIR}/backup_result.json"
-      cmd="chef-automate backup create --result-json ${BACKUP_RESULTS_PATH} > /dev/null"
-      executeCmd "$cmd"
+        # Interrogate the results file to get the ID of the backup
+        BACKUP_ID=`cat $BACKUP_RESULTS_PATH | jq -r ".result.backup_id"`
 
-      # Interrogate the results file to get the ID of the backup
-      BACKUP_ID=`cat $BACKUP_RESULTS_PATH | jq -r ".result.backup_id"`
+        # Create a tar file of the backup directory in the working directory
+        BACKUP_PATH="${WORKING_DIR}/${BACKUP_ID}.tar.gz"
+        log "Creating archive of backup: $BACKUP_PATH"
+        cmd="tar -zcf ${BACKUP_PATH} -C /var/opt/chef-automate/backups ${BACKUP_ID}"
+        executeCmd "$cmd"
 
-      # Create a tar file of the backup directory in the working directory
-      BACKUP_PATH="${WORKING_DIR}/${BACKUP_ID}.tar.gz"
-      log "Creating archive of backup: $BACKUP_PATH"
-      cmd="tar -zcf ${BACKUP_PATH} -C /var/opt/chef-automate/backups ${BACKUP_ID}"
-      executeCmd "$cmd"
+        # Determine the filename to be used as the blob name
+        blob_name="automate_`basename $BACKUP_PATH`"
 
-      # Determine the filename to be used as the blob name
-      blob_name="automate_`basename $BACKUP_PATH`"
+      ;;
 
-    ;;
+    chef)
 
-  chef)
+        # Run Chef server backup
+        log "Running Chef Server backup"
+        cmd="chef-server-ctl backup -y"
+        executeCmd "$cmd"
 
-      # Run Chef server backup
-      log "Running Chef Server backup"
-      cmd="chef-server-ctl backup -y"
-      executeCmd "$cmd"
+        # Determine the path to the backup fle
+        BACKUP_FILE=`ls -1tr /var/opt/chef-backup | tail -1`
+        BACKUP_PATH="/var/opt/chef-backup/${BACKUP_FILE}"
 
-      # Determine the path to the backup fle
-      BACKUP_FILE=`ls -1tr /var/opt/chef-backup | tail -1`
-      BACKUP_PATH="/var/opt/chef-backup/${BACKUP_FILE}"
+        # Determine the filename to be used as the blob name
+        blob_name="`basename $BACKUP_PATH`"
 
-      # Determine the filename to be used as the blob name
-      blob_name="`basename $BACKUP_PATH`"
+      ;;
 
-    ;;
+    *)
 
-  *)
+      log "Unrecognised backup type: ${BACKUP_TYPE}. Please specify 'automate' or 'chef' using the -t option"
+      exit 3
 
-    log "Unrecognised backup type: ${BACKUP_TYPE}. Please specify 'automate' or 'chef' using the -t option"
-    exit 3
+  esac
+fi
 
-esac
+# Ensure that the container exists, if it does not create it
+signature "GET" "" "restype:container"
+response=`curl -X "GET" \
+    -w "%{http_code}" \
+    -H "$x_ms_date" \
+    -H "$x_ms_version" \
+    -H "$authorization" \
+    -o /dev/null \
+    -s \
+    "https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}?restype=container"`
+
+# if the response is 404 then the container cannot be found, thus create it
+if [ "$response" == "404" ]
+then
+  log "Creating container: ${CONTAINER_NAME}"
+
+  signature "PUT" "" "restype:container" "" "application/x-www-form-urlencoded"
+
+  curl -X "PUT" \
+    -H "$x_ms_date" \
+    -H "$x_ms_version" \
+    -H "$authorization" \
+    -d "" \
+    "https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}?restype=container"
+fi
 
 # Split the file up
 log "Checking overall filesize"
@@ -313,10 +354,16 @@ do
   # Determine the length of the file
   content_length=`stat -c%s ${path}`
 
-  # Create the necessary signature
-  signature "PUT" $blob_name "blockid:${block_id}\ncomp:block" $content_length "" "x-ms-blob-type:BlockBlob"
+  # if the blob_name is empty set it
+  if [ "X$blob_name" == "X" ]
+  then
+    blob_name=`basename $BACKUP_PATH`
+  fi
 
-  curl -X $request_method \
+  # Create the necessary signature
+  signature "PUT" $blob_name "blockid:${block_id}\ncomp:block" $content_length #"" "x-ms-blob-type:BlockBlob"
+
+  curl -X "PUT" \
     -T $path \
     -H "$x_ms_date" \
     -H "$x_ms_version" \
