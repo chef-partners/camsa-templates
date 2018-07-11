@@ -29,6 +29,13 @@ CONFIGSTORE_FUNCTION_NAME="chefAMAConfigStore"
 MONITOR_USER="monitor"
 MONITOR_EMAIL="monitor@chef.io"
 
+BACKUP_SCRIPT_URL=""
+BACKUP_CRON="0 1 * * *"
+
+SA_NAME=""
+SA_CONTAINER_NAME=""
+SA_KEY=""
+
 #
 # Do not modify variables below here
 #
@@ -197,6 +204,28 @@ do
     -M|--monitoremail)
       MONITOR_EMAIL="$2"
     ;;
+
+    # Specify the url to the backup script
+    --backupscripturl)
+      BACKUP_SCRIPT_URL="$2"
+    ;;
+
+    --backupcron)
+      BACKUP_CRON="$2"
+    ;;
+
+    # Get the storage account settings
+    --saname)
+      SA_NAME="$2"
+    ;;
+
+    --sacontainer)
+      SA_CONTAINER_NAME="$2"
+    ;;
+
+    --sakey)
+      SA_KEY="$2"
+    ;;    
   esac
 
   # move onto the next argument
@@ -208,11 +237,22 @@ log "Chef server"
 # Install necessary pre-requisites for the script
 # In this case jq is required to read data from the function
 log "Pre-requisites" 1
+log "jq" 2
 jq=`which jq`
 if [ "X$jq" == "X" ]
 then
-  log "installing jq" 2
+  log "installing" 3
   cmd="apt-get install -y jq"
+  executeCmd "$cmd"
+fi
+
+# Install rmate for remote script editing for VSCode
+log "rmate" 2
+rmate=`which rmate`
+if [ "X$rmate" == "X" ]
+then
+  log "installing" 3
+  cmd="wget -O /usr/local/bin/rmate https://raw.github.com/aurora/rmate/master/rmate && chmod a+x /usr/local/bin/rmate"
   executeCmd "$cmd"
 fi
 
@@ -354,6 +394,39 @@ do
 
       setting=$(printf "profiles['root_url'] = 'https://%s'" $AUTOMATE_SERVER_FQDN)
       cmd="echo \"$setting\" >> /etc/opscode/chef-server.rb"
+      executeCmd "$cmd"      
+    ;;
+
+    # Configure backup for the server
+    backup)
+
+      BACKUP_SCRIPT_PATH="/usr/local/bin/backup.sh"
+
+      log "Configuring Backup"
+
+      # Ensure that the directories are 
+      log "Creating necessary directories" 1
+      cmd="mkdir -p /etc/managed_app /var/log/managed_app"
+      executeCmd "$cmd"
+
+      # Download the script to the correct location
+      log "Downloading backup script" 1
+      cmd="curl -o ${BACKUP_SCRIPT_PATH} ${BACKUP_SCRIPT_URL} && chmod +x ${BACKUP_SCRIPT_PATH}"
+      executeCmd "$cmd"
+
+      # Write out the configuration file
+      cat << EOF > /etc/managed_app/backup_config
+STORAGE_ACCOUNT="${SA_NAME}"
+CONTAINER_NAME="${SA_CONTAINER_NAME}"
+ACCESS_KEY="${SA_KEY}"
+EOF
+
+      # Add the script to the crontab for backup
+      cmd=$(printf '(crontab -l; echo "%s %s -t chef") | crontab -' $BACKUP_CRON $BACKUP_SCRIPT_PATH)
+      executeCmd "$cmd"
+
+      # Perform an initial backup
+      cmd="${BACKUP_SCRIPT_PATH} -t chef"
       executeCmd "$cmd"      
     ;;
 

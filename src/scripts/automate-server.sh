@@ -37,6 +37,13 @@ CONFIGSTORE_FUNCTION_NAME="chefAMAConfigStore"
 AUTOMATELOG_FUNCTION_APIKEY=""
 AUTOMATELOG_FUNCTION_NAME="AutomateLog"
 
+BACKUP_SCRIPT_URL=""
+BACKUP_CRON="0 1 * * *"
+
+SA_NAME=""
+SA_CONTAINER_NAME=""
+SA_KEY=""
+
 # Define where the script called by the cronjob should be saved
 SCRIPT_LOCATION="/usr/local/bin/azurefunctionlog.sh"
 
@@ -215,6 +222,28 @@ do
     --scriptlocation)
       SCRIPT_LOCATION="$2"
     ;;
+
+    # Specify the url to the backup script
+    --backupscripturl)
+      BACKUP_SCRIPT_URL="$2"
+    ;;
+
+    --backupcron)
+      BACKUP_CRON="$2"
+    ;;
+
+    # Get the storage account settings
+    --saname)
+      SA_NAME="$2"
+    ;;
+
+    --sacontainer)
+      SA_CONTAINER_NAME="$2"
+    ;;
+
+    --sakey)
+      SA_KEY="$2"
+    ;;
   esac
 
   # move onto the next argument
@@ -222,6 +251,20 @@ do
 done
 
 log "Automate server"
+
+# Install necessary pre-requisites for the script
+# In this case jq is required to read data from the function
+log "Pre-requisites" 1
+
+# Install rmate for remote script editing for VSCode
+log "rmate" 2
+rmate=`which rmate`
+if [ "X$rmate" == "X" ]
+then
+  log "installing" 3
+  cmd="wget -O /usr/local/bin/rmate https://raw.github.com/aurora/rmate/master/rmate && chmod a+x /usr/local/bin/rmate"
+  executeCmd "$cmd"
+fi
 
 # Determine what needs to be done
 for operation in $MODE
@@ -332,27 +375,68 @@ do
     # Setup the cronjob to send data to Log Analytics
     cron)
 
-      log "Configuring CronJob for Log Analytics data"
+      # Only perform the cron addition if the variables are set
+      if [ "X$AUTOMATELOG_FUNCTION_NAME" != "X" ] && [ "X$AUTOMATELOG_FUNCTION_APIKEY" != "X" ]
+      then
+         
+        log "Configuring CronJob for Log Analytics data"
 
-      log "Creating script: $SCRIPT_LOCATION" 1
-      # Create the script that will be called by the cronjob
-      cat << EOF > $SCRIPT_LOCATION
+        log "Creating script: $SCRIPT_LOCATION" 1
+        # Create the script that will be called by the cronjob
+        cat << EOF > $SCRIPT_LOCATION
 #!/usr/bin/env bash
 
 journalctl -fu chef-automate --since "5 minutes ago" --until "now" -o json > /var/log/jsondump.json
 curl -H "Content-Type: application/json" -X POST -d @/var/log/jsondump.json ${FUNCTION_BASE_URL}/${AUTOMATELOG_FUNCTION_NAME}?code=${AUTOMATELOG_FUNCTION_APIKEY}      
 EOF
 
-      # Ensure that the script is executable
-      cmd=$(printf "chmod +x %s" $SCRIPT_LOCATION)
+        # Ensure that the script is executable
+        cmd=$(printf "chmod +x %s" $SCRIPT_LOCATION)
+        executeCmd "$cmd"
+
+        log "Adding cron entry" 1
+
+        # Add the script to cron
+        cmd=$(printf '(crontab -l; echo "*/5 * * * * %s") | crontab -' $SCRIPT_LOCATION)
+        executeCmd "$cmd"
+      else
+
+        log "Unable to complete Cron setup as function name and / or API key have not been specified. Please use -N and -K to specify them"
+      fi
+
+    ;;
+
+    # Configure backup for the server
+    backup)
+
+      BACKUP_SCRIPT_PATH="/usr/local/bin/backup.sh"
+
+      log "Configuring Backup"
+
+      # Ensure that the directories are 
+      log "Creating necessary directories" 1
+      cmd="mkdir -p /etc/managed_app /var/log/managed_app"
       executeCmd "$cmd"
 
-      log "Adding cron entry" 1
-
-      # Add the script to cron
-      cmd=$(printf '(crontab -l; echo "*/5 * * * * %s") | crontab -' $SCRIPT_LOCATION)
+      # Download the script to the correct location
+      log "Downloading backup script" 1
+      cmd="curl -o ${BACKUP_SCRIPT_PATH} ${BACKUP_SCRIPT_URL} && chmod +x ${BACKUP_SCRIPT_PATH}"
       executeCmd "$cmd"
 
+      # Write out the configuration file
+      cat << EOF > /etc/managed_app/backup_config
+STORAGE_ACCOUNT="${SA_NAME}"
+CONTAINER_NAME="${SA_CONTAINER_NAME}"
+ACCESS_KEY="${SA_KEY}"
+EOF
+
+      # Add the script to the crontab for backup
+      cmd=$(printf '(crontab -l; echo "%s %s -t automate") | crontab -' $BACKUP_CRON $BACKUP_SCRIPT_PATH)
+      executeCmd "$cmd"
+
+      # Perform an initial backup
+      cmd="${BACKUP_SCRIPT_PATH} -t automate"
+      executeCmd "$cmd"
     ;;
 
     # Extract the external IP address to add to the config store

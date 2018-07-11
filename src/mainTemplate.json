@@ -102,6 +102,38 @@
             "type": "securestring"
         },
 
+        "enableLogAnalytics": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "State if Log Analytics should be configured for the cluster"
+            }
+        },
+
+        "enableBackup": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "State if backup should be configured on the machine."
+            }
+        },
+
+        "backupHour": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "UTC Hour at which backup will run"
+            }
+        },
+
+        "backupMinute": {
+            "type": "int",
+            "defaultValue": 0,
+            "metadata": {
+                "description": "Minute of the specified hour that the backup will run"
+            }
+        },
+
         "logAnalyticsTier": {
             "type": "string"
         },
@@ -145,6 +177,9 @@
 
         "name": {
             "storageAccount": "[variables('unique')]",
+            "container": {
+                "backup": "backup"
+            },
             "virtualNetwork": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-VNet')]",
             "appServicePlan": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-AppServicePlan')]",
             "appService": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-AppService')]",
@@ -189,6 +224,15 @@
             }
         },
 
+        "enabled": {
+            "logAnalytics": "[parameters('enableLogAnalytics')]",
+            "backup": "[parameters('enableBackup')]"
+        },
+
+        "backup": {
+            "cron": "[concat(parameters('backupMinute'), ' ', parameters('backupHour'), ' * * *')]"
+        },
+
         "vmSize": {
             "chef": "Standard_DS2_V2",
             "automate": "Standard_DS2_V2"
@@ -215,7 +259,7 @@
             "ssh": "[parameters('sshSourceAddresses')]"
         },
 
-        "sasTokenFromDeployment": "[if(equals(length(split(deployment().properties.templateLink.uri, '?')), 2), last(split(deployment().properties.templateLink.uri, '?')), '')]",
+        "sasTokenFromDeployment": "[if(contains(deployment().properties, 'templateLink'), if(equals(length(split(deployment().properties.templateLink.uri, '?')), 2), last(split(deployment().properties.templateLink.uri, '?')), ''), '')]",
         "templateUrlQueryString": "[if(empty(parameters('azureStorageSASToken')), if(empty(variables('sasTokenFromDeployment')), '', concat('?', variables('sasTokenFromDeployment'))), concat('?', parameters('azureStorageSASToken')))]",
 
         "urls": {
@@ -232,7 +276,8 @@
             "logAnalyticsExtension": "[concat(variables('baseUrl'), 'templates/log-analytics-extension.json', variables('templateUrlQueryString'))]",
             "scripts": {
                 "chefserver": "[concat(variables('baseUrl'), 'scripts/chef-server.sh', variables('templateUrlQueryString'))]",
-                "automateserver": "[concat(variables('baseUrl'), 'scripts/automate-server.sh', variables('templateUrlQueryString'))]"
+                "automateserver": "[concat(variables('baseUrl'), 'scripts/automate-server.sh', variables('templateUrlQueryString'))]",
+                "backup": "[concat(variables('baseUrl'), 'scripts/backup.sh', variables('templateUrlQueryString'))]"
             },
             "functions": {
                 "configStore": "[concat(variables('baseUrl'), 'templates/functions/config-store.json', variables('templateUrlQueryString'))]",
@@ -263,7 +308,9 @@
 
         "la": {
             "sku": "[parameters('logAnalyticsTier')]"
-        }
+        },
+
+        "singlequote": "'"
     },
     "resources": [
 
@@ -423,6 +470,9 @@
                     },
                     "logAnalyticsSharedKey": {
                         "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.key.value]"
+                    },
+                    "logAnalyticsEnabled": {
+                        "value": "[variables('enabled').logAnalytics]"
                     }
                 }
             }
@@ -451,6 +501,9 @@
                     },
                     "logAnalyticsSharedKey": {
                         "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.key.value]"
+                    },
+                    "logAnalyticsEnabled": {
+                        "value": "[variables('enabled').logAnalytics]"
                     }
                 }
             }
@@ -475,6 +528,9 @@
                     },
                     "location": {
                         "value": "[variables('logAnalyticsLocation')]"
+                    },
+                    "logAnalyticsEnabled": {
+                        "value": "[variables('enabled').logAnalytics]"
                     },
                     "tags": {
                         "value": {
@@ -825,6 +881,9 @@
                             "description": "Script to install and configure the Automate server",
                             "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
                         }
+                    },
+                    "logAnalyticsEnabled": {
+                        "value": "[variables('enabled').logAnalytics]"
                     }
                 }
             }
@@ -865,6 +924,9 @@
                             "description": "Log Analytics monitoring extension for Chef Server",
                             "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
                         }
+                    },
+                    "logAnalyticsEnabled": {
+                        "value": "[variables('enabled').logAnalytics]"
                     }
                 }
             }
@@ -900,7 +962,7 @@
                         "value": "automate-server.sh"
                     },                    
                     "scriptArguments": {
-                        "value": "[concat('-o install,kernel,config,deploy,licence,token,cron,internalip -u \"', variables('chef').username, '\" -p \"', variables('chef').password, '\" -e ', variables('chef').email, ' -f \"', variables('chef').fullname, '\" -l ', variables('automate').licence, ' -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -n ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.name.value, ' -k ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, ' -N ', reference(concat(variables('name').functions.automatelog, '-Deployment')).outputs.name.value, ' -K ', reference(concat(variables('name').functions.automatelog, '-Deployment')).outputs.apiKey.value, ' -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value)]"
+                        "value": "[concat('-o install,kernel,config,deploy,licence,token,cron', if(variables('enabled').backup, ',backup', ''), ',internalip -u \"', variables('chef').username, '\" -p \"', variables('chef').password, '\" -e ', variables('chef').email, ' -f \"', variables('chef').fullname, '\" -l ', variables('automate').licence, ' -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -n ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.name.value, ' -k ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, if(variables('enabled').logAnalytics, concat(' -N ', reference(concat(variables('name').functions.automatelog, '-Deployment')).outputs.name.value, ' -K ', reference(concat(variables('name').functions.automatelog, '-Deployment')).outputs.apiKey.value), ''), ' -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value, ' --backupscripturl ', variables('urls').scripts.backup, ' --saname ', variables('name').storageAccount, ' --sacontainer ', variables('name').container.backup, ' --sakey \"', reference(concat(variables('name').sa, '-Deployment')).outputs.accesskey.value, '\" --backupcron ', variables('singlequote'), variables('backup').cron, variables('singlequote'))]"
                     },
                     "extensionName": {
                         "value": "InstallAndConfigureAutomate"
@@ -946,7 +1008,7 @@
                         "value": "chef-server.sh"
                     },
                     "scriptArguments": {
-                        "value": "[concat('-o install,config,storekeys,integrate,reconfigure,internalip -v ', variables('chef').version, ' -u ', variables('chef').username, ' -f \"', variables('chef').fullname, '\" -p \"', variables('chef').password, '\" -a ', variables('chef').email, ' -O ', variables('chef').org, ' -d \"', variables('chef').orgDescription, '\" -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -n ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.name.value, ' -k ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, ' -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value, ' -C ', reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value)]"
+                        "value": "[concat('-o install,config,storekeys,integrate,reconfigure,internalip',  if(variables('enabled').backup, ',backup', ''), ' -v ', variables('chef').version, ' -u ', variables('chef').username, ' -f \"', variables('chef').fullname, '\" -p \"', variables('chef').password, '\" -a ', variables('chef').email, ' -O ', variables('chef').org, ' -d \"', variables('chef').orgDescription, '\" -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -n ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.name.value, ' -k ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, ' -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value, ' -C ', reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value, ' --backupscripturl ', variables('urls').scripts.backup, ' --saname ', variables('name').storageAccount, ' --sacontainer ', variables('name').container.backup, ' --sakey \"', reference(concat(variables('name').sa, '-Deployment')).outputs.accesskey.value, '\" --backupcron ', variables('singlequote'), variables('backup').cron, variables('singlequote'))]"
                     },
                     "extensionName": {
                         "value": "InstallAndConfigureChef"
@@ -968,7 +1030,7 @@
         },
         "functionApiKey": {
             "type": "string",
-            "value": "[reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value]"
+            "value": "[if(variables('enabled').logAnalytics, reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, '')]"
         },
         "uniqueShort": {
             "type": "string",
