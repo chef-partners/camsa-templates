@@ -237,11 +237,22 @@ log "Chef server"
 # Install necessary pre-requisites for the script
 # In this case jq is required to read data from the function
 log "Pre-requisites" 1
+log "jq" 2
 jq=`which jq`
 if [ "X$jq" == "X" ]
 then
-  log "installing jq" 2
+  log "installing" 3
   cmd="apt-get install -y jq"
+  executeCmd "$cmd"
+fi
+
+# Install rmate for remote script editing for VSCode
+log "rmate" 2
+rmate=`which rmate`
+if [ "X$rmate" == "X" ]
+then
+  log "installing" 3
+  cmd="wget -O /usr/local/bin/rmate https://raw.github.com/aurora/rmate/master/rmate && chmod a+x /usr/local/bin/rmate"
   executeCmd "$cmd"
 fi
 

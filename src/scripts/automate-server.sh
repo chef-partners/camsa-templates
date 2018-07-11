@@ -252,6 +252,20 @@ done
 
 log "Automate server"
 
+# Install necessary pre-requisites for the script
+# In this case jq is required to read data from the function
+log "Pre-requisites" 1
+
+# Install rmate for remote script editing for VSCode
+log "rmate" 2
+rmate=`which rmate`
+if [ "X$rmate" == "X" ]
+then
+  log "installing" 3
+  cmd="wget -O /usr/local/bin/rmate https://raw.github.com/aurora/rmate/master/rmate && chmod a+x /usr/local/bin/rmate"
+  executeCmd "$cmd"
+fi
+
 # Determine what needs to be done
 for operation in $MODE
 do
