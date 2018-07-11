@@ -400,7 +400,7 @@ do
 
       # Download the script to the correct location
       log "Downloading backup script" 1
-      cmd="curl -o ${BACKUP_SCRIPT_PATH} ${BACKUP_SCRIPT_URL} && chown +x ${BACKUP_SCRIPT_PATH}"
+      cmd="curl -o ${BACKUP_SCRIPT_PATH} ${BACKUP_SCRIPT_URL} && chmod +x ${BACKUP_SCRIPT_PATH}"
       executeCmd "$cmd"
 
       # Write out the configuration file

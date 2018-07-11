@@ -230,7 +230,7 @@
         },
 
         "backup": {
-            "cron": "[concat(parameters('backupHour'), ' ', parameters('backupMinute'), ' * * *')]"
+            "cron": "[concat(parameters('backupMinute'), ' ', parameters('backupHour'), ' * * *')]"
         },
 
         "vmSize": {
