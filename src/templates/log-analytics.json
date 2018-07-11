@@ -17,6 +17,9 @@
         },
         "tags": {
             "type": "Object"
+        },
+        "logAnalyticsEnabled": {
+            "type": "bool"
         }
     },
     "variables": {
@@ -31,12 +34,16 @@
         "apiVersions": {
             "workspace": "2015-03-20"
         },
-        "tags": "[parameters('tags')]"
+        "tags": "[parameters('tags')]",
+        "enabled": {
+            "logAnalytics": "[parameters('logAnalyticsEnabled')]"
+        }
     },
     "resources": [
         {
             "type": "Microsoft.OperationalInsights/workspaces",
             "name": "[variables('name').workspace]",
+            "condition": "[variables('enabled').logAnalytics]",
             "apiVersion": "[variables('apiVersions').workspace]",
             "location": "[variables('location')]",
             "tags": "[variables('tags')]",
@@ -51,11 +58,11 @@
     "outputs": {
         "workspaceId": {
             "type": "String",
-            "value": "[reference(concat('Microsoft.OperationalInsights/workspaces/', variables('name').workspace)).customerId]"
+            "value": "[if(variables('enabled').logAnalytics, reference(concat('Microsoft.OperationalInsights/workspaces/', variables('name').workspace)).customerId, '')]"
         },
         "key": {
             "type": "String",
-            "value": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', variables('name').workspace), variables('apiVersions').workspace).primarySharedKey]"
+            "value": "[if(variables('enabled').logAnalytics, listKeys(resourceId('Microsoft.OperationalInsights/workspaces', variables('name').workspace), variables('apiVersions').workspace).primarySharedKey, '')]"
         }
     }
 }

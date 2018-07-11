@@ -26,6 +26,9 @@
             "metadata": {
                 "description": "Primary key to use for authentication to Log Analytics"
             }
+        },
+        "logAnalyticsEnabled": {
+            "type": "bool"
         }
     },
     "variables": {
@@ -42,13 +45,15 @@
         },
         "logAnalytics": {
             "workspace_id": "[parameters('logAnalyticsWorkspaceId')]",
-            "shared_key": "[parameters('logAnalyticsSharedKey')]"
+            "shared_key": "[parameters('logAnalyticsSharedKey')]",
+            "enabled": "[parameters('logAnalyticsEnabled')]"
         }
     },
     "resources": [
         {
             "type": "Microsoft.Web/sites/functions",
             "name": "[concat(variables('name').site, '/', variables('name').function)]",
+            "condition": "[variables('logAnalytics').enabled]",
             "apiVersion": "[variables('apiVersions').functions]",
             "properties": {
                 "config": {
@@ -81,11 +86,11 @@
     "outputs": {
         "name": {
             "type": "string",
-            "value": "[parameters('functionName')]"
+            "value": "if(variables('logAnalytics').enabled, [parameters('functionName'), '')]"
         },        
         "apiKey": {
             "type": "string",
-            "value": "[listsecrets(resourceId('Microsoft.Web/sites/functions', variables('name').site, variables('name').function), '2016-08-01').key]"
+            "value": "[if(variables('logAnalytics').enabled, listsecrets(resourceId('Microsoft.Web/sites/functions', variables('name').site, variables('name').function), '2016-08-01').key, '')]"
         }
     }
 }

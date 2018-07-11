@@ -375,26 +375,34 @@ do
     # Setup the cronjob to send data to Log Analytics
     cron)
 
-      log "Configuring CronJob for Log Analytics data"
+      # Only perform the cron addition if the variables are set
+      if [ "X$AUTOMATELOG_FUNCTION_NAME" != "X" ] && [ "X$AUTOMATELOG_FUNCTION_APIKEY" != "X" ]
+      then
+         
+        log "Configuring CronJob for Log Analytics data"
 
-      log "Creating script: $SCRIPT_LOCATION" 1
-      # Create the script that will be called by the cronjob
-      cat << EOF > $SCRIPT_LOCATION
+        log "Creating script: $SCRIPT_LOCATION" 1
+        # Create the script that will be called by the cronjob
+        cat << EOF > $SCRIPT_LOCATION
 #!/usr/bin/env bash
 
 journalctl -fu chef-automate --since "5 minutes ago" --until "now" -o json > /var/log/jsondump.json
 curl -H "Content-Type: application/json" -X POST -d @/var/log/jsondump.json ${FUNCTION_BASE_URL}/${AUTOMATELOG_FUNCTION_NAME}?code=${AUTOMATELOG_FUNCTION_APIKEY}      
 EOF
 
-      # Ensure that the script is executable
-      cmd=$(printf "chmod +x %s" $SCRIPT_LOCATION)
-      executeCmd "$cmd"
+        # Ensure that the script is executable
+        cmd=$(printf "chmod +x %s" $SCRIPT_LOCATION)
+        executeCmd "$cmd"
 
-      log "Adding cron entry" 1
+        log "Adding cron entry" 1
 
-      # Add the script to cron
-      cmd=$(printf '(crontab -l; echo "*/5 * * * * %s") | crontab -' $SCRIPT_LOCATION)
-      executeCmd "$cmd"
+        # Add the script to cron
+        cmd=$(printf '(crontab -l; echo "*/5 * * * * %s") | crontab -' $SCRIPT_LOCATION)
+        executeCmd "$cmd"
+      else
+
+        log "Unable to complete Cron setup as function name and / or API key have not been specified. Please use -N and -K to specify them"
+      fi
 
     ;;
 

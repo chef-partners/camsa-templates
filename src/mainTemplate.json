@@ -451,7 +451,6 @@
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').functions.automatelog, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
-            "condition": "[variables('enabled').logAnalytics]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', variables('name').appService, '-Deployment')]",
                 "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]"
@@ -471,6 +470,9 @@
                     },
                     "logAnalyticsSharedKey": {
                         "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.key.value]"
+                    },
+                    "logAnalyticsEnabled": {
+                        "value": "[variables('enabled').logAnalytics]"
                     }
                 }
             }
@@ -480,7 +482,6 @@
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').functions.nodecount, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
-            "condition": "[variables('enabled').logAnalytics]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', variables('name').appService, '-Deployment')]",
                 "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]"
@@ -500,6 +501,9 @@
                     },
                     "logAnalyticsSharedKey": {
                         "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.key.value]"
+                    },
+                    "logAnalyticsEnabled": {
+                        "value": "[variables('enabled').logAnalytics]"
                     }
                 }
             }
@@ -509,7 +513,6 @@
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').la, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
-            "condition": "[variables('enabled').logAnalytics]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -525,6 +528,9 @@
                     },
                     "location": {
                         "value": "[variables('logAnalyticsLocation')]"
+                    },
+                    "logAnalyticsEnabled": {
+                        "value": "[variables('enabled').logAnalytics]"
                     },
                     "tags": {
                         "value": {
@@ -844,7 +850,6 @@
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').laExtension.automate, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
-            "condition": "[variables('enabled').logAnalytics]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', variables('name').vm.automate, '-Deployment')]",
                 "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]"
@@ -876,6 +881,9 @@
                             "description": "Script to install and configure the Automate server",
                             "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
                         }
+                    },
+                    "logAnalyticsEnabled": {
+                        "value": "[variables('enabled').logAnalytics]"
                     }
                 }
             }
@@ -885,7 +893,6 @@
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').laExtension.chef, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
-            "condition": "[variables('enabled').logAnalytics]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', variables('name').vm.chef, '-Deployment')]",
                 "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]"
@@ -917,6 +924,9 @@
                             "description": "Log Analytics monitoring extension for Chef Server",
                             "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
                         }
+                    },
+                    "logAnalyticsEnabled": {
+                        "value": "[variables('enabled').logAnalytics]"
                     }
                 }
             }
@@ -929,8 +939,8 @@
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', variables('name').vm.automate, '-Deployment')]",
                 "[concat('Microsoft.Resources/deployments/', variables('name').functions.configstore, '-Deployment')]",
-                "[if(variables('enabled').logAnalytics, concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment'), '')]",
-                "[if(variables('enabled').logAnalytics, concat('Microsoft.Resources/deployments/', variables('name').laExtension.automate, '-Deployment'), '')]"
+                "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').laExtension.automate, '-Deployment')]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -952,7 +962,7 @@
                         "value": "automate-server.sh"
                     },                    
                     "scriptArguments": {
-                        "value": "[concat('-o install,kernel,config,deploy,licence,token', if(variables('enabled').logAnalytics, ',cron', ''), if(variables('enabled').backup, ',backup', ''), ',internalip -u \"', variables('chef').username, '\" -p \"', variables('chef').password, '\" -e ', variables('chef').email, ' -f \"', variables('chef').fullname, '\" -l ', variables('automate').licence, ' -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -n ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.name.value, ' -k ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, if(variables('enabled').logAnalytics, concat(' -N ', reference(concat(variables('name').functions.automatelog, '-Deployment')).outputs.name.value, ' -K ', reference(concat(variables('name').functions.automatelog, '-Deployment')).outputs.apiKey.value), ''), ' -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value, ' --backupscripturl ', variables('urls').scripts.backup, ' --saname ', variables('name').storageAccount, ' --sacontainer ', variables('name').container.backup, ' --sakey \"', reference(concat(variables('name').sa, '-Deployment')).outputs.accesskey.value, '\" --backupcron ', variables('singlequote'), variables('backup').cron, variables('singlequote'))]"
+                        "value": "[concat('-o install,kernel,config,deploy,licence,token,cron', if(variables('enabled').backup, ',backup', ''), ',internalip -u \"', variables('chef').username, '\" -p \"', variables('chef').password, '\" -e ', variables('chef').email, ' -f \"', variables('chef').fullname, '\" -l ', variables('automate').licence, ' -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -n ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.name.value, ' -k ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, if(variables('enabled').logAnalytics, concat(' -N ', reference(concat(variables('name').functions.automatelog, '-Deployment')).outputs.name.value, ' -K ', reference(concat(variables('name').functions.automatelog, '-Deployment')).outputs.apiKey.value), ''), ' -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value, ' --backupscripturl ', variables('urls').scripts.backup, ' --saname ', variables('name').storageAccount, ' --sacontainer ', variables('name').container.backup, ' --sakey \"', reference(concat(variables('name').sa, '-Deployment')).outputs.accesskey.value, '\" --backupcron ', variables('singlequote'), variables('backup').cron, variables('singlequote'))]"
                     },
                     "extensionName": {
                         "value": "InstallAndConfigureAutomate"
@@ -975,8 +985,8 @@
                 "[concat('Microsoft.Resources/deployments/', variables('name').vm.chef, '-Deployment')]",
                 "[concat('Microsoft.Resources/deployments/', variables('name').extension.automate, '-Deployment')]",
                 "[concat('Microsoft.Resources/deployments/', variables('name').functions.configstore, '-Deployment')]",
-                "[if(variables('enabled').logAnalytics, concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment'), '')]",
-                "[if(variables('enabled').logAnalytics, concat('Microsoft.Resources/deployments/', variables('name').laExtension.chef, '-Deployment'), '')]"
+                "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').laExtension.chef, '-Deployment')]"
             ],
             "properties": {
                 "mode": "Incremental",
