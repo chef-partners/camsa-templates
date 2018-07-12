@@ -164,9 +164,18 @@
             "defaultValue": [
                 "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDP2kmdeomWaf4jzSEx2TmW43tTkWYJafn5jj6qN9cMkgY5tFhLu2vmTlzeLL7m9A7rmR6Dn8kYFmpvnHy/nT3dZfmkIJbVBr4aQjPdhYC95+8VTR1gPQjQRrm/VbQoaTle4dHRPPMjM0/w9hXD+yelLQl6Npk6rE+N/+4ykDdKBFY+LYFsz68tjOjaEIkGJHZ2A8tDJNKA9BOXVB9hwWKBA4slzaoti5/EgTP0ToFlTn2+WtPWkkcSWZFjPJpenHfLHKZY38PrYrK1yoQlELAihv+6+Gkg4m0QwhbpQz6thG6PVdBMF6dXKCO8HoMusSMSoN/Q21aQHQh9pJ2q9fUF automate-azure"
             ]
+        },
+
+        "debug": {
+            "type": "bool",
+            "metadata": {
+                "description": "Allow extra output from the template. This should not be used in production"
+            },
+            "defaultValue": false
         }
     },
     "variables": {
+
         "unique": "[uniqueString(subscription().subscriptionId, resourceGroup().id, deployment().name, parameters('prefix'))]",
         "uniqueShort": "[if(empty(parameters('uniqueShort')), substring(variables('unique'), 0, 4), parameters('uniqueShort'))]",
 
@@ -226,7 +235,8 @@
 
         "enabled": {
             "logAnalytics": "[parameters('enableLogAnalytics')]",
-            "backup": "[parameters('enableBackup')]"
+            "backup": "[parameters('enableBackup')]",
+            "debug": "[parameters('debug')]"
         },
 
         "backup": {
@@ -1035,6 +1045,14 @@
         "uniqueShort": {
             "type": "string",
             "value": "[variables('uniqueShort')]"
+        },
+        "setupCommandAutomate": {
+            "type": "string",
+            "value": "[if(variables('enabled').debug, reference(concat(variables('name').extension.automate, '-Deployment')).outputs.executedCommand.value, '')]"
+        },
+        "setupCommandChef": {
+            "type": "string",
+            "value": "[if(variables('enabled').debug, reference(concat(variables('name').extension.chef, '-Deployment')).outputs.executedCommand.value, '')]"
         }
     }
 }
