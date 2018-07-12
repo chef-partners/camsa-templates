@@ -28,6 +28,9 @@
         },
         "tags": {
             "type": "object"
+        },
+        "logAnalyticsEnabled": {
+            "type": "bool"
         }
     },
     "variables": {
@@ -46,12 +49,16 @@
         "apiVersions": {
             "cloudMonitoring": "2015-06-15"
         },
-        "tags": "[parameters('tags')]"
+        "tags": "[parameters('tags')]",
+        "enabled": {
+            "logAnalytics": "[parameters('logAnalyticsEnabled')]"
+        }
     },
     "resources": [
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(variables('name').vm, '/', variables('name').extension)]",
+            "condition": "[variables('enabled').logAnalytics]",
             "apiVersion": "[variables('apiVersions').cloudMonitoring]",
             "tags": "[variables('tags')]",
             "location": "[variables('location')]",
