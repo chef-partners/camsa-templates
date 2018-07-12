@@ -129,7 +129,7 @@ function trim() {
 
 # Use the arguments and the name of the script to determine how the script was called
 called="$0 $@"
-echo $called >> commands.log
+echo -e "$called" >> commands.log
 
 # Analyse the script arguments and configure the variables accordingly
 while [[ $# -gt 0 ]]
