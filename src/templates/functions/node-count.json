@@ -87,7 +87,7 @@
         "name": {
             "type": "string",
             "value": "if(variables('logAnalytics').enabled, [parameters('functionName'), '')]"
-        },        
+        },
         "apiKey": {
             "type": "string",
             "value": "[if(variables('logAnalytics').enabled, listsecrets(resourceId('Microsoft.Web/sites/functions', variables('name').site, variables('name').function), '2016-08-01').key, '')]"

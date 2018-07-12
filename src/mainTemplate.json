@@ -88,7 +88,6 @@
         "automateLicence": {
             "type": "securestring"
         },
-
         "enableLogAnalytics": {
             "type": "bool",
             "defaultValue": true,
@@ -96,7 +95,6 @@
                 "description": "State if Log Analytics should be configured for the cluster"
             }
         },
-
         "enableBackup": {
             "type": "bool",
             "defaultValue": true,
@@ -104,7 +102,6 @@
                 "description": "State if backup should be configured on the machine."
             }
         },
-
         "backupHour": {
             "type": "int",
             "defaultValue": 1,
@@ -112,7 +109,6 @@
                 "description": "UTC Hour at which backup will run"
             }
         },
-
         "backupMinute": {
             "type": "int",
             "defaultValue": 0,
@@ -120,7 +116,6 @@
                 "description": "Minute of the specified hour that the backup will run"
             }
         },
-
         "logAnalyticsTier": {
             "type": "string"
         },
@@ -148,7 +143,6 @@
                 "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDP2kmdeomWaf4jzSEx2TmW43tTkWYJafn5jj6qN9cMkgY5tFhLu2vmTlzeLL7m9A7rmR6Dn8kYFmpvnHy/nT3dZfmkIJbVBr4aQjPdhYC95+8VTR1gPQjQRrm/VbQoaTle4dHRPPMjM0/w9hXD+yelLQl6Npk6rE+N/+4ykDdKBFY+LYFsz68tjOjaEIkGJHZ2A8tDJNKA9BOXVB9hwWKBA4slzaoti5/EgTP0ToFlTn2+WtPWkkcSWZFjPJpenHfLHKZY38PrYrK1yoQlELAihv+6+Gkg4m0QwhbpQz6thG6PVdBMF6dXKCO8HoMusSMSoN/Q21aQHQh9pJ2q9fUF automate-azure"
             ]
         },
-
         "debug": {
             "type": "bool",
             "metadata": {
@@ -158,7 +152,6 @@
         }
     },
     "variables": {
-
         "unique": "[uniqueString(subscription().subscriptionId, resourceGroup().id, deployment().name, parameters('prefix'))]",
         "uniqueShort": "[if(empty(parameters('uniqueShort')), substring(variables('unique'), 0, 4), parameters('uniqueShort'))]",
         "baseUrl": "[if(not(empty(parameters('baseUrl'))), if(endsWith(parameters('baseUrl'), '/'), parameters('baseUrl'), concat(parameters('baseUrl'), '/')), if(contains(deployment().properties, 'templateLink'), uri(deployment().properties.templateLink.uri, '.'), ''))]",
@@ -212,17 +205,14 @@
                 "starterkit": "[concat(parameters('prefix'), '-StarterKit-AF')]"
             }
         },
-
         "enabled": {
             "logAnalytics": "[parameters('enableLogAnalytics')]",
             "backup": "[parameters('enableBackup')]",
             "debug": "[parameters('debug')]"
         },
-
         "backup": {
             "cron": "[concat(parameters('backupMinute'), ' ', parameters('backupHour'), ' * * *')]"
         },
-
         "vmSize": {
             "chef": "Standard_DS2_V2",
             "automate": "Standard_DS2_V2"
@@ -245,7 +235,6 @@
         "sourceAddresses": {
             "ssh": "[parameters('sshSourceAddresses')]"
         },
-
         "sasTokenFromDeployment": "[if(contains(deployment().properties, 'templateLink'), if(equals(length(split(deployment().properties.templateLink.uri, '?')), 2), last(split(deployment().properties.templateLink.uri, '?')), ''), '')]",
         "templateUrlQueryString": "[if(empty(parameters('azureStorageSASToken')), if(empty(variables('sasTokenFromDeployment')), '', concat('?', variables('sasTokenFromDeployment'))), concat('?', parameters('azureStorageSASToken')))]",
         "urls": {
@@ -291,7 +280,6 @@
         "la": {
             "sku": "[parameters('logAnalyticsTier')]"
         },
-
         "singlequote": "'"
     },
     "resources": [
