@@ -509,7 +509,12 @@ EOF
   storageAccountName: "${STORAGE_ACCOUNT_NAME}",
   storageAccountKey: "${STORAGE_ACCOUNT_KEY}",
   queueName: "chef-statsd",
-  backends: [ "/usr/local/statsd/azure-queue/statsd-azure-queue" ]
+  backends: [ "/usr/local/statsd/azure-queue/statsd-azure-queue" ],
+  log: {
+    application: [ "statsd" ],
+    backend: [ "syslog" ],
+    level: [ "LOG_INFO" ]
+  }
 }
 EOF
 
@@ -540,6 +545,8 @@ EOF
 # Enable statsd metrics
 estatsd["enable"] = true
 estatsd["protocol"] = "statsd"
+estatsd["port"] = 8125
+
 EOF
     ;;
 
