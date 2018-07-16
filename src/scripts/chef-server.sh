@@ -36,6 +36,8 @@ SA_NAME=""
 SA_CONTAINER_NAME=""
 SA_KEY=""
 
+STATSD_BACKEND_SCRIPT_URL=""
+
 #
 # Do not modify variables below here
 #
@@ -225,7 +227,11 @@ do
 
     --sakey)
       SA_KEY="$2"
-    ;;    
+    ;;
+
+    --backend-script-url)
+      STATSD_BACKEND_SCRIPT_URL="$2"  
+    ;;
   esac
 
   # move onto the next argument
