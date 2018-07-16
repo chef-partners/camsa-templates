@@ -506,15 +506,10 @@ EOF
       # create configuration file for statsd
       cat << EOF > /etc/statsd/config.js
 {
-  storageAccountName: "${STORAGE_ACCOUNT_NAME}",
-  storageAccountKey: "${STORAGE_ACCOUNT_KEY}",
+  storageAccountName: "${SA_NAME}",
+  storageAccountKey: "${SA_KEY}",
   queueName: "chef-statsd",
-  backends: [ "/usr/local/statsd/azure-queue/statsd-azure-queue" ],
-  log: {
-    application: [ "statsd" ],
-    backend: [ "syslog" ],
-    level: [ "LOG_INFO" ]
-  }
+  backends: [ "/usr/local/statsd/azure-queue/statsd-azure-queue" ]
 }
 EOF
 
