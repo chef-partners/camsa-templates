@@ -229,7 +229,8 @@
                 "configstore": "[concat(parameters('prefix'), '-ConfigStore-AF')]",
                 "automatelog": "[concat(parameters('prefix'), '-AutomateLog-AF')]",
                 "nodecount": "[concat(parameters('prefix'), '-NodeCount-AF')]",
-                "starterkit": "[concat(parameters('prefix'), '-StarterKit-AF')]"
+                "starterkit": "[concat(parameters('prefix'), '-StarterKit-AF')]",
+                "chefmetrics": "[concat(parameters('prefix'), '-ChefMetrics-AF')]"
             }
         },
 
@@ -293,7 +294,8 @@
                 "configStore": "[concat(variables('baseUrl'), 'templates/functions/config-store.json', variables('templateUrlQueryString'))]",
                 "automateLog": "[concat(variables('baseUrl'), 'templates/functions/automate-log.json', variables('templateUrlQueryString'))]",
                 "nodeCount": "[concat(variables('baseUrl'), 'templates/functions/node-count.json', variables('templateUrlQueryString'))]",
-                "starterKit": "[concat(variables('baseUrl'), 'templates/functions/starter-kit.json', variables('templateUrlQueryString'))]"
+                "starterKit": "[concat(variables('baseUrl'), 'templates/functions/starter-kit.json', variables('templateUrlQueryString'))]",
+                "chefMetrics": "[concat(variables('baseUrl'), 'templates/functions/chef-metrics.json', variables('templateUrlQueryString'))]"
             },
             "statsd": {
                 "azureStorage": "[concat(variables('baseUrl'), 'scripts/statsd-azure-queue.js', variables('templateUrlQueryString'))]"
@@ -472,6 +474,37 @@
                 "mode": "Incremental",
                 "templateLink": {
                     "uri": "[variables('urls').functions.automateLog]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[variables('name').appService]"
+                    },
+                    "logAnalyticsWorkspaceId": {
+                        "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.workspaceId.value]"
+                    },
+                    "logAnalyticsSharedKey": {
+                        "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.key.value]"
+                    },
+                    "logAnalyticsEnabled": {
+                        "value": "[variables('enabled').logAnalytics]"
+                    }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').functions.chefmetrics, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').appService, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').functions.chefMetrics]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -1021,7 +1054,7 @@
                         "value": "chef-server.sh"
                     },
                     "scriptArguments": {
-                        "value": "[concat('-o install,config,storekeys,integrate,metrics,reconfigure,internalip',  if(variables('enabled').backup, ',backup', ''), ' -v ', variables('chef').version, ' -u ', variables('chef').username, ' -f \"', variables('chef').fullname, '\" -p \"', variables('chef').password, '\" -a ', variables('chef').email, ' -O ', variables('chef').org, ' -d \"', variables('chef').orgDescription, '\" -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -n ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.name.value, ' -k \"', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, '\" -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value, ' -C ', reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value, ' --backupscripturl \"', variables('urls').scripts.backup, '\" --saname ', variables('name').storageAccount, ' --sacontainer ', variables('name').container.backup, ' --sakey \"', reference(concat(variables('name').sa, '-Deployment')).outputs.accesskey.value, '\" --backend-script-url ', variables('urls').statsd.azureStorage, ' --backupcron ', variables('singlequote'), variables('backup').cron, variables('singlequote'))]"
+                        "value": "[concat('-o install,config,storekeys,integrate,', if(variables('enabled').logAnalytics, ',metrics', ''), ',reconfigure,internalip',  if(variables('enabled').backup, ',backup', ''), ' -v ', variables('chef').version, ' -u ', variables('chef').username, ' -f \"', variables('chef').fullname, '\" -p \"', variables('chef').password, '\" -a ', variables('chef').email, ' -O ', variables('chef').org, ' -d \"', variables('chef').orgDescription, '\" -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -n ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.name.value, ' -k \"', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, '\" -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value, ' -C ', reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value, ' --backupscripturl \"', variables('urls').scripts.backup, '\" --saname ', variables('name').storageAccount, ' --sacontainer ', variables('name').container.backup, ' --sakey \"', reference(concat(variables('name').sa, '-Deployment')).outputs.accesskey.value, '\" --backend-script-url ', variables('urls').statsd.azureStorage, ' --backupcron ', variables('singlequote'), variables('backup').cron, variables('singlequote'))]"
                     },
                     "extensionName": {
                         "value": "InstallAndConfigureChef"

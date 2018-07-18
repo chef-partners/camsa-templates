@@ -540,7 +540,7 @@ EOF
 # Enable statsd metrics
 estatsd["enable"] = true
 estatsd["protocol"] = "statsd"
-estatsd["port"] = 8125
+estatsd["port"] = "8125"
 
 EOF
     ;;

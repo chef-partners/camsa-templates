@@ -124,13 +124,12 @@ let flush_stats = function azure_queue_flush_stats(ts, metrics) {
                 mean = sum / numInThreshold;
             }
             // create objects of items that need to be added to the payload
-            let items = {
-                "${key}.mean": mean,
-                "${key}.upper": max,
-                "${key}.upper_${pctThreshold}": maxAtThreshold,
-                "${key}.lower": min,
-                "${key}.count": count
-            };
+            let items = {};
+            items[sprintf_js_1.sprintf("%s.mean", key)] = mean;
+            items[sprintf_js_1.sprintf("%s.upper", key)] = max;
+            items[sprintf_js_1.sprintf("%s.upper_%s", key, pctThreshold)] = maxAtThreshold;
+            items[sprintf_js_1.sprintf("%s.lower", key)] = min;
+            items[sprintf_js_1.sprintf("%s.count", key)] = count;
             for (let name in items) {
                 payload.push({
                     metric: name,
@@ -168,10 +167,10 @@ exports.init = function azure_queue_init(startup_time, config, events, log) {
     // create queue service
     queue_name = config.queueName;
     service = azure.createQueueService(config.storageAccountName, config.storageAccountKey);
+    service.messageEncoder = new azure.QueueMessageEncoder.TextBase64QueueMessageEncoder();
     logger.log(sprintf_js_1.sprintf("Stats Queue: %s", queue_name));
     // set the events
     events.on('flush', flush_stats);
     events.on('status', backend_status);
     return true;
 };
-//# sourceMappingURL=index.js.map
