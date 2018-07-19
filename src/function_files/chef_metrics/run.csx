@@ -31,11 +31,11 @@ public static void Run(string rawmetric, TraceWriter log)
         DateTime time = dateTime.AddSeconds((double) metric["points"][0][0]);
 
         // set the properties of the object
-        message.name = (string) metric["metric"];
-        message.type = (string) metric["type"];
-        message.host = (string) metric["host"];
-        message.time = time;
-        message.value = (double) metric["points"][0][1];
+        message.cm_name = (string) metric["metric"];
+        message.cm_type = (string) metric["type"];
+        message.cm_host = (string) metric["host"];
+        message.cm_time = time;
+        message.cm_value = (double) metric["points"][0][1];
 
         // Submit the metric to Log Analytics
         law.Submit(message, "statsd_log");
