@@ -72,7 +72,7 @@ public class LogAnalyticsWriter {
         string hashedString = BuildSignature(stringToHash, SharedKey);
         string signature = "SharedKey " + CustomerId + ":" + hashedString;
 
-        string timestamp = metricMessage.time.ToString("yyyy-MM-ddThh:mm:ssZ");
+        string timestamp = metricMessage.cm_time.ToString("yyyy-MM-ddThh:mm:ssZ");
         AFLog.Info(timestamp);
 
         AFLog.Info("submiting log");
