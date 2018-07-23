@@ -9,25 +9,36 @@
             }
         },
 
+        "existingVNet": {
+            "type": "bool",
+            "metadata": {
+                "description": "State if an existing VNet and Subnet shoulod be used. If true then `customerResourceGroupName`, `virtualNetworkName` and `subnetName` must be supplied"
+            },
+            "defaultValue": true
+        },
+
         "customerResourceGroupName": {
             "type": "string",
             "metadata": {
                 "description": "Name of the resource group that contains the Virtual network to which the Chef and Automate servers should be connected to"
-            }
+            },
+            "defaultValue": ""
         },
 
         "virtualNetworkName": {
             "type": "string",
             "metadata": {
                 "description": "Name of the Virtual Network which contains the Subnet to which the machines should be connected"
-            }
+            },
+            "defaultValue": ""
         },
 
         "subnetName": {
             "type": "string",
             "metadata": {
                 "description": "Name of the subnet to which the machines should be connected to"
-            }
+            },
+            "defaultValue": ""
         },
 
         "uniqueShort": {
@@ -172,6 +183,22 @@
                 "description": "Allow extra output from the template. This should not be used in production"
             },
             "defaultValue": false
+        },
+
+        "vnetPrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Prefix for the virtual network. Only used when creating a new network for deployment"
+            },
+            "defaultValue": "10.0.0.0/24"
+        },
+
+        "subnetPrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Prefix for the subnet. Only used when creating a new virtual network"
+            },
+            "defaultValue": "10.0.0.0/24"
         }
     },
     "variables": {
@@ -189,7 +216,10 @@
             "container": {
                 "backup": "backup"
             },
-            "virtualNetwork": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-VNet')]",
+            "network": {
+                "vnet": "[if(empty(parameters('virtualNetworkName')), concat(parameters('prefix'), '-', variables('uniqueShort'), '-VNet'), parameters('virtualNetworkName'))]",
+                "subnet": "[if(empty(parameters('subnetName')), concat(parameters('prefix'), '-', variables('uniqueShort'), '-Subnet'), parameters('subnetName'))]"
+            },
             "appServicePlan": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-AppServicePlan')]",
             "appService": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-AppService')]",
             "sa": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-SA')]",
@@ -263,8 +293,14 @@
             ]
         },
 
-        "customerVNetID": "[resourceId(parameters('customerResourceGroupName'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-        "customerSubnetRef": "[concat(variables('customerVNetID'), '/subnets/', parameters('subnetName'))]",
+        "network": {
+            "existing": "[parameters('existingVNet')]",
+            "resourceGroup": "[parameters('customerResourceGroupName')]",
+            "prefix": {
+                "vnet": "[parameters('vnetPrefix')]",
+                "subnet": "[parameters('subnetPrefix')]"
+            }
+        },
 
         "sourceAddresses": {
             "ssh": "[parameters('sshSourceAddresses')]"
@@ -325,7 +361,11 @@
             "sku": "[parameters('logAnalyticsTier')]"
         },
 
-        "singlequote": "'"
+        "singlequote": "'",
+
+        "tags": {
+            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+        }
     },
     "resources": [
 
@@ -349,7 +389,7 @@
                     "tags": {
                         "value": {
                             "description": "Storage account used for troubleshooting and function storage",
-                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                            "provider": "[variables('tags').provider]"
                         }
                     }
                 }
@@ -376,7 +416,7 @@
                     "tags": {
                         "value": {
                             "description": "Service plan to host functions for setup and logging",
-                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                            "provider": "[variables('tags').provider]"
                         }
                     }
                 }
@@ -407,7 +447,7 @@
                     "tags": {
                         "value": {
                             "description": "Website app service to store the various functions required for the Chef Managed App",
-                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                            "provider": "[variables('tags').provider]"
                         }
                     },
                     "servicePlanId": {
@@ -581,12 +621,55 @@
                     "tags": {
                         "value": {
                             "description": "Log Analytics workspace to capture information about the health of the Chef Automate Managed App",
-                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                            "provider": "[variables('tags').provider]"
                         }
                     }
                 }
             }
         },
+
+        {
+            "comments": "Virtual Network resource to either create a network or return the details of an existing on",
+            "type": "Mirosoft.Resources/deployments",
+            "name": "[concat(variables('name').network.vnet, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').virtualNetwork]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "resourceGroup": {
+                        "value": "[variables('network').resourceGroup]"
+                    },
+                    "vnetName": {
+                        "value": "[variables('name').network.vnet]"
+                    },
+                    "subnetName": {
+                        "value": "[variables('name').network.subnet]"
+                    },
+                    "vnetPrefix": {
+                        "value": "[variables('network').prefix.vnet]"
+                    },
+                    "subnetPrefix": {
+                        "value": "[variables('network').prefix.subnet]"
+                    },
+                    "existingVnet": {
+                        "value": "[variables('network').existing]"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "Log Analytics workspace to capture information about the health of the Chef Automate Managed App",
+                            "provider": "[variables('tags').provider]"
+                        }                        
+                    }
+                }
+            }
+        }
 
         {
             "type": "Microsoft.Resources/deployments",
@@ -611,7 +694,7 @@
                     "tags": {
                         "value": {
                             "description": "network security group limiting access to the Chef server",
-                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                            "provider": "[variables('tags').provider]"
                         }
                     }
                 }
@@ -641,7 +724,7 @@
                     "tags": {
                         "value": {
                             "description": "network security group limiting access to the Automate server",
-                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                            "provider": "[variables('tags').provider]"
                         }
                     }
                 }
@@ -674,7 +757,7 @@
                     "tags": {
                         "value": {
                             "description": "Public IP address for the Chef server",
-                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                            "provider": "[variables('tags').provider]"
                         }
                     }
                 }
@@ -707,7 +790,7 @@
                     "tags": {
                         "value": {
                             "description": "Public IP address for the Automate server",
-                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                            "provider": "[variables('tags').provider]"
                         }
                     }
                 }
@@ -736,7 +819,7 @@
                         "value": "[reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.publicIpId.value]"
                     },
                     "subnetRef": {
-                        "value": "[variables('customerSubnetRef')]"
+                        "value": "[reference(concat(variables('name').network.vnet, '-Deployment')).outputs.subnetRef]"
                     },
                     "nsgRef": {
                         "value": "[reference(concat(variables('name').nsg.chef, '-Deployment')).outputs.nsgId.value]"
@@ -744,7 +827,7 @@
                     "tags": {
                         "value": {
                             "description": "Network card for the Chef server connected to the customer subnet",
-                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                            "provider": "[variables('tags').provider]"
                         }
                     }
                 }
@@ -773,7 +856,7 @@
                         "value": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.publicIpId.value]"
                     },
                     "subnetRef": {
-                        "value": "[variables('customerSubnetRef')]"
+                        "value": "[reference(concat(variables('name').network.vnet, '-Deployment')).outputs.subnetRef]"
                     },
                     "nsgRef": {
                         "value": "[reference(concat(variables('name').nsg.automate, '-Deployment')).outputs.nsgId.value]"
@@ -781,7 +864,7 @@
                     "tags": {
                         "value": {
                             "description": "Network card for the Automate server connected to the customer subnet",
-                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                            "provider": "[variables('tags').provider]"
                         }
                     }
                 }
@@ -833,7 +916,7 @@
                     "tags": {
                         "value": {
                             "description": "Chef Server Virtual Machine",
-                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                            "provider": "[variables('tags').provider]"
                         }
                     }
                 }
@@ -885,7 +968,7 @@
                     "tags": {
                         "value": {
                             "description": "Automate Server Virtual Machine",
-                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                            "provider": "[variables('tags').provider]"
                         }
                     }
                 }
@@ -925,7 +1008,7 @@
                     "tags": {
                         "value": {
                             "description": "Script to install and configure the Automate server",
-                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                            "provider": "[variables('tags').provider]"
                         }
                     },
                     "logAnalyticsEnabled": {
@@ -968,7 +1051,7 @@
                     "tags": {
                         "value": {
                             "description": "Log Analytics monitoring extension for Chef Server",
-                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                            "provider": "[variables('tags').provider]"
                         }
                     },
                     "logAnalyticsEnabled": {
@@ -1016,7 +1099,7 @@
                     "tags": {
                         "value": {
                             "description": "Script to install and configure the Automate server",
-                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                            "provider": "[variables('tags').provider]"
                         }
                     }
                 }
@@ -1062,7 +1145,7 @@
                     "tags": {
                         "value": {
                             "description": "Script to install and configure the Chef server",
-                            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+                            "provider": "[variables('tags').provider]"
                         }
                     }
                 }
