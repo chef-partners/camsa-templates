@@ -630,7 +630,7 @@
 
         {
             "comments": "Virtual Network resource to either create a network or return the details of an existing on",
-            "type": "Mirosoft.Resources/deployments",
+            "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').network.vnet, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
             "properties": {
@@ -669,7 +669,7 @@
                     }
                 }
             }
-        }
+        },
 
         {
             "type": "Microsoft.Resources/deployments",
