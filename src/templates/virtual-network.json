@@ -45,7 +45,7 @@
         "resourceGroup": "[if(parameters('existingVNet'), parameters('resourceGroup'), resourceGroup().name)]"
       },
 
-      "tags": "[parameters('tags')"
+      "tags": "[parameters('tags')]"
     },
     "resources": [
           {
