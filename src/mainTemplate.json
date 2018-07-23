@@ -819,7 +819,7 @@
                         "value": "[reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.publicIpId.value]"
                     },
                     "subnetRef": {
-                        "value": "[reference(concat(variables('name').network.vnet, '-Deployment')).outputs.subnetRef]"
+                        "value": "[reference(concat(variables('name').network.vnet, '-Deployment')).outputs.subnetRef.value]"
                     },
                     "nsgRef": {
                         "value": "[reference(concat(variables('name').nsg.chef, '-Deployment')).outputs.nsgId.value]"
@@ -856,7 +856,7 @@
                         "value": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.publicIpId.value]"
                     },
                     "subnetRef": {
-                        "value": "[reference(concat(variables('name').network.vnet, '-Deployment')).outputs.subnetRef]"
+                        "value": "[reference(concat(variables('name').network.vnet, '-Deployment')).outputs.subnetRef.value]"
                     },
                     "nsgRef": {
                         "value": "[reference(concat(variables('name').nsg.automate, '-Deployment')).outputs.nsgId.value]"
