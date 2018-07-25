@@ -39,6 +39,7 @@ SA_KEY=""
 STATSD_BACKEND_SCRIPT_URL=""
 
 ENCODED_ARGS=""
+ARG_FILE=""
 
 #
 # Do not modify variables below here
@@ -144,9 +145,10 @@ do
 
     -e|--encoded)
       ENCODED_ARGS="$2"
+    ;;
 
-      # Read in the variables from the decoded json
-      echo ${ENCODED_ARGS} | base64 --decode > args.json
+    -A|--argfile)
+      ARG_FILE="$2"
     ;;
 
     -o|--operation)
@@ -270,6 +272,30 @@ then
   cmd="wget -O /usr/local/bin/rmate https://raw.github.com/aurora/rmate/master/rmate && chmod a+x /usr/local/bin/rmate"
   executeCmd "$cmd"
 fi
+
+# If encoded arguments have been supplied, decode them and save to file
+if [ "X${ENCODED_ARGS}" != "X" ]
+then
+  log "Reading encoded arguments"
+
+  ARG_FILE="args.json"
+  
+  # Decode the bas64 string and write out the ARG file
+  echo ${ENCODED_ARGS} | base64 --decode > ${ARG_FILE}
+fi
+
+# If the ARG_FILE has been specified and the file exists read in the arguments
+if [ "X${ARG_FILE}" != "X" ]
+then
+  if [ -f $ARG_FILE ]
+  then
+    VARS=`echo ${ENCODED_ARGS} | base64 --decode | tee args.json | jq -r '. | keys[] as $k | "\($k)=\"\(.[$k])\""'`
+  else
+    log "Unable to find specified args file: ${ARG_FILE}" 0 err
+    exit 1
+  fi
+fi
+
 
 # Determine the full URL for the Azure function
 AF_URL=$(printf '%s/%s?code=%s' $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY)

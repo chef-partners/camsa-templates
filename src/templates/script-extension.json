@@ -57,7 +57,7 @@
             "extensions": "2015-06-15"
         },
 
-        "arguments": "[if(empty(parameters('arguments')), parameters('scriptArguments'), concat(parameters('scriptArguments'), ' -e ', base64ToJson(parameters('arguments'))))]",
+        "arguments": "[if(empty(parameters('arguments')), parameters('scriptArguments'), concat(parameters('scriptArguments'), ' -e ', base64(string(parameters('arguments')))))]",
         "command": "[concat('./', parameters('scriptName'), ' ', variables('arguments'))]",
 
         "urls": {
