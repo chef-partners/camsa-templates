@@ -289,7 +289,7 @@ if [ "X${ARG_FILE}" != "X" ]
 then
   if [ -f $ARG_FILE ]
   then
-    VARS=`echo ${ENCODED_ARGS} | base64 --decode | tee args.json | jq -r '. | keys[] as $k | "\($k)=\"\(.[$k])\""'`
+    VARS=`cat ${ARG_FILE} | jq -r '. | keys[] as $k | "\($k)=\"\(.[$k])\""'`
   else
     log "Unable to find specified args file: ${ARG_FILE}" 0 err
     exit 1
