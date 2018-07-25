@@ -297,7 +297,7 @@ then
     # Evaluate all the vars in the arguments
     for VAR in "$VARS"
     do
-      eval $VAR
+      eval "$VAR"
     done
   else
     log "Unable to find specified args file: ${ARG_FILE}" 0 err
