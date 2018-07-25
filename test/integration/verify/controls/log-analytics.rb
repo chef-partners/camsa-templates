@@ -1,6 +1,6 @@
 resource_group_name = attribute('resource_group_name', default: 'InSpec-AMA', description: 'Name of the resource group to interogate')
 unique_string = attribute('unique_string', default: '9j2f')
-la_location = attribute('location', default: 'westeurope')
+la_location = attribute('la_location', default: 'westeurope')
 provider = attribute('provider', default: '33194f91-eb5f-4110-827a-e95f640a9e46')
 prefix = attribute('prefix', default: 'inspec')
 
