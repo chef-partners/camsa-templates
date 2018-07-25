@@ -276,12 +276,12 @@ fi
 # If encoded arguments have been supplied, decode them and save to file
 if [ "X${ENCODED_ARGS}" != "X" ]
 then
-  log "Reading encoded arguments"
+  log "Decoding arguments"
 
   ARG_FILE="args.json"
   
   # Decode the bas64 string and write out the ARG file
-  echo ${ENCODED_ARGS} | base64 --decode > ${ARG_FILE}
+  echo ${ENCODED_ARGS} | base64 --decode | jq . > ${ARG_FILE}
 fi
 
 # If the ARG_FILE has been specified and the file exists read in the arguments
@@ -289,7 +289,16 @@ if [ "X${ARG_FILE}" != "X" ]
 then
   if [ -f $ARG_FILE ]
   then
+
+    log "Reading JSON vars"
+
     VARS=`cat ${ARG_FILE} | jq -r '. | keys[] as $k | "\($k)=\"\(.[$k])\""'`
+
+    # Evaluate all the vars in the arguments
+    for VAR in $VARS
+    do
+      eval $VAR
+    done
   else
     log "Unable to find specified args file: ${ARG_FILE}" 0 err
     exit 1
