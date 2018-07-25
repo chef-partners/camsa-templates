@@ -72,7 +72,7 @@
             "template_file": "templates/functions/chef-metrics.json",
             "code_files":
                 {
-                    "ChefMetricMessage": "src/function_files/chef_metrics/ChefMetricMessage.csx",
+                    "ChefMetricMessage_csx": "src/function_files/chef_metrics/ChefMetricMessage.csx",
                     "run_csx": "src/function_files/chef_metrics/run.csx",
                     "LogAnalyticsWriter_csx": "src/function_files/chef_metrics/LogAnalyticsWriter.csx"
                 },
