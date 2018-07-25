@@ -38,6 +38,8 @@ SA_KEY=""
 
 STATSD_BACKEND_SCRIPT_URL=""
 
+ENCODED_ARGS=""
+
 #
 # Do not modify variables below here
 #
@@ -139,6 +141,13 @@ do
   key="$1"
 
   case $key in
+
+    -e|--encoded)
+      ENCODED_ARGS="$2"
+
+      # Read in the variables from the decoded json
+      echo ${ENCODED_ARGS} | base64 --decode > args.json
+    ;;
 
     -o|--operation)
       MODE="$2"

@@ -33,6 +33,11 @@
             }
         },
 
+        "arguments": {
+            "type": "object",
+            "defaultValue": {}
+        },
+
         "extensionName": {
             "type": "string",
             "metadata": {
@@ -52,7 +57,7 @@
             "extensions": "2015-06-15"
         },
 
-        "arguments": "[parameters('scriptArguments')]",
+        "arguments": "[if(empty(parameters('arguments')), parameters('scriptArguments'), concat(parameters('scriptArguments'), ' -e ', base64ToJson(parameters('arguments'))))]",
         "command": "[concat('./', parameters('scriptName'), ' ', variables('arguments'))]",
 
         "urls": {

@@ -1139,6 +1139,29 @@
                     "scriptArguments": {
                         "value": "[concat('-o install,config,storekeys,integrate,', if(variables('enabled').logAnalytics, ',metrics', ''), ',reconfigure,internalip',  if(variables('enabled').backup, ',backup', ''), ' -v ', variables('chef').version, ' -u ', variables('chef').username, ' -f \"', variables('chef').fullname, '\" -p \"', variables('chef').password, '\" -a ', variables('chef').email, ' -O ', variables('chef').org, ' -d \"', variables('chef').orgDescription, '\" -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -n ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.name.value, ' -k \"', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, '\" -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value, ' -C ', reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value, ' --backupscripturl \"', variables('urls').scripts.backup, '\" --saname ', variables('name').storageAccount, ' --sacontainer ', variables('name').container.backup, ' --sakey \"', reference(concat(variables('name').sa, '-Deployment')).outputs.accesskey.value, '\" --backend-script-url \"', variables('urls').statsd.azureStorage, '\" --backupcron ', variables('singlequote'), variables('backup').cron, variables('singlequote'))]"
                     },
+                    "arguments":{
+                        "value": {
+                            "MODE": "[concat('install,config,storekeys,integrate,', if(variables('enabled').logAnalytics, 'metrics,', ''), 'reconfigure,internalip', if(variables('enabled').backup, ',backup', ''))]",
+                            "CHEF_SERVER_VERSION": "[variables('chef').version]",
+                            "CHEF_USER_NAME": "[variables('chef').username]",
+                            "CHEF_USER_FULLNAME": "[variables('chef').fullname]",
+                            "CHEF_USER_PASSWORD": "[variables('chef').password]",
+                            "CHEF_USER_EMAILADDRESS": "[variables('chef').email]",
+                            "CHEF_ORGNAME": "[variables('chef').org]",
+                            "CHEF_ORG_DESCRIPTION": "[variables('chef').orgDescription]",
+                            "FUNCTION_BASE_URL": "[reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value]",
+                            "CONFIGSTORE_FUNCTION_NAME": "[reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.name.value]",
+                            "CONFIGSTORE_FUNCTION_APIKEY": "[reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value]",
+                            "AUTOMATE_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value]",
+                            "CHEF_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value]",
+                            "BACKUP_SCRIPT_URL": "[variables('urls').scripts.backup]",
+                            "BACKUP_CRON": "[variables('backup').cron]",
+                            "SA_NAME": "[variables('name').storageAccount]",
+                            "SA_CONTAINER_NAME": "[variables('name').container.backup]",
+                            "SA_KEY": "[reference(concat(variables('name').sa, '-Deployment')).outputs.accesskey.value]",
+                            "STATSD_BACKEND_SCRIPT_URL": "[variables('urls').statsd.azureStorage]"
+                        }
+                    },
                     "extensionName": {
                         "value": "InstallAndConfigureChef"
                     },
