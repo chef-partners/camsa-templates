@@ -156,7 +156,7 @@
 
         "baseUrl": {
             "type": "string",
-            "defaultValue": "https://raw.githubusercontent.com/chef-partners/azure-managed-automate/master"
+            "defaultValue": "https://chefarmstorage.blob.core.windows.net/ama"
         },
 
         "azureStorageSASToken": {

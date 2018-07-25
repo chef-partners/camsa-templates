@@ -1,6 +1,7 @@
 resource_group_name = attribute('resource_group_name', default: 'InSpec-AMA', description: 'Name of the resource group to interogate')
 unique_string = attribute('unique_string', default: '9j2f')
 provider = attribute('provider', default: '33194f91-eb5f-4110-827a-e95f640a9e46')
+prefix = attribute('prefix', default: 'inspec')
 
 title 'Ensure that the script extension has been deployed for each machine'
 
@@ -10,7 +11,7 @@ title 'Ensure that the script extension has been deployed for each machine'
     title 'Ensure the script has been deployed'
 
     component_title = component.split(' ').map(&:capitalize).join(' ')
-    resource_name = format('inspec-%s-%s-VM/InstallAndConfigure%s', component, unique_string, component_title)
+    resource_name = format('%s-%s-%s-VM/InstallAndConfigure%s', prefix, component, unique_string, component_title)
 
     describe azure_generic_resource(group_name: resource_group_name, name: resource_name) do
       its('type') { should eq 'Microsoft.Compute/virtualMachines/extensions' }
