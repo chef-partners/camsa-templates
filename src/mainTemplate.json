@@ -279,14 +279,14 @@
             "automate": "Standard_DS2_V2"
         },
 
+        "admin_username": "azureama",
         "admin": {
-            "username": "azureama",
             "copy": [
                 {
                     "name": "sshPublicKeys",
                     "count": "[length(parameters('sshPublicKeys'))]",
                     "input": {
-                        "path": "[concat('/home/', variables('admin').username, '/.ssh/authorized_keys')]",
+                        "path": "[concat('/home/', variables('admin_username'), '/.ssh/authorized_keys')]",
                         "keyData": "[parameters('sshPublicKeys')[copyIndex('sshPublicKeys')]]"
                     }
                 }
