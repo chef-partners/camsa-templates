@@ -295,7 +295,7 @@ then
     VARS=`cat ${ARG_FILE} | jq -r '. | keys[] as $k | "\($k)=\"\(.[$k])\""'`
 
     # Evaluate all the vars in the arguments
-    for VAR in $VARS
+    for VAR in "$VARS"
     do
       eval $VAR
     done
