@@ -44,6 +44,11 @@ SA_NAME=""
 SA_CONTAINER_NAME=""
 SA_KEY=""
 
+# Define variables that hold the encoded arguments that can be passed
+# to the script. An existing decoded file can also be used
+ENCODED_ARGS=""
+ARG_FILE=""
+
 # Define where the script called by the cronjob should be saved
 SCRIPT_LOCATION="/usr/local/bin/azurefunctionlog.sh"
 
@@ -160,6 +165,14 @@ do
 
   case $key in
 
+    -e|--encoded)
+      ENCODED_ARGS="$2"
+    ;;
+
+    -A|--argfile)
+      ARG_FILE="$2"
+    ;;
+
     -o|--operation)
       MODE="$2"
     ;;
@@ -253,8 +266,16 @@ done
 log "Automate server"
 
 # Install necessary pre-requisites for the script
-# In this case jq is required to read data from the function
+# In this case jq is required to read the decoded JSON data and function responses
 log "Pre-requisites" 1
+log "jq" 2
+jq=`which jq`
+if [ "X$jq" == "X" ]
+then
+  log "installing" 3
+  cmd="apt-get install -y jq"
+  executeCmd "$cmd"
+fi
 
 # Install rmate for remote script editing for VSCode
 log "rmate" 2
@@ -264,6 +285,38 @@ then
   log "installing" 3
   cmd="wget -O /usr/local/bin/rmate https://raw.github.com/aurora/rmate/master/rmate && chmod a+x /usr/local/bin/rmate"
   executeCmd "$cmd"
+fi
+
+# If encoded arguments have been supplied, decode them and save to file
+if [ "X${ENCODED_ARGS}" != "X" ]
+then
+  log "Decoding arguments"
+
+  ARG_FILE="args.json"
+  
+  # Decode the bas64 string and write out the ARG file
+  echo ${ENCODED_ARGS} | base64 --decode | jq . > ${ARG_FILE}
+fi
+
+# If the ARG_FILE has been specified and the file exists read in the arguments
+if [ "X${ARG_FILE}" != "X" ]
+then
+  if [ -f $ARG_FILE ]
+  then
+
+    log "Reading JSON vars"
+
+    VARS=`cat ${ARG_FILE} | jq -r '. | keys[] as $k | "\($k)=\"\(.[$k])\""'`
+
+    # Evaluate all the vars in the arguments
+    for VAR in "$VARS"
+    do
+      eval "$VAR"
+    done
+  else
+    log "Unable to find specified args file: ${ARG_FILE}" 0 err
+    exit 1
+  fi
 fi
 
 # Determine what needs to be done

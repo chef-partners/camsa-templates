@@ -1097,9 +1097,27 @@
                     },
                     "scriptName": {
                         "value": "automate-server.sh"
-                    },                    
-                    "scriptArguments": {
-                        "value": "[concat('-o install,kernel,config,deploy,licence,token,cron', if(variables('enabled').backup, ',backup', ''), ',internalip -u \"', variables('chef').username, '\" -p \"', variables('chef').password, '\" -e ', variables('chef').email, ' -f \"', variables('chef').fullname, '\" -l ', variables('automate').licence, ' -b ', reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, ' -n ', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.name.value, ' -k \"', reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, '\"', if(variables('enabled').logAnalytics, concat(' -N ', reference(concat(variables('name').functions.automatelog, '-Deployment')).outputs.name.value, ' -K \"', reference(concat(variables('name').functions.automatelog, '-Deployment')).outputs.apiKey.value), ''), '\" -F ', reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value, ' --backupscripturl \"', variables('urls').scripts.backup, '\" --saname ', variables('name').storageAccount, ' --sacontainer ', variables('name').container.backup, ' --sakey \"', reference(concat(variables('name').sa, '-Deployment')).outputs.accesskey.value, '\" --backupcron ', variables('singlequote'), variables('backup').cron, variables('singlequote'))]"
+                    },
+                    "arguments": {
+                        "value": {
+                            "MODE": "[concat('install,kernel,config,deploy,licence,token,cron', if(variables('enabled').backup, ',backup', ''), ',internalip')]",
+                            "USERNAME": "[variables('chef').username]",
+                            "PASSWORD": "[variables('chef').password]",
+                            "EMAILADDRESS": "[variables('chef').email]",
+                            "FULLNAME": "[variables('chef').fullname]",
+                            "AUTOMATE_LICENCE": "[variables('automate').licence]",
+                            "FUNCTION_BASE_URL": "[reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value]",
+                            "CONFIGSTORE_FUNCTION_NAME": "[reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.name.value]",
+                            "CONFIGSTORE_FUNCTION_APIKEY": "[reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value]",
+                            "AUTOMATELOG_FUNCTION_NAME": "[if(variables('enabled').logAnalytics, reference(concat(variables('name').functions.automatelog, '-Deployment')).outputs.name.value, '')]",
+                            "AUTOMATELOG_FUNCTION_APIKEY": "[if(variables('enabled').logAnalytics, reference(concat(variables('name').functions.automatelog, '-Deployment')).outputs.apiKey.value, '')]",
+                            "AUTOMATE_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value]",
+                            "BACKUP_SCRIPT_URL": "[variables('urls').scripts.backup]",
+                            "SA_NAME": "[variables('name').storageAccount]",
+                            "SA_CONTAINER_NAME": "[variables('name').container.backup]",
+                            "SA_KEY": "[reference(concat(variables('name').sa, '-Deployment')).outputs.accesskey.value]",
+                            "BACKUP_CRON": "variables('backup').cron"
+                        }
                     },
                     "extensionName": {
                         "value": "InstallAndConfigureAutomate"

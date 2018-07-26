@@ -38,6 +38,8 @@ SA_KEY=""
 
 STATSD_BACKEND_SCRIPT_URL=""
 
+# Define variables that hold the encoded arguments that can be passed
+# to the script. An existing decoded file can also be used
 ENCODED_ARGS=""
 ARG_FILE=""
 
