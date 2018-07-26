@@ -129,6 +129,14 @@
             }
         },
 
+        "autoDiscoverSASToken": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "State if the template should try to auto discover the SAS token from the deployment. This is used when building and testing the template in VSTS."
+            }
+        },
+
         "backupHour": {
             "type": "int",
             "defaultValue": 1,
@@ -306,7 +314,7 @@
             "ssh": "[parameters('sshSourceAddresses')]"
         },
 
-        "sasTokenFromDeployment": "[if(contains(deployment().properties, 'templateLink'), if(equals(length(split(deployment().properties.templateLink.uri, '?')), 2), last(split(deployment().properties.templateLink.uri, '?')), ''), '')]",
+        "sasTokenFromDeployment": "[if(parameters('autoDiscoverSASToken'), if(contains(deployment().properties, 'templateLink'), if(equals(length(split(deployment().properties.templateLink.uri, '?')), 2), last(split(deployment().properties.templateLink.uri, '?')), ''), ''), '')]",
         "templateUrlQueryString": "[if(empty(parameters('azureStorageSASToken')), if(empty(variables('sasTokenFromDeployment')), '', concat('?', variables('sasTokenFromDeployment'))), concat('?', parameters('azureStorageSASToken')))]",
 
         "urls": {
