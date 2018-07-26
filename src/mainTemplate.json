@@ -113,6 +113,14 @@
             "type": "securestring"
         },
 
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "Location that the resources should be deployed to. Defaults to the Resource Group location"
+            },
+            "defaultValue": "[resourceGroup().location]"
+        },
+
         "enableLogAnalytics": {
             "type": "bool",
             "defaultValue": true,
@@ -216,7 +224,7 @@
 
         "baseUrl": "[if(not(empty(parameters('baseUrl'))), if(endsWith(parameters('baseUrl'), '/'), parameters('baseUrl'), concat(parameters('baseUrl'), '/')), if(contains(deployment().properties, 'templateLink'), uri(deployment().properties.templateLink.uri, '.'), ''))]",
 
-        "location": "[resourceGroup().location]",
+        "location": "[parameters('location')]",
         "logAnalyticsLocation": "[if(empty(parameters('logAnalyticsLocation')), variables('location'), parameters('logAnalyticsLocation'))]",
 
         "name": {
@@ -820,6 +828,9 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
                     "nicName": {
                         "value": "[variables('name').nic.customer.chef]"
                     },
@@ -857,6 +868,9 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
                     "nicName": {
                         "value": "[variables('name').nic.customer.automate]"
                     },
@@ -894,6 +908,9 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
                     "vmName": {
                         "value": "[variables('name').vm.chef]"
                     },
@@ -946,6 +963,9 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
                     "vmName": {
                         "value": "[variables('name').vm.automate]"
                     },

@@ -38,9 +38,14 @@
         "type": "object"
     }
   },
+  "variables": {
+    "apiVersions": {
+      "publicIpAddress": "[parameters('apiVersion')]"
+    }
+  },
   "resources": [
     {
-      "apiVersion": "[parameters('apiVersion')]",
+      "apiVersion": "[variables('apiVersions').publicIpAddress]",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[parameters('publicIPAddressName')]",
       "location": "[parameters('location')]",
@@ -59,7 +64,7 @@
       "type": "string"
     },
     "fqdn": {
-      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('publicIpAddressName')),providers('Microsoft.Network', 'publicIPAddresses').apiVersions[0]).dnsSettings.fqdn]",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses',parameters('publicIpAddressName')), variables('apiVersions').publicIpAddress).dnsSettings.fqdn]",
       "type": "string"
     }
   }

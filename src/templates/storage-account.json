@@ -25,11 +25,16 @@
           "type": "object"
       }
     },
+    "variables": {
+      "apiVersions": {
+        "sa": "2015-06-15"
+      }
+    },
     "resources": [
       {
         "type": "Microsoft.Storage/storageAccounts",
         "name": "[concat(parameters('storageAccountName'))]",
-        "apiVersion": "2015-06-15",
+        "apiVersion": "[variables('apiVersions').sa]",
         "location": "[parameters('location')]",
         "tags": "[parameters('tags')]",
         "properties": {
@@ -40,7 +45,7 @@
     "outputs": {
       "accesskey": {
         "type": "string",
-        "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
+        "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), variables('apiVersions').sa).keys[0].value]"
       }
     }
   }
