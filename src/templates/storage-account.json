@@ -37,8 +37,8 @@
         "apiVersion": "[variables('apiVersions').sa]",
         "location": "[parameters('location')]",
         "tags": "[parameters('tags')]",
-        "properties": {
-          "accountType": "[parameters('storageAccountType')]"
+        "sku": {
+          "name": "[parameters('storageAccountType')]"
         }
       }
     ],
