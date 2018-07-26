@@ -311,13 +311,6 @@ fi
 # Determine the full URL for the Azure function
 AF_URL=$(printf '%s/%s?code=%s' $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY)
 
-# Download rmate for remote editing
-cmd="wget -O /usr/local/bin/rmate https://raw.github.com/aurora/rmate/master/rmate"
-executeCmd "$cmd"
-
-cmd="chmod a+x /usr/local/bin/rmate"
-executeCmd "$cmd"
-
 # Determine the necessary operations
 for operation in $MODE
 do
