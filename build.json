@@ -67,6 +67,16 @@
                     "constants_csx": "src/function_files/node_count/constants.csx"
                 },
             "config": "src/function_files/node_count/function.json"
-        }        
+        },        
+        {
+            "template_file": "templates/functions/chef-metrics.json",
+            "code_files":
+                {
+                    "ChefMetricMessage_csx": "src/function_files/chef_metrics/ChefMetricMessage.csx",
+                    "run_csx": "src/function_files/chef_metrics/run.csx",
+                    "LogAnalyticsWriter_csx": "src/function_files/chef_metrics/LogAnalyticsWriter.csx"
+                },
+            "config": "src/function_files/chef_metrics/function.json"
+        }
     ]
 }

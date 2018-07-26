@@ -1,0 +1,12 @@
+{
+  "bindings": [
+    {
+      "name": "rawmetric",
+      "type": "queueTrigger",
+      "direction": "in",
+      "queueName": "chef-statsd",
+      "connection": "AzureWebJobsStorage"
+    }
+  ],
+  "disabled": false
+}

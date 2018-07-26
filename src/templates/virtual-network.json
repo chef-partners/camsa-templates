@@ -2,13 +2,19 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-      "virtualNetworkName": {
+      "vnetName": {
+        "type": "string"
+      },
+      "existingVNet": {
+        "type": "bool"
+      },
+      "resourceGroup": {
         "type": "string"
       },
       "location": {
         "type": "string"
       },
-      "vnetAddressPrefix": {
+      "vnetPrefix": {
         "type": "string"
       },
       "subnetName": {
@@ -22,28 +28,44 @@
       }
     },
     "variables" : {
-      "vnetID" : "[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
-      "subnet" : "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
-      "tags": "[parameters('tags')"
+
+      "location": "[parameters('location')]",
+
+      "name": {
+        "vnet": "[parameters('vnetName')]",
+        "subnet": "[parameters('subnetName')]"
+      },
+
+      "network": {
+        "existing": "[parameters('existingVNet')]",
+        "prefix": {
+          "vnet": "[parameters('vnetPrefix')]",
+          "subnet": "[parameters('subnetPrefix')]"
+        },
+        "resourceGroup": "[if(parameters('existingVNet'), parameters('resourceGroup'), resourceGroup().name)]"
+      },
+
+      "tags": "[parameters('tags')]"
     },
     "resources": [
           {
               "apiVersion": "2015-06-15",
               "type": "Microsoft.Network/virtualNetworks",
-              "name": "[parameters('virtualNetworkName')]",
-              "location": "[parameters('location')]",
+              "name": "[variables('name').vnet]",
+              "location": "[variables('location')]",
               "tags": "[variables('tags')]",
+              "condition": "[not(variables('network').existing)]",
               "properties": {
                   "addressSpace": {
                       "addressPrefixes": [
-                          "[parameters('vnetAddressPrefix')]"
+                          "[variables('network').prefix.vnet]"
                       ]
                   },
                   "subnets": [
                       {
-                          "name": "[parameters('subnetName')]",
+                          "name": "[variables('name').subnet]",
                           "properties": {
-                              "addressPrefix": "[parameters('subnetPrefix')]"
+                              "addressPrefix": "[variables('network').prefix.subnet]"
                           }
                       }
                   ]
@@ -52,7 +74,7 @@
     ],
     "outputs": {
       "subnetRef": {
-        "value": "[variables('subnet')]",
+        "value": "[concat(resourceId(variables('network').resourceGroup, 'Microsoft.Network/virtualNetworks', variables('name').vnet), '/subnets/', variables('name').subnet)]",
         "type": "string"
       }
     }

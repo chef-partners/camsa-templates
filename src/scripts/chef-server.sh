@@ -36,6 +36,13 @@ SA_NAME=""
 SA_CONTAINER_NAME=""
 SA_KEY=""
 
+STATSD_BACKEND_SCRIPT_URL=""
+
+# Define variables that hold the encoded arguments that can be passed
+# to the script. An existing decoded file can also be used
+ENCODED_ARGS=""
+ARG_FILE=""
+
 #
 # Do not modify variables below here
 #
@@ -138,6 +145,14 @@ do
 
   case $key in
 
+    -e|--encoded)
+      ENCODED_ARGS="$2"
+    ;;
+
+    -A|--argfile)
+      ARG_FILE="$2"
+    ;;
+
     -o|--operation)
       MODE="$2"
     ;;
@@ -225,7 +240,11 @@ do
 
     --sakey)
       SA_KEY="$2"
-    ;;    
+    ;;
+
+    --backend-script-url)
+      STATSD_BACKEND_SCRIPT_URL="$2"  
+    ;;
   esac
 
   # move onto the next argument
@@ -255,6 +274,39 @@ then
   cmd="wget -O /usr/local/bin/rmate https://raw.github.com/aurora/rmate/master/rmate && chmod a+x /usr/local/bin/rmate"
   executeCmd "$cmd"
 fi
+
+# If encoded arguments have been supplied, decode them and save to file
+if [ "X${ENCODED_ARGS}" != "X" ]
+then
+  log "Decoding arguments"
+
+  ARG_FILE="args.json"
+  
+  # Decode the bas64 string and write out the ARG file
+  echo ${ENCODED_ARGS} | base64 --decode | jq . > ${ARG_FILE}
+fi
+
+# If the ARG_FILE has been specified and the file exists read in the arguments
+if [ "X${ARG_FILE}" != "X" ]
+then
+  if [ -f $ARG_FILE ]
+  then
+
+    log "Reading JSON vars"
+
+    VARS=`cat ${ARG_FILE} | jq -r '. | keys[] as $k | "\($k)=\"\(.[$k])\""'`
+
+    # Evaluate all the vars in the arguments
+    for VAR in "$VARS"
+    do
+      eval "$VAR"
+    done
+  else
+    log "Unable to find specified args file: ${ARG_FILE}" 0 err
+    exit 1
+  fi
+fi
+
 
 # Determine the full URL for the Azure function
 AF_URL=$(printf '%s/%s?code=%s' $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY)
@@ -445,7 +497,92 @@ EOF
       # set the address in the config store
       cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"chef_internal_ip\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $internal_ip)
       executeCmd "$cmd" 
-    ;;    
+    ;;
+
+    # Install and configure Statsd for Chef Server monitoring
+    metrics)
+
+      log "Metrics - statsd"
+
+      # create the user that statsd will run under
+      cmd="adduser statsd"
+      executeCmd "$cmd"
+
+      # install necessary packages to support statsd
+      # configure PPA for node, which is required by statsd
+      cmd="curl -sL https://deb.nodesource.com/setup_8.x -o nodesource_setup.sh"
+      executeCmd "$cmd"
+
+      cmd="bash ./nodesource_setup.sh"
+      executeCmd "$cmd"
+
+      # Install git and nodejs
+      cmd="apt-get install git-core nodejs -y"
+      executeCmd "$cmd"
+
+      # Clone the statsd repo to the machine
+      cmd="mkdir -p /usr/local/statsd/azure-queue"
+      executeCmd "$cmd"
+
+      cmd="git clone https://github.com/etsy/statsd.git /usr/local/statsd/statsd"
+      executeCmd "$cmd"
+
+      cmd=$(printf "wget -P /usr/local/statsd/azure-queue %s" $STATSD_BACKEND_SCRIPT_URL)
+      executeCmd "$cmd"
+
+      # Install script dependencies
+      cmd="npm install --prefix /usr/local/statsd/azure-queue azure-storage sprintf-js"
+      executeCmd "$cmd"
+
+      # Set the permissions of the statsd directory
+      cmd="chown -R statsd /usr/local/statsd"
+      executeCmd "$cmd"
+
+      # Create directory for statsd configuration
+      cmd="mkdir /etc/statsd"
+      executeCmd "$cmd"
+
+      # create configuration file for statsd
+      cat << EOF > /etc/statsd/config.js
+{
+  storageAccountName: "${SA_NAME}",
+  storageAccountKey: "${SA_KEY}",
+  queueName: "chef-statsd",
+  backends: [ "/usr/local/statsd/azure-queue/statsd-azure-queue" ]
+}
+EOF
+
+      # Create the systemd service file
+      cat << EOF > /etc/systemd/system/statsd.service
+[Unit]
+Description=StatsD daemon for Chef Server monitoring
+
+[Service]
+User=statsd
+Type=simple
+ExecStart=/usr/bin/node /usr/local/statsd/statsd/stats.js /etc/statsd/config.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+      cmd="systemctl enable statsd.service"
+      executeCmd "$cmd"
+
+      cmd="systemctl start statsd.service"
+      executeCmd "$cmd"
+
+      # Enable statsd output from the chef server
+      cat << EOF >> /etc/opscode/chef-server.rb
+
+# Enable statsd metrics
+estatsd["enable"] = true
+estatsd["protocol"] = "statsd"
+estatsd["port"] = "8125"
+
+EOF
+    ;;
 
   esac
 

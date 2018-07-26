@@ -30,7 +30,13 @@
             "type": "string",
             "metadata": {
                 "description": "Arguments that should be passed to the script"
-            }
+            },
+            "defaultValue": ""
+        },
+
+        "arguments": {
+            "type": "object",
+            "defaultValue": {}
         },
 
         "extensionName": {
@@ -52,7 +58,7 @@
             "extensions": "2015-06-15"
         },
 
-        "arguments": "[parameters('scriptArguments')]",
+        "arguments": "[if(empty(parameters('arguments')), parameters('scriptArguments'), concat('-e ', base64(string(parameters('arguments')))))]",
         "command": "[concat('./', parameters('scriptName'), ' ', variables('arguments'))]",
 
         "urls": {

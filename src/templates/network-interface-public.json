@@ -21,11 +21,14 @@
       },
       "tags": {
           "type": "object"
+      },
+      "location": {
+        "type": "string"
       }
     },
     "variables": {
   
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('location')]",
   
       "name": {
         "nic": "[parameters('nicName')]"

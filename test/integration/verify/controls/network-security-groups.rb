@@ -3,6 +3,7 @@ unique_string = attribute('unique_string', default: '9j2f')
 location = attribute('location', default: 'westeurope')
 ssh_source_addresses = attribute('ssh_source_addresses', default: ['10.1.1.0/24'])
 provider = attribute('provider', default: '33194f91-eb5f-4110-827a-e95f640a9e46')
+prefix = attribute('prefix', default: 'inspec')
 
 # Define array that states where the traffic is coming from
 # Both denote access from the Internet
@@ -14,14 +15,14 @@ control 'Automate-Server-NSG' do
   impact 1.0
   title 'Check the settings of the network security group for the Automate server'
 
-  describe azure_generic_resource(group_name: resource_group_name, name: "inspec-automate-#{unique_string}-Customer-NSG") do
+  describe azure_generic_resource(group_name: resource_group_name, name: "#{prefix}-automate-#{unique_string}-Customer-NSG") do
     its('type') { should eq 'Microsoft.Network/networkSecurityGroups' }
     its('location') { should cmp location }
     its('properties.provisioningState') { should cmp 'Succeeded' }
     its('properties.securityRules.count') { should cmp 3 }
 
     # it should be connected to the correct NIC
-    its('properties.networkInterfaces.first.id') { should include "inspec-automate-#{unique_string}-Customer-VNet-NIC" }
+    its('properties.networkInterfaces.first.id') { should include "#{prefix}-automate-#{unique_string}-Customer-VNet-NIC" }
 
     its('tags') { should include 'provider' }
     its('tags') { should include 'description' }
@@ -35,7 +36,7 @@ control 'Automate-Server-NSG-Port-80' do
   title 'Ensure that port 80 (HTTP) is accessible from the Internet'
 
   # Perform specifc test to check that port 80 is open
-  port_80_rule = azure_generic_resource(group_name: resource_group_name, name: "inspec-automate-#{unique_string}-Customer-NSG")
+  port_80_rule = azure_generic_resource(group_name: resource_group_name, name: "#{prefix}-automate-#{unique_string}-Customer-NSG")
                  .properties.securityRules.find { |r| r.properties.destinationPortRange == '80' && sources.include?(r.properties.sourceAddressPrefix) }
 
   describe port_80_rule do
@@ -50,7 +51,7 @@ control 'Automate-Server-NSG-Port-443' do
   title 'Ensure that port 443 (HTTPS) is accessible from the Internet'
 
   # Perform specifc test to check that port 443 is open
-  port_443_rule = azure_generic_resource(group_name: resource_group_name, name: "inspec-automate-#{unique_string}-Customer-NSG")
+  port_443_rule = azure_generic_resource(group_name: resource_group_name, name: "#{prefix}-automate-#{unique_string}-Customer-NSG")
                   .properties.securityRules.find { |r| r.properties.destinationPortRange == '443' && sources.include?(r.properties.sourceAddressPrefix) }
 
   describe port_443_rule do
@@ -65,7 +66,7 @@ control 'Automate-Server-NSG-Port-22' do
   title 'Ensure that port 22 (SSH) is not accessible from the Internet'
 
   # Perform specifc test to check that port 22 is open
-  port_22_rule = azure_generic_resource(group_name: resource_group_name, name: "inspec-automate-#{unique_string}-Customer-NSG")
+  port_22_rule = azure_generic_resource(group_name: resource_group_name, name: "#{prefix}-automate-#{unique_string}-Customer-NSG")
                  .properties.securityRules.find { |r| r.properties.destinationPortRange == '22' && sources.include?(r.properties.sourceAddressPrefixes) }
 
   describe port_22_rule do
@@ -81,7 +82,7 @@ control 'Automate-Server-NSG-Port-22-from-CHefHQ' do
 
   # Ensure that port 22 is accessible from the ssh source addresses
   ssh_source_addresses.each do |ssh_src_addr|
-    rule = azure_generic_resource(group_name: resource_group_name, name: "inspec-automate-#{unique_string}-Customer-NSG")
+    rule = azure_generic_resource(group_name: resource_group_name, name: "#{prefix}-automate-#{unique_string}-Customer-NSG")
           .properties.securityRules.find { |r| r.properties.destinationPortRange == '22' && r.properties.sourceAddressPrefixes.include?(ssh_src_addr) }
 
     describe rule do
@@ -97,14 +98,14 @@ control 'Chef-Server-NSG' do
   impact 1.0
   title 'Check the settings of the network security group for the Chef server'
 
-  describe azure_generic_resource(group_name: resource_group_name, name: "inspec-chef-#{unique_string}-Customer-NSG") do
+  describe azure_generic_resource(group_name: resource_group_name, name: "#{prefix}-chef-#{unique_string}-Customer-NSG") do
     its('type') { should eq 'Microsoft.Network/networkSecurityGroups' }
     its('location') { should cmp location }
     its('properties.provisioningState') { should cmp 'Succeeded' }
     its('properties.securityRules.count') { should cmp 3 }
 
     # it should be connected to the correct NIC
-    its('properties.networkInterfaces.first.id') { should include "inspec-chef-#{unique_string}-Customer-VNet-NIC" }
+    its('properties.networkInterfaces.first.id') { should include "#{prefix}-chef-#{unique_string}-Customer-VNet-NIC" }
 
     its('tags') { should include 'provider' }
     its('tags') { should include 'description' }
@@ -118,7 +119,7 @@ control 'Chef-Server-NSG-Port-80' do
   title 'Ensure that port 80 (HTTP) is accessible from the Internet'
 
   # Perform specifc test to check that port 80 is open
-  port_80_rule = azure_generic_resource(group_name: resource_group_name, name: "inspec-chef-#{unique_string}-Customer-NSG")
+  port_80_rule = azure_generic_resource(group_name: resource_group_name, name: "#{prefix}-chef-#{unique_string}-Customer-NSG")
                  .properties.securityRules.find { |r| r.properties.destinationPortRange == '80' && sources.include?(r.properties.sourceAddressPrefix) }
 
   describe port_80_rule do
@@ -133,7 +134,7 @@ control 'Chef-Server-NSG-Port-443' do
   title 'Ensure that port 443 (HTTPS) is accessible from the Internet'
 
   # Perform specifc test to check that port 443 is open
-  port_443_rule = azure_generic_resource(group_name: resource_group_name, name: "inspec-chef-#{unique_string}-Customer-NSG")
+  port_443_rule = azure_generic_resource(group_name: resource_group_name, name: "#{prefix}-chef-#{unique_string}-Customer-NSG")
                   .properties.securityRules.find { |r| r.properties.destinationPortRange == '443' && sources.include?(r.properties.sourceAddressPrefix) }
 
   describe port_443_rule do
@@ -148,7 +149,7 @@ control 'Chef-Server-NSG-Port-22' do
   title 'Ensure that port 22 (SSH) is not accessible from the Internet'
 
   # Perform specifc test to check that port 22 is not accessible from the Internet
-  port_22_rule = azure_generic_resource(group_name: resource_group_name, name: "inspec-chef-#{unique_string}-Customer-NSG")
+  port_22_rule = azure_generic_resource(group_name: resource_group_name, name: "#{prefix}-chef-#{unique_string}-Customer-NSG")
                  .properties.securityRules.find { |r| r.properties.destinationPortRange == '22' && sources.include?(r.properties.sourceAddressPrefixes) }
 
   describe port_22_rule do
@@ -164,7 +165,7 @@ control 'Chef-Server-NSG-Port-22-from-CHefHQ' do
 
   # Ensure that port 22 is accessible from the ssh source addresses
   ssh_source_addresses.each do |ssh_src_addr|
-    rule = azure_generic_resource(group_name: resource_group_name, name: "inspec-chef-#{unique_string}-Customer-NSG")
+    rule = azure_generic_resource(group_name: resource_group_name, name: "#{prefix}-chef-#{unique_string}-Customer-NSG")
           .properties.securityRules.find { |r| r.properties.destinationPortRange == '22' && r.properties.sourceAddressPrefixes.include?(ssh_src_addr) }
 
     describe rule do

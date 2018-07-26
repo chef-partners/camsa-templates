@@ -1,6 +1,7 @@
 resource_group_name = attribute('resource_group_name', default: 'InSpec-AMA', description: 'Name of the resource group to interogate')
 unique_string = attribute('unique_string', default: '9j2f')
 location = attribute('location', default: 'westeurope')
+prefix = attribute('prefix', default: 'inspec')
 
 # This name needs to be specified because for AppServices Azure passes the displayname and not the name of the location
 # So westeurope = West Europe
@@ -11,8 +12,8 @@ provider = attribute('provider', default: '33194f91-eb5f-4110-827a-e95f640a9e46'
 title 'Ensure that the server farm, website and functions are setup correctly'
 
 # Set the name of the app service to be used for testing
-app_service_plan_name = format('inspec-%s-AppServicePlan', unique_string)
-app_service_name = format('inspec-%s-AppService', unique_string)
+app_service_plan_name = format('%s-%s-AppServicePlan', prefix, unique_string)
+app_service_name = format('%s-%s-AppService', prefix, unique_string)
 
 control 'AMA Functions Service Plan (Server Farm)' do
   impact 1.0

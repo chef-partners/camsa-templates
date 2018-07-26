@@ -6,6 +6,7 @@ vnet_address_prefix = attribute('vnet_address_prefix', default: '10.3.0.0/24', d
 customer_subnet_prefix = attribute('customer_subnet_prefix', default: '10.3.0.0/25', description: 'The address space assigned to the customer subnet')
 location = attribute('location', default: 'westeurope', description: 'Location of the resources within Azure')
 unique_string = attribute('unique_string', default: '9j2f', description: 'The 4 character string that is used to uniquely identify resources')
+prefix = attribute('prefix', default: 'inspec')
 
 title 'Ensure Subnets are configured in customer network'
 
@@ -40,7 +41,7 @@ control 'Customer Subnet' do
   end
 
   # Ensure the customer facing NIC for Chef is connected
-  chef_nic = format('inspec-chef-%s-Customer-VNet-NIC', unique_string)
+  chef_nic = format('%s-chef-%s-Customer-VNet-NIC', prefix, unique_string)
 
   chef_nic_connected = subnet.properties.ipConfigurations.find { |i| i.id.include? chef_nic }
 
@@ -51,7 +52,7 @@ control 'Customer Subnet' do
   end
 
   # Ensure the customer facing NIC for Automate is connected
-  automate_nic = format('inspec-automate-%s-Customer-VNet-NIC', unique_string)
+  automate_nic = format('%s-automate-%s-Customer-VNet-NIC', prefix, unique_string)
 
   automate_nic_connected = subnet.properties.ipConfigurations.find { |i| i.id.include? automate_nic }
 
