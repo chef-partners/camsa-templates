@@ -27,7 +27,7 @@
     },
     "variables": {
       "apiVersions": {
-        "sa": "2015-06-15"
+        "sa": "2018-02-01"
       }
     },
     "resources": [
