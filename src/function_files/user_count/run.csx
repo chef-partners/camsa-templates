@@ -50,7 +50,6 @@ public static void Run(TimerInfo myTimer, CloudTable settingTable, TraceWriter l
         jsonObj = GetData(automate_fqdn, automate_token, log);
         // Convert var to json
         var json = JsonConvert.SerializeObject(jsonObj);
-
     
         log.Info("json file sent to Log Analytics: " + json);
         
@@ -60,7 +59,7 @@ public static void Run(TimerInfo myTimer, CloudTable settingTable, TraceWriter l
         string hashedString = BuildSignature(stringToHash, sharedKey);
         string signature = "SharedKey " + customerId + ":" + hashedString;
     
-        PostData(signature, datestring, json, customerId, LogName);
+        PostData(signature, datestring, json, customerId, LogName, log);
     } else {
         log.Info(String.Format("Unable to find selected token in table: {0}", AutomateTokenKeyName));
     }

@@ -17,7 +17,6 @@ using Microsoft.WindowsAzure.Storage.Table;
 public class NodeCount
 {
     public string ServerAddress { get; set; }
-    public string ServerType { get;set; }
     public int Total { get; set; }
     public int Success { get; set; }
     public int Failure { get; set; }
@@ -26,20 +25,8 @@ public class NodeCount
  
 public static void Run(TimerInfo myTimer, CloudTable settingTable, TraceWriter log)
 {
-    log.Info("Start function to add information to Log Analytics");
- 
     // LogName is name of the event type that is being submitted to Log Analytics
     string LogName = "ChefAutomateAMAInfraNodeCount";
-
-    Random garbage = new Random();
-    string ServerType = "Automate";
-    string Address = "https://opschefautomate.west.centralus.cloudapp.azure.com/";
-    if(garbage.Next(1,3) == 1){
-    ServerType = "Chef Server";
-    Address = "https://opschefserver.west.centralus.cloudapp.azure.com/";
-    }
-
-    log.Info("Server Type is " + ServerType + " and address is " + Address);
 
     // Get the automate token from the config store table
     // and the automate FQDN
@@ -59,11 +46,9 @@ public static void Run(TimerInfo myTimer, CloudTable settingTable, TraceWriter l
         string automate_fqdn = fqdn_setting.Value;
 
         // Creates the JSON object, with key/value pairs
-        log.Info(GetStringData(log, automate_fqdn, automate_token));
         NodeCount jsonObj = new NodeCount();
-        jsonObj = GetData(automate_fqdn, automate_token);
-        jsonObj.ServerType = ServerType;
-        jsonObj.ServerAddress = Address;
+        jsonObj = GetData(automate_fqdn, automate_token, log);
+        jsonObj.ServerAddress = automate_fqdn;
         // Convert object to json
         var json = JsonConvert.SerializeObject(jsonObj);
     
@@ -75,7 +60,7 @@ public static void Run(TimerInfo myTimer, CloudTable settingTable, TraceWriter l
         string hashedString = BuildSignature(stringToHash, sharedKey);
         string signature = "SharedKey " + customerId + ":" + hashedString;
     
-        PostData(signature, datestring, json, customerId, LogName);
+        PostData(signature, datestring, json, customerId, LogName, log);
     } else {
         log.Info(String.Format("Unable to find selected token in table: {0}", AutomateTokenKeyName));
     }
@@ -95,7 +80,7 @@ public static string BuildSignature(string message, string secret)
 }
  
 // Send a request to the POST API endpoint
-public static void PostData(string signature, string date, string json, string customerId, string LogName)
+public static void PostData(string signature, string date, string json, string customerId, string LogName, TraceWriter log)
 {
     // You can use an optional field to specify the timestamp from the data. If the time field is not specified, Log Analytics assumes the time is the message ingestion time
     string TimeStampField = "";
@@ -116,16 +101,16 @@ public static void PostData(string signature, string date, string json, string c
  
         System.Net.Http.HttpContent responseContent = response.Result.Content;
         string result = responseContent.ReadAsStringAsync().Result;
-        Console.WriteLine("Return Result: " + result);
+        log.Info("Return Result: " + result);
     }
     catch (Exception excep)
     {
-        Console.WriteLine("API Post Exception: " + excep.Message);
+        log.Info("API Post Exception: " + excep.Message);
     }
 }
 
 // Send a request to the POST API endpoint
-public static NodeCount GetData(string automate_fqdn, string token)
+public static NodeCount GetData(string automate_fqdn, string token, TraceWriter log)
 {
     
     NodeCount nodeCount = null;
@@ -133,7 +118,6 @@ public static NodeCount GetData(string automate_fqdn, string token)
     {
         ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
         string url = String.Format("https://{0}/api/v0/cfgmgmt/stats/node_counts", automate_fqdn);
-        Console.WriteLine("PREPARING REQUEST======");
         System.Net.Http.HttpClient client = new System.Net.Http.HttpClient();
         client.DefaultRequestHeaders.Add("x-data-collector-token", token);
 
@@ -144,40 +128,11 @@ public static NodeCount GetData(string automate_fqdn, string token)
                 nodeCount = response.Result.Content.ReadAsAsync<NodeCount>().Result;
             }
 
-        Console.WriteLine("Return Result: " + response.Result.Content);
-    }
-    catch (Exception excep)
-    {
-        Console.WriteLine("API Post Exception: " + excep.Message);
-    } 
-    return nodeCount;
-}
-
-public static string GetStringData(TraceWriter log, string automate_fqdn, string token)
-{
-    
-    string nodeCount = "unchanged";
-    try
-    {
-        ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
-        string url = String.Format("https://{0}/api/v0/cfgmgmt/stats/node_counts", automate_fqdn);
-        log.Info("PREPARING REQUEST======");
-        System.Net.Http.HttpClient client = new System.Net.Http.HttpClient();
-        client.DefaultRequestHeaders.Add("x-data-collector-token", token);
-
-        Task<HttpResponseMessage> response = client.GetAsync(new Uri(url));
-
-        if (response.Result.IsSuccessStatusCode)
-            {
-                nodeCount = response.Result.Content.ReadAsStringAsync().Result;
-            }
-
         log.Info("Return Result: " + response.Result.Content);
     }
     catch (Exception excep)
     {
-        log.Info("API Get Exception: " + excep.Message);
-        nodeCount = "failed";
+        log.Info("API Post Exception: " + excep.Message);
     } 
     return nodeCount;
 }
