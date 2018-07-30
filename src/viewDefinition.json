@@ -45,7 +45,7 @@
                                 },
                                 "Tile": {
                                     "Legend": "Node Count",
-                                    "Query": "ChefAutomateAMAInfraNodeCount_CL | where ServerType_s == \"Automate\" | top 1 by TimeGenerated  | project Total_d"
+                                    "Query": "ChefAutomateAMAInfraNodeCount_CL | top 1 by TimeGenerated | project Total_d"
                                 },
                                 "SecondTile": {
                                     "Legend": "User Count",
