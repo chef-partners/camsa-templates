@@ -11,3 +11,6 @@ test/integration/build/parameters.json
 *.pdf
 inspec.out
 package-lock.json
+.vscode
+.ruby-version
+.envrc
