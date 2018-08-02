@@ -275,6 +275,7 @@
                 "configstore": "[concat(parameters('prefix'), '-ConfigStore-AF')]",
                 "automatelog": "[concat(parameters('prefix'), '-AutomateLog-AF')]",
                 "nodecount": "[concat(parameters('prefix'), '-NodeCount-AF')]",
+                "usercount": "[concat(parameters('prefix'), '-UserCount-AF')]",
                 "starterkit": "[concat(parameters('prefix'), '-StarterKit-AF')]",
                 "chefmetrics": "[concat(parameters('prefix'), '-ChefMetrics-AF')]"
             }
@@ -346,6 +347,7 @@
                 "configStore": "[concat(variables('baseUrl'), 'templates/functions/config-store.json', variables('templateUrlQueryString'))]",
                 "automateLog": "[concat(variables('baseUrl'), 'templates/functions/automate-log.json', variables('templateUrlQueryString'))]",
                 "nodeCount": "[concat(variables('baseUrl'), 'templates/functions/node-count.json', variables('templateUrlQueryString'))]",
+                "userCount": "[concat(variables('baseUrl'), 'templates/functions/user-count.json', variables('templateUrlQueryString'))]",
                 "starterKit": "[concat(variables('baseUrl'), 'templates/functions/starter-kit.json', variables('templateUrlQueryString'))]",
                 "chefMetrics": "[concat(variables('baseUrl'), 'templates/functions/chef-metrics.json', variables('templateUrlQueryString'))]"
             },
@@ -592,6 +594,36 @@
                 "mode": "Incremental",
                 "templateLink": {
                     "uri": "[variables('urls').functions.nodeCount]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "siteName": {
+                        "value": "[variables('name').appService]"
+                    },
+                    "logAnalyticsWorkspaceId": {
+                        "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.workspaceId.value]"
+                    },
+                    "logAnalyticsSharedKey": {
+                        "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.key.value]"
+                    },
+                    "logAnalyticsEnabled": {
+                        "value": "[variables('enabled').logAnalytics]"
+                    }
+                }
+            }
+        },          
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').functions.usercount, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').appService, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').functions.userCount]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {

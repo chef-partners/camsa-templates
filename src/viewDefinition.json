@@ -45,14 +45,14 @@
                                 },
                                 "Tile": {
                                     "Legend": "Node Count",
-                                    "Query": "ChefAutomateAMAInfraNodeCount_CL | where ServerType_s == \"Automate\" | top 1 by TimeGenerated  | project Total_d"
+                                    "Query": "ChefAutomateAMAInfraNodeCount_CL | top 1 by TimeGenerated | project Total_d"
                                 },
                                 "SecondTile": {
                                     "Legend": "User Count",
-                                    "Query": "ChefAutomateAMABasicInfoTelemetry_CL| where ServerType_s == \"Automate\" | top 1 by TimeGenerated  | project UserCount_s"
+                                    "Query": "ChefAutomateAMAUserCount_CL | top 1 by TimeGenerated | project Total_d"
                                 },
                                 "List": {
-                                    "Query": "ChefAutomateAMABasicInfoTelemetry_CL | distinct ServerType_s, Address_s | project ServerType_s, Address_s",
+                                    "Query": "ChefAutomateAMAInfraNodeCount_CL | distinct ServerAddress_s | project ServerAddress_s",
                                     "HideGraph": true,
                                     "enableSparklines": false,
                                     "operation": "Summary",
@@ -108,10 +108,10 @@
                                     {
                                         "Header": {
                                             "Title": "Latency (ms)",
-                                            "Subtitle": ""
+                                            "Subtitle": "Average Per 5 Minutes"
                                         },
                                         "LineChart": {
-                                            "Query": "ChefAutomateAMALatencyTelemetry_CL | where ServerType_s == \"Automate\" and isnotnull(Latency_d) | summarize avg(Latency_d) by ServerType_s, bin(TimeGenerated, 1m) ",
+                                            "Query": "ChefAutomateAMALatencyTelemetry_CL | where ServerType_s == \"Automate\" and isnotnull(Latency_d) | summarize avg(Latency_d) by ServerType_s, bin(TimeGenerated, 1m)",
                                             "yAxis": {
                                                 "isLogarithmic": false,
                                                 "units": {
@@ -146,7 +146,7 @@
                                     {
                                         "Header": {
                                             "Title": "500 Errors",
-                                            "Subtitle": "per 5 minutes"
+                                            "Subtitle": "count per 5 minutes"
                                         },
                                         "LineChart": {
                                             "Query": "automateloadbalancerlog_CL | where isnotnull(status_s) and status_s matches regex \"^5\\\\d{2}$\"  | summarize AggregatedValue = count() by status_s, bin(TimeGenerated, 5m)",
@@ -178,10 +178,10 @@
                                     {
                                         "Header": {
                                             "Title": "Latency (ms)",
-                                            "Subtitle": ""
+                                            "Subtitle": "Average Per 5 Minutes"
                                         },
                                         "LineChart": {
-                                            "Query": "ChefAutomateAMALatencyTelemetry_CL | where ServerType_s == \"Chef Server\" and isnotnull(Latency_d) | summarize avg(Latency_d) by ServerType_s, bin(TimeGenerated, 1m) ",
+                                            "Query": "statsd_log_CL  | where cm_name_s contains \"allRequests.mean\"  | project cm_name_s, cm_value_d, cm_time_t  | parse cm_name_s with Interface \".allRequests\" * | project cm_name_s, Interface, cm_value_d , cm_time_t  | summarize AggregatedValue =  avg(cm_value_d) by Interface, bin(cm_time_t, 5m)",
                                             "yAxis": {
                                                 "isLogarithmic": false,
                                                 "units": {
@@ -197,10 +197,10 @@
                                     {
                                         "Header": {
                                             "Title": "Requests",
-                                            "Subtitle": "average per minute"
+                                            "Subtitle": "Count Per 5 Minutes"
                                         },
                                         "LineChart": {
-                                            "Query": "ChefAutomateAMALatencyTelemetry_CL | where ServerType_s == \"Chef Server\" and isnotnull(Requests_d) | summarize avg(Requests_d) by ServerType_s, bin(TimeGenerated, 1m) ",
+                                            "Query": "statsd_log_CL  | where cm_name_s contains \"StatusCode\"  | project cm_name_s, cm_time_t  | parse cm_name_s with * \"byStatusCode.\" StatusCode | project cm_name_s, StatusCode, cm_time_t  | summarize AggregatedValue = count() by StatusCode, bin(cm_time_t, 5m)",
                                             "yAxis": {
                                                 "isLogarithmic": false,
                                                 "units": {
@@ -216,10 +216,10 @@
                                     {
                                         "Header": {
                                             "Title": "500 Errors",
-                                            "Subtitle": "per minute"
+                                            "Subtitle": "count per 5 minutes"
                                         },
                                         "LineChart": {
-                                            "Query": "ChefAutomateAMALatencyTelemetry_CL | where ServerType_s == \"Chef Server\"| summarize count(StatusCode_d == 500) by ServerType_s, bin(TimeGenerated, 1m) ",
+                                            "Query": "statsd_log_CL  | where cm_name_s contains \"StatusCode\"  | project cm_name_s, cm_time_t  | parse cm_name_s with * \"byStatusCode.\" StatusCode | project cm_name_s, StatusCode, cm_time_t  | where isnotnull(StatusCode) and StatusCode matches regex \"^5\\\\d{2}$\" | summarize AggregatedValue = count() by StatusCode, bin(cm_time_t, 5m)",
                                             "yAxis": {
                                                 "isLogarithmic": false,
                                                 "units": {
@@ -257,18 +257,18 @@
                             "version": 2,
                             "configuration": {
                                 "TileOne": {
-                                    "Legend": "Nodes",
-                                    "Query": "ChefAutomateAMAInfraNodeCount_CL | where ServerType_s == \"Automate\" | top 1 by TimeGenerated  | project Total_d"
+                                    "Legend": "Node Count",
+                                    "Query": "ChefAutomateAMAInfraNodeCount_CL | top 1 by TimeGenerated | project Total_d"
                                 },
                                 "TileTwo": {
-                                    "Legend": "Organizations",
-                                    "Query": "ChefAutomateTelemetry_CL | top 1 by TimeGenerated  | project UserCount_s"
+                                    "Legend": "User Count",
+                                    "Query": "ChefAutomateAMAUserCount_CL | top 1 by TimeGenerated | project Total_d"
                                 },
                                 "Advanced": {
                                     "DataFlowVerification": {
-                                        "Enabled": false,
-                                        "Query": "search * | limit 1 | project TimeGenerated",
-                                        "Message": ""
+                                        "Enabled": true,
+                                        "Query": "ChefAutomateAMAInfraNodeCount_CL | top 1 by TimeGenerated  | project TimeGenerated",
+                                        "Message": "Node data unavailable, please add a node"
                                     }
                                 },
                                 "navigation": [

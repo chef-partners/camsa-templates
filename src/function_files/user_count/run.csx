@@ -11,22 +11,22 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Microsoft.WindowsAzure.Storage.Table;
  
 // Class for what should be sent to Log Analytics
-public class NodeCount
+public class UserCount
 {
     public string ServerAddress { get; set; }
-    public int Total { get; set; }
-    public int Success { get; set; }
-    public int Failure { get; set; }
-    public int Missing { get; set; }
+    public int Total { get; set; } 
 }
  
 public static void Run(TimerInfo myTimer, CloudTable settingTable, TraceWriter log)
 {
+    log.Info("Start function to add information to Log Analytics");
+ 
     // LogName is name of the event type that is being submitted to Log Analytics
-    string LogName = "ChefAutomateAMAInfraNodeCount";
+    string LogName = "ChefAutomateAMAUserCount";
 
     // Get the automate token from the config store table
     // and the automate FQDN
@@ -46,10 +46,9 @@ public static void Run(TimerInfo myTimer, CloudTable settingTable, TraceWriter l
         string automate_fqdn = fqdn_setting.Value;
 
         // Creates the JSON object, with key/value pairs
-        NodeCount jsonObj = new NodeCount();
+        UserCount jsonObj = new UserCount();
         jsonObj = GetData(automate_fqdn, automate_token, log);
-        jsonObj.ServerAddress = automate_fqdn;
-        // Convert object to json
+        // Convert var to json
         var json = JsonConvert.SerializeObject(jsonObj);
     
         log.Info("json file sent to Log Analytics: " + json);
@@ -110,14 +109,14 @@ public static void PostData(string signature, string date, string json, string c
 }
 
 // Send a request to the POST API endpoint
-public static NodeCount GetData(string automate_fqdn, string token, TraceWriter log)
+public static UserCount GetData(string automate_fqdn, string token, TraceWriter log)
 {
     
-    NodeCount nodeCount = null;
+    UserCount users = new UserCount();
     try
     {
         ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
-        string url = String.Format("https://{0}/api/v0/cfgmgmt/stats/node_counts", automate_fqdn);
+        string url = String.Format("https://{0}/api/v0/auth/users", automate_fqdn);
         System.Net.Http.HttpClient client = new System.Net.Http.HttpClient();
         client.DefaultRequestHeaders.Add("x-data-collector-token", token);
 
@@ -125,7 +124,12 @@ public static NodeCount GetData(string automate_fqdn, string token, TraceWriter 
 
         if (response.Result.IsSuccessStatusCode)
             {
-                nodeCount = response.Result.Content.ReadAsAsync<NodeCount>().Result;
+                log.Info(response.Result.Content.ReadAsStringAsync().Result.ToString());
+                var userJson = response.Result.Content.ReadAsAsync<dynamic>().Result;
+                log.Info(userJson.users[0].ToString());
+                JArray userArray = (JArray)userJson.users;
+                users.ServerAddress = automate_fqdn;
+                users.Total = userArray.Count;
             }
 
         log.Info("Return Result: " + response.Result.Content);
@@ -134,7 +138,7 @@ public static NodeCount GetData(string automate_fqdn, string token, TraceWriter 
     {
         log.Info("API Post Exception: " + excep.Message);
     } 
-    return nodeCount;
+    return users;
 }
 
 public class ConfigKV : TableEntity {

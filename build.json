@@ -67,7 +67,16 @@
                     "constants_csx": "src/function_files/node_count/constants.csx"
                 },
             "config": "src/function_files/node_count/function.json"
-        },        
+        }, 
+        {
+            "template_file": "templates/functions/user-count.json",
+            "code_files":
+                {
+                    "run_csx": "src/function_files/user_count/run.csx",
+                    "constants_csx": "src/function_files/user_count/constants.csx"
+                },
+            "config": "src/function_files/user_count/function.json"
+        },         
         {
             "template_file": "templates/functions/chef-metrics.json",
             "code_files":
