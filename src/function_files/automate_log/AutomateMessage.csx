@@ -9,6 +9,7 @@ public class AutomateMessage{
     public string job { get; set; }
     public string function { get; set; }
     public string status { get; set; }
+    public decimal request_time { get; set; }
 
     public string GetLogFriendlyPackageName(){
         string str = sourcePackage;
