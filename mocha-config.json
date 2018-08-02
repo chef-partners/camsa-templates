@@ -1,0 +1,12 @@
+{
+    "reporterEnabled": "mocha-junit-reporter, mochawesome",
+    "mochaJunitReporterReporterOptions": {
+      "mochaFile": "build/tests/lint_out.xml"
+    },
+    "mochawesomeReporterOptions": {
+      "reportDir": "build/tests/lint_html",
+      "reportFilename": "index",
+      "reportTitle": "AMA Lint Tests",
+      "overwrite": true
+    }
+}

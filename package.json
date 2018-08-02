@@ -13,7 +13,8 @@
         "build:copy": "node bin/build.js copy",
         "build:patch": "node bin/build.js patch",
         "build:package": "node bin/build.js package",
-        "build:run": "node bin/build.js run"
+        "build:run": "node bin/build.js run",
+        "test:lint": "mocha test/lint/validateJsonTests.js test/lint/mainTemplateTests.js test/lint/createUiDefTests.js -r mocha-clean --reporter mocha-multi-reporters --reporter-options configFile=mocha-config.json"
     },
     "dependencies": {
         "commander": "^2.15.1",
@@ -21,12 +22,33 @@
         "rimraf": "^2.6.2",
         "sprintf-js": "^1.1.1",
         "typescript": "^2.8.3",
-        "zip-folder": "^1.0.0"
+        "zip-folder": "^1.0.0",
+        "chai": "^4.1.2",
+        "fs-readdir-recursive": "^1.0.0",
+        "grunt-mocha-cli": "^4.0.0",
+        "it-each": "^0.3.1",
+        "jsonlint": "1.6.3",
+        "json-parser": "^1.1.5",
+        "line-column": "^1.0.2",
+        "mocha": "^2.3.3",
+        "recursive-readdir": "^2.2.1",
+        "should": "^13.1.2",
+        "mochawesome": "^3.0.2",
+        "mocha-clean": "^1.0.0"
     },
     "devDependencies": {
         "@types/fs-extra": "^5.0.2",
         "@types/node": "^8.10.11",
         "@types/rimraf": "^2.0.2",
-        "@types/sprintf-js": "^1.1.0"
+        "@types/sprintf-js": "^1.1.0",
+        "grunt": "^1.0.1",
+        "grunt-file-exists": "^0.1.4",
+        "grunt-jsonlint": "^1.1.0",
+        "grunt-strip-json-comments": "^2.2.0",
+        "grunt-tv4": "^2.0.0",
+        "load-grunt-tasks": "^3.5.2",
+        "mocha": "^5.1.1",
+        "mocha-junit-reporter": "^1.17.0",
+        "mocha-multi-reporters": "^1.1.7"
     }
 }

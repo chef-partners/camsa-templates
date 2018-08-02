@@ -1,3 +1,9 @@
 location: westeurope
 location_name: West Europe
+unique_string: kmd2
+resource_group_name: rjs-ama-20180723-5
+prefix: rjs
 apikey: 
+customer_resource_group_name: rjs-ama-20180723-5
+customer_virtual_network_name: rjs-kmd2-VNet
+customer_subnet_name: rjs-kmd2-Subnet
