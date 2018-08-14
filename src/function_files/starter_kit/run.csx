@@ -55,6 +55,7 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, CloudT
     sb.AppendLine(String.Format("Automate URL: https://{0}", AMA[AutomateServerFQDNKey]));
     sb.AppendLine(String.Format("Automate admin username: {0}", AMA[AutomateCredentialsAdminUsernameKey]));
     sb.AppendLine(String.Format("Automate admin password: {0}", AMA[AutomateCredentialsAdminPasswordKey]));
+    sb.AppendLine(String.Format("Automate Token: {0}", AMA[AutomateTokenKey]));
     sb.AppendLine();
     sb.AppendLine(String.Format("Chef Server Internal IP Address: {0}", AMA[ChefServerInternalIPAddressKey]));
     sb.AppendLine(String.Format("Automate Server Internal IP Address: {0}", AMA[AutomateServerInternalIPAddressKey]));
