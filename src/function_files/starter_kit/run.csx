@@ -75,6 +75,15 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, CloudT
     string knife_file_path = Path.Combine(chef_repo_path, ".chef", "knife.rb");
     File.WriteAllText(knife_file_path, knife_config);
 
+    // Read in the ARM extension template and patch the values
+    string arm_extension = File.ReadAllText(Path.Combine(executionContext.FunctionDirectory, "chef-extension.json"));
+
+    arm_extension = arm_extension.Replace("{{ CHEF_SERVER_URL }}", String.Format("https://{0}/organizations/{1}", AMA[ChefServerFQDNKey], AMA[OrgKey]));
+    arm_extension = arm_extension.Replace("{{ ORG_VALIDATOR_NAME }}", String.Format("{0}-validator", AMA[OrgKey]));
+    arm_extension = arm_extension.Replace("{{ ORG_VALIDATOR_KEY }}", AMA[OrgKeyKey]);
+
+    string arm_extension_path = Path.Combine(chef_repo_path, "chef-extension.json");
+
     // Zip up the directory
     string zip_path = Path.Combine(executionContext.FunctionDirectory, "starter_kit.zip");
 
