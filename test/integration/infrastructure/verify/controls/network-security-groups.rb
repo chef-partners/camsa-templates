@@ -2,7 +2,7 @@ resource_group_name = attribute('resource_group_name', default: 'InSpec-AMA', de
 unique_string = attribute('unique_string', default: '9j2f')
 location = attribute('location', default: 'westeurope')
 ssh_source_addresses = attribute('ssh_source_addresses', default: ['10.1.1.0/24'])
-provider = attribute('provider', default: '33194f91-eb5f-4110-827a-e95f640a9e46')
+provider = attribute('provider', default: '2680257b-9f22-4261-b1ef-72412d367a68')
 prefix = attribute('prefix', default: 'inspec')
 
 # Define array that states where the traffic is coming from
