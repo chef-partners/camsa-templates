@@ -155,7 +155,7 @@
                         "constraints": {
                             "required": true,
                             "regex": "^[a-zA-Z0-9 ]+$",
-                            "validationMessage": "A company name must be specified"
+                            "validationMessage": "A company name or your name must be specified"
                         },
                         "visible": true
                     },
