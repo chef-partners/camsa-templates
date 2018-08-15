@@ -6,9 +6,9 @@ using System.Text.RegularExpressions;
 using System.Globalization;
 
 public static class AutomateLogParser{
-    public static AutomateMessage ParseGenericLogMessage(string logMessage, TraceWriter log){
+    public static AutomateMessage ParseGenericLogMessage(string logMessage, string customerName, string subscriptionId, TraceWriter log){
         if(logMessage.Contains("automate-load-balancer")){
-            return ParesAutomateLoadBalancerLog(logMessage, log);
+            return ParesAutomateLoadBalancerLog(logMessage, customerName, subscriptionId, log);
         }
         else{
             AutomateMessage automateMessage = new AutomateMessage();
@@ -17,7 +17,7 @@ public static class AutomateLogParser{
         }
     }
 
-    public static AutomateMessage ParesAutomateLoadBalancerLog(string logMessage, TraceWriter log){
+    public static AutomateMessage ParesAutomateLoadBalancerLog(string logMessage, string customerName, string subscriptionId, TraceWriter log){
         Regex rx = new Regex(@"(.*) \[(.*)\]  ""(.*)"" (\d+) ""(.*)"" (\d+) ""(.*)"" ""(.*)"" ""(.*)"" ""(.*)"" ""(.*)"" (\d+)");
         Match m = rx.Match(logMessage);
 
@@ -33,6 +33,8 @@ public static class AutomateLogParser{
         automateMessage.message = m.Groups[3].ToString();
         automateMessage.status = m.Groups[4].ToString();
         automateMessage.request_time = System.Convert.ToDecimal(m.Groups[5].ToString());
+        automateMessage.customerName = customerName;
+        automateMessage.subscriptionId = subscriptionId;
         return automateMessage;
     }
 }

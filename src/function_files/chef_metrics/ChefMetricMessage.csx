@@ -6,5 +6,7 @@ public class ChefMetricMessage {
     public string cm_name { get; set; }
     public string cm_type { get; set; }
     public string cm_host { get; set; }
-    public double cm_value { get; set; } 
+    public string cm_customer_name { get; set; }
+    public string cm_subscription_id { get; set; }
+    public double cm_value { get; set; }
 }

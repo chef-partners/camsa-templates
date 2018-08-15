@@ -36,6 +36,8 @@ public static void Run(string rawmetric, TraceWriter log)
         message.cm_host = (string) metric["host"];
         message.cm_time = time;
         message.cm_value = (double) metric["points"][0][1];
+        message.cm_customer_name = customerName;
+        message.cm_subscription_id = subscriptionId;
 
         // Submit the metric to Log Analytics
         law.Submit(message, "statsd_log");

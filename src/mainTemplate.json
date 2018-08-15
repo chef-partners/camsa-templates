@@ -113,6 +113,15 @@
             "type": "securestring"
         },
 
+
+        "customerName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the customer using the template"
+            },
+            "defaultValue": ""
+        },
+
         "location": {
             "type": "string",
             "metadata": {
@@ -237,6 +246,7 @@
 
         "name": {
             "storageAccount": "[variables('unique')]",
+            "customer": "[parameters('customerName')]",
             "container": {
                 "backup": "backup"
             },

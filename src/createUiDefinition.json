@@ -148,14 +148,26 @@
                 },
                 "elements": [
                     {
+                        "name": "customerName",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Customer Name",
+                        "toolTip": "Your name or company name. This should be the same as the name registered for the Automate Licence",
+                        "constraints": {
+                            "required": true,
+                            "regex": "^[a-zA-Z0-9 ]+$",
+                            "validationMessage": "A company name must be specified"
+                        },
+                        "visible": true
+                    },
+                    {
                         "name": "licence",
                         "type": "Microsoft.Common.TextBox",
                         "label": "Automate Licence",
                         "toolTip": "Please paste your Automate licence file here",
                         "constraints": {
                             "required": true,
-                            "regex": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
-                            "validationMessage": "The Automate licence should be a Base64 encoded string"
+                            "regex": "^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+\/=]*$",
+                            "validationMessage": "The Automate licence should be a Json Web Token provided by Chef Software"
                         },
                         "visible": true
                     }
@@ -467,6 +479,7 @@
             "chefOrg": "[steps('chefCredentialsStep').orgname]",
             "chefOrgDescription": "[steps('chefCredentialsStep').orgdescription]",
             "automateLicence": "[steps('automateLicenceStep').licence]",
+            "customerName": "[steps('automateLicenceStep').customerName]",
             "logAnalyticsTier": "[steps('logAnalyticsStep').tier]",
             "logAnalyticsLocation": "[steps('logAnalyticsStep').location]",
             "backupHour": "[steps('backupStep').hour]",

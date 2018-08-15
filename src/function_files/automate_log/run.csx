@@ -24,7 +24,7 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, TraceW
         log.Info(item);
         if(item != string.Empty){
 	        data = JsonConvert.DeserializeObject<AutomateLog>(appendedItem as string);
-            AutomateMessage automateMessage = AutomateLogParser.ParseGenericLogMessage(data.MESSAGE_s, log);
+            AutomateMessage automateMessage = AutomateLogParser.ParseGenericLogMessage(data.MESSAGE_s, customerName, subscriptionId, log);
             log.Info(automateMessage.sourcePackage);
             if(automateMessage.sourcePackage != "Unknown Entry"){
                 string logName = automateMessage.sourcePackage.Replace("-", "") + "log";

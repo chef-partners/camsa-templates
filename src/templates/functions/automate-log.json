@@ -29,12 +29,16 @@
         },
         "logAnalyticsEnabled": {
             "type": "bool"
+        },
+        "customerName": {
+            "type": "string"
         }
     },
     "variables": {
         "name": {
             "site": "[parameters('siteName')]",
-            "function": "[parameters('functionName')]"
+            "function": "[parameters('functionName')]",
+            "customer": "[parameters('customerName')]"
         },
         "apiVersions": {
             "functions": "2016-08-01"
@@ -84,7 +88,7 @@
                     "AutomateLogParser.csx": "[base64ToString(variables('code').AutomateLogParser_csx)]",
                     "AutomateMessage.csx": "[base64ToString(variables('code').AutomateMessage_csx)]",
                     "LogAnalyticsWriter.csx": "[base64ToString(variables('code').LogAnalyticsWriter_csx)]",
-                    "workspace.csx": "[concat('static string customerId = \"', variables('logAnalytics').workspace_id, '\";\nstatic string sharedKey = \"', variables('logAnalytics').shared_key, '\";')]",
+                    "workspace.csx": "[concat('static string customerId = \"', variables('logAnalytics').workspace_id, '\";\nstatic string sharedKey = \"', variables('logAnalytics').shared_key, '\";\nstatic string customerName = \"', variables('name').customer, '\";\nstatic string subscriptionId = \"', subscription().id, '\";')]",
                     "run.csx": "[base64ToString(variables('code').run_csx)]"
                 }
             }
