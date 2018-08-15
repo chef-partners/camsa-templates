@@ -31,7 +31,8 @@
             "type": "bool"
         },
         "customerName": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": ""
         }
     },
     "variables": {

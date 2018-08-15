@@ -666,6 +666,9 @@
                     },
                     "logAnalyticsEnabled": {
                         "value": "[variables('enabled').logAnalytics]"
+                    },
+                    "customerName": {
+                        "value": "[variables('name').customer]"
                     }
                 }
             }
@@ -697,6 +700,9 @@
                     },
                     "logAnalyticsEnabled": {
                         "value": "[variables('enabled').logAnalytics]"
+                    },
+                    "customerName": {
+                        "value": "[variables('name').customer]"
                     }
                 }
             }
