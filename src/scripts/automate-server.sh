@@ -408,13 +408,34 @@ do
 
       log "API Token"
 
-      # build up command to get the token from automate
+      # 3 api tokens are required
+      # - chef server connection
+      # - remote stats for 'node' and 'user' count
+      # - user token
+
+      # build up command to generate a token for the chef server
       cmd="chef-automate admin-token | sed -e 's/^[[:space:]]*//'"
       automate_api_token=$(executeCmd "$cmd")
 
       # build up the command to curl information into the function
-      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_token\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $automate_api_token)
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"chef_automate_token\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $automate_api_token)
       executeCmd "$cmd"
+
+      # build up command to generate a token for the remote stats
+      cmd="chef-automate admin-token | sed -e 's/^[[:space:]]*//'"
+      automate_api_token=$(executeCmd "$cmd")
+
+      # build up the command to curl information into the function
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"logging_automate_token\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $automate_api_token)
+      executeCmd "$cmd"
+
+      # build up command to generate a token for the remote stats
+      cmd="chef-automate admin-token | sed -e 's/^[[:space:]]*//'"
+      automate_api_token=$(executeCmd "$cmd")
+
+      # build up the command to curl information into the function
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"user_automate_token\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $automate_api_token)
+      executeCmd "$cmd"          
 
       cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_fqdn\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $AUTOMATE_SERVER_FQDN)
       executeCmd "$cmd"

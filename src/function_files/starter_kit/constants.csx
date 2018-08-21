@@ -16,7 +16,7 @@ static string AutomateServerInternalIPAddressKey = "automate_internal_ip";
 static string AutomateCredentialsURLKey = "automate_credentials_url";
 static string AutomateCredentialsAdminUsernameKey = "automate_credentials_username";
 static string AutomateCredentialsAdminPasswordKey = "automate_credentials_password";
-static string AutomateTokenKey = "automate_token";
+static string AutomateTokenKey = "user_automate_token";
 
 // Define the monitoring user keys
 static string MonitorUserPasswordKey = "monitor_user_password";
