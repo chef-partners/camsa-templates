@@ -83,6 +83,7 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, CloudT
     arm_extension = arm_extension.Replace("{{ ORG_VALIDATOR_KEY }}", AMA[OrgKeyKey]);
 
     string arm_extension_path = Path.Combine(chef_repo_path, "chef_extension.json");
+    File.WriteAllText(arm_extension_path, arm_extension);
 
     // Zip up the directory
     string zip_path = Path.Combine(executionContext.FunctionDirectory, "starter_kit.zip");
