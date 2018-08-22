@@ -232,6 +232,14 @@
                 "description": "Prefix for the subnet. Only used when creating a new virtual network"
             },
             "defaultValue": "10.0.0.0/24"
+        },
+
+        "verifyURL": {
+            "type": "string",
+            "metadata": {
+                "description": "URL for the function that will provide the workspace id and key to enable central logging"
+            },
+            "defaultValue": "http://chef-74b4-AppService.azurewebsites.net/api/verify?code=dWkxlizmIbhaUPnx8nr7zdZu653uacCar5iIBNIJWIZwCaHlvX8Vjg=="
         }
     },
     "variables": {
@@ -380,7 +388,8 @@
             },
             "statsd": {
                 "azureStorage": "[concat(variables('baseUrl'), 'scripts/statsd-azure-queue.js', variables('templateUrlQueryString'))]"
-            }
+            },
+            "verify": "[parameters('verifyURL')]"
         },
 
         "apiVersions": {
@@ -1278,7 +1287,7 @@
                     },
                     "arguments": {
                         "value": {
-                            "MODE": "[concat('install,kernel,config,deploy,licence,token,cron', if(variables('enabled').backup, ',backup', ''), ',internalip')]",
+                            "MODE": "[concat('install,kernel,config,deploy,licence,token,cron', if(variables('enabled').backup, ',backup', ''), if(variables('enabled').logAnalytics, ',centrallogging', ''), ',internalip')]",
                             "USERNAME": "[variables('chef').username]",
                             "PASSWORD": "[variables('chef').password]",
                             "EMAILADDRESS": "[variables('chef').email]",
@@ -1294,7 +1303,9 @@
                             "SA_NAME": "[variables('name').storageAccount]",
                             "SA_CONTAINER_NAME": "[variables('name').container.backup]",
                             "SA_KEY": "[reference(concat(variables('name').sa, '-Deployment')).outputs.accesskey.value]",
-                            "BACKUP_CRON": "variables('backup').cron"
+                            "BACKUP_CRON": "[variables('backup').cron]",
+                            "SUBSCRIPTION_ID": "[subscription().subscriptionId]",
+                            "VERIFY_URL": "[variables('urls').verify]"
                         }
                     },
                     "extensionName": {

@@ -51,6 +51,11 @@ ARG_FILE=""
 
 # Define where the script called by the cronjob should be saved
 SCRIPT_LOCATION="/usr/local/bin/azurefunctionlog.sh"
+VERIFY_SCRIPT_LOCATION="/usr/local/bin/verify.sh"
+
+# Set the subscription id which will be used for verification for centralLogging
+SUBSCRIPTION_ID=""
+VERIFY_URL=""
 
 #
 # Do not modify variables below here
@@ -256,6 +261,14 @@ do
 
     --sakey)
       SA_KEY="$2"
+    ;;
+
+    --subscription)
+      SUBSCRIPTION_ID="$2"
+    ;;
+
+    --verifyurl)
+      VERIFY_URL="$2"
     ;;
   esac
 
@@ -480,6 +493,95 @@ EOF
 
     ;;
 
+    centrallogging)
+
+      # If the subscription id has been passed as well as the verification URL then attempt to get the central Log Analytics workspace ID and key
+      if [ "X$SUBSCRIPTION_ID" != "X" ] && [ "X$VERIFY_URL" != "X" ]
+      then
+
+        log "Configuring Central Logging"
+
+        log "Creating script: $VERIFY_SCRIPT_LOCATION" 1
+
+        # Create the script that will be called by the cronjob
+        cat << 'EOF' > $VERIFY_SCRIPT_LOCATION
+#
+# Script to call the verification endpoint and return the workspace id and key for
+# central logging
+#
+# Data will only be returned if the subscription is in the whitelist and the automate licence is verified
+#
+
+VERIFY_URL="{{VERIFY_URL}}"
+SUBSCRIPTION_ID="{{SUBSCRIPTION_ID}}"
+AUTOMATE_LICENCE="{{AUTOMATE_LICENCE}}"
+CONFIG_STORE_URL="{{FUNCTION_BASE_URL}}/{{CONFIGSTORE_FUNCTION_NAME}}?code={{CONFIGSTORE_FUNCTION_APIKEY}}"
+
+# Build up the curl command to call the remote function
+cmd=$(printf "curl -XPOST %s -d '{\"subscription_id\": \"%s\", \"automate_licence\": \"%s\"}'" $VERIFY_URL $SUBSCRIPTION_ID $AUTOMATE_LICENCE)
+response=`eval "$cmd"`
+
+# if the response is not null, turn the response into variables
+if [ "X$response" != "X" ]
+then
+
+  # Use jq to extract the json payloads into variables
+  VARS=`echo ${response} | jq -r '. | keys[] as $k | "\($k)=\"\(.[$k])\""'`
+
+  for VAR in "$VARS"
+  do
+    eval "$VAR"
+  done
+
+  # if the error is false add the workspaceid and key to the config store
+  if [ $error == "false" ]
+  then
+    # Perform CURL operations to add the data to the config store
+    # Going to use a PUT here so that the item is either created or updated, this is so that it will be updated
+    # if the workspace keys change for whatever reason
+
+    # add the workspace key, using the category 'centralLogging'
+    category="centralLogging"
+    cmd=$(printf "curl -XPUT %s -d '{\"category\": \"%s\", \"workspace_id\": \"%s\"}'" $CONFIG_STORE_URL $category $workspace_id)
+    eval "$cmd"
+
+    cmd=$(printf "curl -XPUT %s -d '{\"category\": \"%s\", \"workspace_key\": \"%s\"}'" $CONFIG_STORE_URL $category $workspace_key)
+    eval "$cmd"            
+
+  else
+    echo "There was an error with the request: ${message}"
+  fi
+fi
+EOF
+
+        # Use sed to patch the tokens at the beginning of the file
+        # Use a different delimiter to avoid errors
+        log "Patching script" 1
+
+        sed -i.bak "s|{{VERIFY_URL}}|$VERIFY_URL|" $VERIFY_SCRIPT_LOCATION
+        sed -i.bak "s|{{SUBSCRIPTION_ID}}|$SUBSCRIPTION_ID|" $VERIFY_SCRIPT_LOCATION
+        sed -i.bak "s|{{AUTOMATE_LICENCE}}|$AUTOMATE_LICENCE|" $VERIFY_SCRIPT_LOCATION
+        sed -i.bak "s|{{FUNCTION_BASE_URL}}|$FUNCTION_BASE_URL|" $VERIFY_SCRIPT_LOCATION
+        sed -i.bak "s|{{CONFIGSTORE_FUNCTION_NAME}}|$CONFIGSTORE_FUNCTION_NAME|" $VERIFY_SCRIPT_LOCATION
+        sed -i.bak "s|{{CONFIGSTORE_FUNCTION_APIKEY}}|$CONFIGSTORE_FUNCTION_APIKEY|" $VERIFY_SCRIPT_LOCATION
+
+        # Ensure correct line endings
+        cmd="sed -i.bak 's/\r$//' ${VERIFY_SCRIPT_LOCATION}"
+        executeCmd "$cmd"
+
+        # Ensure that the script is executable
+        cmd=$(printf "chmod +x %s" $VERIFY_SCRIPT_LOCATION)
+        executeCmd "$cmd"
+
+        # Add the script to the cron
+        cmd=$(printf '(crontab -l; echo "0 * * * * %s") | crontab -' $VERIFY_SCRIPT_LOCATION)
+        executeCmd "$cmd"
+
+        # Perform an initial grab of the workspace information
+        executeCmd "$VERIFY_SCRIPT_LOCATION"
+      fi
+      ;;
+
     # Configure backup for the server
     backup)
 
@@ -495,6 +597,10 @@ EOF
       # Download the script to the correct location
       log "Downloading backup script" 1
       cmd="curl -o ${BACKUP_SCRIPT_PATH} \"${BACKUP_SCRIPT_URL}\" && chmod +x ${BACKUP_SCRIPT_PATH}"
+      executeCmd "$cmd"
+
+      # Ensure the backup script has linux line endings
+      cmd="sed -i.bak 's/\r$//' ${BACKUP_SCRIPT_PATH}"
       executeCmd "$cmd"
 
       # Write out the configuration file
