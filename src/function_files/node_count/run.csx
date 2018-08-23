@@ -68,8 +68,8 @@ public static void Run(TimerInfo myTimer, CloudTable settingTable, TraceWriter l
         PostData(signature, datestring, json, customerId, LogName, log);
 
         // Get the central logging workspace and attempt to send data there as well
-        Dictionary<string, dynamic> cl_workspace = GetCentralLoggingWorkspace(settingTable, log);
-        if (cl_workspace["id"] != false && cl_workspace["key"] != false)
+        Dictionary<string, string> cl_workspace = GetCentralLoggingWorkspace(settingTable, log);
+        if (!String.IsNullOrEmpty(cl_workspace["id"]) && !String.IsNullOrEmpty(cl_workspace["key"]))
         {
             // Create a hash for the API signature
             hashedString = BuildSignature(stringToHash, cl_workspace["key"]);
@@ -153,14 +153,14 @@ public static NodeCount GetData(string automate_fqdn, string token, TraceWriter 
     return nodeCount;
 }
 
-public static Dictionary<string, dynamic> GetCentralLoggingWorkspace(CloudTable table, TraceWriter log)
+public static Dictionary<string, string> GetCentralLoggingWorkspace(CloudTable table, TraceWriter log)
 {
     // initialise variables
-    Dictionary<string, dynamic> workspace = new Dictionary<string, dynamic>();
+    Dictionary<string, string> workspace = new Dictionary<string, string>();
 
     // Set default values
-    workspace.Add("id", false);
-    workspace.Add("key", false);
+    workspace.Add("id", String.Empty);
+    workspace.Add("key", String.Empty);
 
     // Get the workspace id and key from the config stiore using the centralLogging partitionkey
     string partition_filter = TableQuery.GenerateFilterCondition(

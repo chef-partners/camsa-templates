@@ -9,7 +9,7 @@
 using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Microsoft.WindowsAzure.Storage.Table;
+using Microsoft.WindowsAzure.Storage.Table; 
 
 public static void Run(string rawmetric, CloudTable settingTable, TraceWriter log)
 {
@@ -55,7 +55,7 @@ public static void Run(string rawmetric, CloudTable settingTable, TraceWriter lo
  * The workspace id and key are retrieved from the config store and only if they exist
  * will an attempt be made to send the data to the central logging
  */
-public static void CentralLogging(AutomateMessage message, string name, CloudTable table, TraceWriter log)
+public static void CentralLogging(ChefMetricMessage message, string name, CloudTable table, TraceWriter log)
 {
     // initialise variables
     string workspace_id = String.Empty;
@@ -93,4 +93,8 @@ public static void CentralLogging(AutomateMessage message, string name, CloudTab
         LogAnalyticsWriter centralWorkspace = new LogAnalyticsWriter(workspace_id, workspace_key, log);
         centralWorkspace.Submit(message, name);
     }
+}
+
+public class ConfigKV : TableEntity {
+    public string Value { get; set; }
 }
