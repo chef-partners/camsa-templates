@@ -110,8 +110,7 @@
         },
 
         "automateLicence": {
-            "type": "securestring",
-            "defaultValue": ""
+            "type": "securestring"
         },
 
 
@@ -1394,10 +1393,14 @@
             "type": "string",
             "value": "[concat(reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, '/', reference(concat(variables('name').functions.starterkit, '-Deployment')).outputs.name.value, '?code=', reference(concat(variables('name').functions.starterkit, '-Deployment')).outputs.apiKey.value)]"
         },
-        "functionApiKey": {
+        "configStoreFunctionApiKey": {
             "type": "string",
-            "value": "[if(variables('enabled').logAnalytics, reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, '')]"
+            "value": "[reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value]"
         },
+        "starterKitFunctionApiKey": {
+            "type": "string",
+            "value": "[reference(concat(variables('name').functions.starterkit, '-Deployment')).outputs.apiKey.value]"
+        },        
         "uniqueShort": {
             "type": "string",
             "value": "[variables('uniqueShort')]"

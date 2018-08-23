@@ -39,7 +39,7 @@
       "defaultValue": "{{ ORG_VALIDATOR_NAME }}"
     },
     "chef_validation_key": {
-      "type": "securestring",
+      "type": "string",
       "metadata": {
         "description": "Base64 encoded key associated with the specific valdiation client"
       },
@@ -50,10 +50,14 @@
       "metadata": {
         "description": "Run list to be applied to the node"
       }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
     }
   },
   "variables": {
-    "location": "[resourceGroup().location]",
+    "location": "[parameters('location')]",
     "name": {
       "vm": "[parameters('vm_name')]",
       "extension": "ChefExtension",
