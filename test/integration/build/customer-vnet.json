@@ -1,0 +1,51 @@
+
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+      "virtualNetworkName": {
+          "type": "string",
+          "defaultValue": "InSpec-Customer-Network"
+      },
+      "subnetName": {
+          "type": "string",
+          "defaultValue": "InSpec-Customer-Subnet"
+      }
+  },
+  "variables": {
+      "location": "[resourceGroup().location]",
+      "name": {
+          "vnet": "[parameters('virtualNetworkName')]",
+          "subnet": "[parameters('subnetName')]"
+      },
+      "networkSize": {
+          "vnet": "10.3.0.0/24",
+          "subnet": "10.3.0.0/25"
+      }
+  },
+  "resources": [
+      {
+          "apiVersion": "2015-06-15",
+          "type": "Microsoft.Network/virtualNetworks",
+          "name": "[variables('name').vnet]",
+          "location": "[variables('location')]",
+          "properties": {
+              "addressSpace": {
+                  "addressPrefixes": [
+                      "[variables('networkSize').vnet]"
+                  ]
+              },
+              "subnets": [
+                  {
+                      "name": "[variables('name').subnet]",
+                      "properties": {
+                          "addressPrefix": "[variables('networkSize').subnet]"
+                      }
+                  }
+              ]
+          }
+      }        
+  ],
+  "outputs": {
+  }
+}
