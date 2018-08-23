@@ -110,7 +110,8 @@
         },
 
         "automateLicence": {
-            "type": "securestring"
+            "type": "securestring",
+            "defaultValue": ""
         },
 
 
@@ -179,7 +180,8 @@
         },
 
         "logAnalyticsTier": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "Free"
         },
 
         "logAnalyticsLocation": {
