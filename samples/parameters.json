@@ -1,0 +1,52 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "prefix": {
+      "value": ""
+    },
+    "existingVNet": {
+      "value": false
+    },
+    "virtualNetworkName": {
+      "value": ""
+    },
+    "customerResourceGroupName": {
+      "value": ""
+    },
+    "subnetName": {
+      "value": ""
+    },
+    "sshSourceAddresses": {
+      "value": [
+        ""
+      ]
+    },
+    "chefUsername": {
+      "value": ""
+    },
+    "chefUserFullname": {
+      "value": ""
+    },
+    "chefUserEmailaddress": {
+      "value": ""
+    },
+    "chefUserPassword": {
+      "value": ""
+    },
+    "chefOrg": {
+      "value": ""
+    },
+    "chefOrgDescription": {
+      "value": ""
+    },
+    "automateLicence": {
+      "value": ""
+    },
+    "sshPublicKeys": {
+      "value": [
+        ""
+      ]
+    }
+  }
+}
