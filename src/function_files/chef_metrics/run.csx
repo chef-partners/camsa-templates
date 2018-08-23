@@ -1,5 +1,6 @@
 
 #r "Newtonsoft.Json"
+#r "Microsoft.WindowsAzure.Storage"
 
 #load "LogAnalyticsWriter.csx"
 #load "ChefMetricMessage.csx"
@@ -8,8 +9,9 @@
 using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Microsoft.WindowsAzure.Storage.Table;
 
-public static void Run(string rawmetric, TraceWriter log)
+public static void Run(string rawmetric, CloudTable settingTable, TraceWriter log)
 {
     log.Info($"C# Queue trigger function processed: {rawmetric}");
 
@@ -41,6 +43,54 @@ public static void Run(string rawmetric, TraceWriter log)
 
         // Submit the metric to Log Analytics
         law.Submit(message, "statsd_log");
+
+        // Attempt to send data to Central Logging
+        CentralLogging(message, "statsd_log", settingTable, log);
     }
 
+}
+
+/**
+ * Method to send logging data to central logging
+ * The workspace id and key are retrieved from the config store and only if they exist
+ * will an attempt be made to send the data to the central logging
+ */
+public static void CentralLogging(AutomateMessage message, string name, CloudTable table, TraceWriter log)
+{
+    // initialise variables
+    string workspace_id = String.Empty;
+    string workspace_key = String.Empty;
+
+    // Get the workspace id and key from the config stiore using the centralLogging partitionkey
+    string partition_filter = TableQuery.GenerateFilterCondition(
+        "PartitionKey",
+        QueryComparisons.Equal,
+        "centralLogging"
+    );
+
+    // create a partition query
+    TableQuery<ConfigKV> query = new TableQuery<ConfigKV>().Where(partition_filter);
+
+    // iterate around the results and set the workspace id and key of they exist
+    foreach (ConfigKV entity in table.ExecuteQuery(query))
+    {
+        if (entity.RowKey == "workspace_id")
+        {
+            workspace_id = entity.Value;
+        }
+
+        if (entity.RowKey == "workspace_key")
+        {
+            workspace_key = entity.Value;
+        }
+    }
+
+    // if the worksoace key and id have been set create a new LogAnalyticsWriter and send the
+    // data
+    if (!String.IsNullOrEmpty(workspace_id) && !String.IsNullOrEmpty(workspace_key))
+    {
+        log.Info("Sending to Central Log Analytics workspace");
+        LogAnalyticsWriter centralWorkspace = new LogAnalyticsWriter(workspace_id, workspace_key, log);
+        centralWorkspace.Submit(message, name);
+    }
 }
