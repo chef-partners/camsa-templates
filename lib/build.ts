@@ -194,8 +194,18 @@ function patch(options, build_config) {
 function packageFiles(options, build_config) {
     console.log("Packaging files");
 
+    // determine if a nightly flag needs to be added to the zip file
+    let flag = "";
+    if (process.env.BUILD_REASON)
+    {
+        if (process.env.BUILD_REASON.toLocaleLowerCase() == "schedule")
+        {
+            flag = "-nightly";
+        }
+    }
+
     // determine the filename for the zip
-    let zip_filename = sprintf("%s-%s.zip", build_config["package"]["name"], options.version);
+    let zip_filename = sprintf("%s-%s%s.zip", build_config["package"]["name"], options.version, flag);
     let zip_filepath = path.join(build_config["dirs"]["output"], zip_filename);
 
     // zip up the files
