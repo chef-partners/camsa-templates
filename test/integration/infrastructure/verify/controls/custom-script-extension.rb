@@ -1,6 +1,6 @@
 resource_group_name = attribute('resource_group_name', default: 'InSpec-AMA', description: 'Name of the resource group to interogate')
 unique_string = attribute('unique_string', default: '9j2f')
-provider = attribute('provider', default: '33194f91-eb5f-4110-827a-e95f640a9e46')
+provider = attribute('provider', default: '2680257b-9f22-4261-b1ef-72412d367a68')
 prefix = attribute('prefix', default: 'inspec')
 
 title 'Ensure that the script extension has been deployed for each machine'

@@ -1,0 +1,4 @@
+name: azure-managed-automate-service-tests
+supports:
+  - os-family: linux
+  - os-name: windows

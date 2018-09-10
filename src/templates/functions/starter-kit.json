@@ -27,7 +27,8 @@
         "code": {
             "run_csx": "",
             "constants_csx": "",
-            "knife_rb": ""
+            "knife_rb": "",
+            "chef_extension_json": ""
         }     
     },
     "resources": [
@@ -41,7 +42,8 @@
                 "files": {
                     "run.csx": "[base64ToString(variables('code').run_csx)]",
                     "constants.csx": "[base64ToString(variables('code').constants_csx)]",
-                    "knife.rb": "[base64ToString(variables('code').knife_rb)]"
+                    "knife.rb": "[base64ToString(variables('code').knife_rb)]",
+                    "chef_extension.json": "[base64ToString(variables('code').chef_extension_json)]"
                 }
             }
         }      

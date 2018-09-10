@@ -1,0 +1,72 @@
+{  
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "name": {
+      "type": "string",
+      "metadata": {
+        "description": "Name o the API Connection"
+      }
+    },
+    "saName": {
+      "type": "string"
+    },
+    "saKey": {
+      "type": "securestring"
+    },
+    "location": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "object"
+    },
+    "backupEnabled": {
+        "type": "bool"
+    }
+  },
+  "variables": {
+
+    "location": "[parameters('location')]",
+
+    "name": {
+      "connection": "[parameters('name')]",
+      "storageAccount": "[parameters('saName')]"
+    },
+
+    "storageAccount": {
+      "key": "[parameters('saKey')]"
+    },
+
+    "tags": "[parameters('tags')]",
+
+    "apiVersions": {
+      "logicApp": "2017-07-01",
+      "connections": "2016-06-01"
+    }
+  },
+  "resources": [
+    {
+      "comments": "API Connection for LogicApp",
+      "type": "Microsoft.Web/connections",
+      "name": "[variables('name').connection]",
+      "condition": "[parameters('backupEnabled')]",
+      "apiVersion": "[variables('apiVersions').connections]",
+      "location": "[variables('location')]",
+      "tags": "[variables('tags')]",
+      "properties": {
+        "displayName": "StorageAccountConnection",
+        "customParameterValues": {},
+        "api": {
+          "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', variables('location'), '/managedApis/azureblob')]"
+        },
+        "parameterValues": {
+          "accountName": "[variables('name').storageAccount]",
+          "accessKey": "[variables('storageAccount').key]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    
+  }
+}

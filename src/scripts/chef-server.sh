@@ -426,7 +426,7 @@ do
 
       # Get the token from the azure function
       log "Retrieving token" 1
-      cmd=$(printf "curl -s -XGET '%s&key=automate_token' | jq -r .automate_token " $AF_URL)
+      cmd=$(printf "curl -s -XGET '%s&key=chef_automate_token' | jq -r .chef_automate_token " $AF_URL)
       automate_token=$(executeCmd "$cmd")
 
       # Use this token to configure the chef server

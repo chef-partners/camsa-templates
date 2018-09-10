@@ -7,7 +7,7 @@ prefix = attribute('prefix', default: 'inspec')
 # So westeurope = West Europe
 location_name = attribute('location_name', default: 'West Europe')
 
-provider = attribute('provider', default: '33194f91-eb5f-4110-827a-e95f640a9e46')
+provider = attribute('provider', default: '2680257b-9f22-4261-b1ef-72412d367a68')
 
 title 'Ensure that the server farm, website and functions are setup correctly'
 

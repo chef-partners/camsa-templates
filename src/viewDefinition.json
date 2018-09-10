@@ -111,7 +111,7 @@
                                             "Subtitle": "Average Per 5 Minutes"
                                         },
                                         "LineChart": {
-                                            "Query": "ChefAutomateAMALatencyTelemetry_CL | where ServerType_s == \"Automate\" and isnotnull(Latency_d) | summarize avg(Latency_d) by ServerType_s, bin(TimeGenerated, 1m)",
+                                            "Query": "automateloadbalancerlog_CL | where isnotnull(request_time_d) | summarize AggregatedValue = avg(request_time_d) by sourcePackage_s, bin(TimeGenerated, 5m)",
                                             "yAxis": {
                                                 "isLogarithmic": false,
                                                 "units": {

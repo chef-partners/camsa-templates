@@ -25,6 +25,11 @@ public static void Run(TimerInfo myTimer, CloudTable settingTable, TraceWriter l
 {
     log.Info("Start function to add information to Log Analytics");
  
+    string datestring = String.Empty;
+    string stringToHash = String.Empty;
+    string hashedString = String.Empty;
+    string signature = String.Empty;
+
     // LogName is name of the event type that is being submitted to Log Analytics
     string LogName = "ChefAutomateAMAUserCount";
 
@@ -54,12 +59,23 @@ public static void Run(TimerInfo myTimer, CloudTable settingTable, TraceWriter l
         log.Info("json file sent to Log Analytics: " + json);
         
         // Create a hash for the API signature
-        var datestring = DateTime.UtcNow.ToString("r");
-        string stringToHash = "POST\n" + json.Length + "\napplication/json\n" + "x-ms-date:" + datestring + "\n/api/logs";
-        string hashedString = BuildSignature(stringToHash, sharedKey);
-        string signature = "SharedKey " + customerId + ":" + hashedString;
+        datestring = DateTime.UtcNow.ToString("r");
+        stringToHash = "POST\n" + json.Length + "\napplication/json\n" + "x-ms-date:" + datestring + "\n/api/logs";
+        hashedString = BuildSignature(stringToHash, sharedKey);
+        signature = "SharedKey " + customerId + ":" + hashedString;
     
         PostData(signature, datestring, json, customerId, LogName, log);
+
+        // Get the central logging workspace and attempt to send data there as well
+        Dictionary<string, string> cl_workspace = GetCentralLoggingWorkspace(settingTable, log);
+        if (!String.IsNullOrEmpty(cl_workspace["id"]) && !String.IsNullOrEmpty(cl_workspace["key"]))
+        {
+            // Create a hash for the API signature
+            hashedString = BuildSignature(stringToHash, cl_workspace["key"]);
+            signature = "SharedKey " + cl_workspace["id"] + ":" + hashedString;
+
+            PostData(signature, datestring, json, cl_workspace["id"], LogName, log);
+        }        
     } else {
         log.Info(String.Format("Unable to find selected token in table: {0}", AutomateTokenKeyName));
     }
@@ -139,6 +155,42 @@ public static UserCount GetData(string automate_fqdn, string token, TraceWriter 
         log.Info("API Post Exception: " + excep.Message);
     } 
     return users;
+}
+
+public static Dictionary<string, string> GetCentralLoggingWorkspace(CloudTable table, TraceWriter log)
+{
+    // initialise variables
+    Dictionary<string, string> workspace = new Dictionary<string, string>();
+
+    // Set default values
+    workspace.Add("id", String.Empty);
+    workspace.Add("key", String.Empty);
+
+    // Get the workspace id and key from the config stiore using the centralLogging partitionkey
+    string partition_filter = TableQuery.GenerateFilterCondition(
+        "PartitionKey",
+        QueryComparisons.Equal,
+        "centralLogging"
+    );
+
+    // create a partition query
+    TableQuery<ConfigKV> query = new TableQuery<ConfigKV>().Where(partition_filter);
+
+    // iterate around the results and set the workspace id and key of they exist
+    foreach (ConfigKV entity in table.ExecuteQuery(query))
+    {
+        if (entity.RowKey == "workspace_id")
+        {
+            workspace["id"] = entity.Value;
+        }
+
+        if (entity.RowKey == "workspace_key")
+        {
+            workspace["key"] = entity.Value;
+        }
+    }
+
+    return workspace;
 }
 
 public class ConfigKV : TableEntity {

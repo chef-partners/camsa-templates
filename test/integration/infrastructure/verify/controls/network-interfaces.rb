@@ -1,8 +1,8 @@
 resource_group_name = attribute('resource_group_name', default: 'InSpec-AMA', description: 'Name of the resource group to interogate')
 unique_string = attribute('unique_string', default: '9j2f')
 location = attribute('location', default: 'westeurope')
-customer_subnet_name = attribute('customer-subnet-name', default: 'InSpec-Customer-Subnet')
-provider = attribute('provider', default: '33194f91-eb5f-4110-827a-e95f640a9e46')
+customer_subnet_name = attribute('customer_subnet_name', default: 'InSpec-Customer-Subnet')
+provider = attribute('provider', default: '2680257b-9f22-4261-b1ef-72412d367a68')
 prefix = attribute('prefix', default: 'inspec')
 
 title 'Check that all Network Interface Cards are setup correctly'

@@ -43,7 +43,8 @@
                 {
                     "run_csx": "src/function_files/starter_kit/run.csx",
                     "constants_csx": "src/function_files/starter_kit/constants.csx",
-                    "knife_rb": "src/function_files/starter_kit/knife.rb"
+                    "knife_rb": "src/function_files/starter_kit/knife.rb",
+                    "chef_extension_json": "src/function_files/starter_kit/chef-extension.json"
                 },
             "config": "src/function_files/starter_kit/function.json"
         },        

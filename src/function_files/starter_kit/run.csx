@@ -1,5 +1,6 @@
 #r "Microsoft.WindowsAzure.Storage"
 #r "System.IO.Compression.Filesystem"
+#r "Newtonsoft.Json"
 
 #load "constants.csx"
 
@@ -9,6 +10,7 @@ using System.Text;
 using System.IO.Compression;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
+using Newtonsoft.Json;
 
 public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, CloudTable settingTable, TraceWriter log, ExecutionContext executionContext)
 {
@@ -35,10 +37,17 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, CloudT
     string validator_key_path = Path.Combine(chef_repo_path, ".chef", validator_key_filename);
     string validator_key = Encoding.UTF8.GetString(Convert.FromBase64String(AMA[OrgKeyKey]));
 
+    string extras_path = Path.Combine(chef_repo_path, "extras");
+
     // Ensure that the parent for the client_key_path exists
     if (!Directory.Exists(Directory.GetParent(client_key_path).ToString()))
     {
         Directory.CreateDirectory(Directory.GetParent(client_key_path).ToString());
+    }
+
+    if (!Directory.Exists(extras_path))
+    {
+        Directory.CreateDirectory(extras_path);
     }
 
     // Write the client and validation keys out to a file
@@ -55,11 +64,28 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, CloudT
     sb.AppendLine(String.Format("Automate URL: https://{0}", AMA[AutomateServerFQDNKey]));
     sb.AppendLine(String.Format("Automate admin username: {0}", AMA[AutomateCredentialsAdminUsernameKey]));
     sb.AppendLine(String.Format("Automate admin password: {0}", AMA[AutomateCredentialsAdminPasswordKey]));
+    sb.AppendLine(String.Format("Automate Token: {0}", AMA[AutomateTokenKey]));
     sb.AppendLine();
     sb.AppendLine(String.Format("Chef Server Internal IP Address: {0}", AMA[ChefServerInternalIPAddressKey]));
     sb.AppendLine(String.Format("Automate Server Internal IP Address: {0}", AMA[AutomateServerInternalIPAddressKey]));
     File.WriteAllText(credentials_path, sb.ToString());
     
+    // create a dictionary to hold the credentials data so that it can be written out as JSON
+    Dictionary<string, string> data = new Dictionary<string, string>();
+    data.Add("CHEF_SERVER_URL", String.Format("https://{0}/organizations/{1}", AMA[ChefServerFQDNKey], AMA[OrgKey]));
+    data.Add("USER_USERNAME", AMA[UserKey]);
+    data.Add("USER_PASSWORD", AMA[UserPasswordKey]);
+    data.Add("AUTOMATE_SERVER_URL", String.Format("https://{0}", AMA[AutomateServerFQDNKey]));
+    data.Add("AUTOMATE_ADMIN_USERNAME", AMA[AutomateCredentialsAdminUsernameKey]);
+    data.Add("AUTOMATE_ADMIN_PASSWORD", AMA[AutomateCredentialsAdminPasswordKey]);
+    data.Add("AUTOMATE_ADMIN_TOKEN", AMA[AutomateTokenKey]);
+    data.Add("CHEF_SERVER_INTERNAL_IP_ADDRESS", AMA[ChefServerInternalIPAddressKey]);
+    data.Add("AUTOMATE_SERVER_INTERNAL_IP_ADDRESS", AMA[AutomateServerInternalIPAddressKey]);
+
+    // Write out the data to a file in the extras directory
+    string credentials_json_path = Path.Combine(extras_path, "credentials.json") ;
+    string data_json = JsonConvert.SerializeObject(data, Formatting.Indented);
+    File.WriteAllText(credentials_json_path, data_json);
 
     // Read in the knife file and patch it so that it has the correct values
     string knife_config = File.ReadAllText(Path.Combine(executionContext.FunctionDirectory, "knife.rb"));
@@ -73,6 +99,16 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, CloudT
     // Write out the knife file to the repo directoyr
     string knife_file_path = Path.Combine(chef_repo_path, ".chef", "knife.rb");
     File.WriteAllText(knife_file_path, knife_config);
+
+    // Read in the ARM extension template and patch the values
+    string arm_extension = File.ReadAllText(Path.Combine(executionContext.FunctionDirectory, "chef_extension.json"));
+
+    arm_extension = arm_extension.Replace("{{ CHEF_SERVER_URL }}", String.Format("https://{0}/organizations/{1}", AMA[ChefServerFQDNKey], AMA[OrgKey]));
+    arm_extension = arm_extension.Replace("{{ ORG_VALIDATOR_NAME }}", String.Format("{0}-validator", AMA[OrgKey]));
+    arm_extension = arm_extension.Replace("{{ ORG_VALIDATOR_KEY }}", AMA[OrgKeyKey]);
+
+    string arm_extension_path = Path.Combine(extras_path, "chef_extension.json");
+    File.WriteAllText(arm_extension_path, arm_extension);
 
     // Zip up the directory
     string zip_path = Path.Combine(executionContext.FunctionDirectory, "starter_kit.zip");

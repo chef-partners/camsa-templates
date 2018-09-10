@@ -6,6 +6,14 @@
       "direction": "in",
       "queueName": "chef-statsd",
       "connection": "AzureWebJobsStorage"
+    },
+    {
+        "type": "table",
+        "name": "settingTable",
+        "tableName": "settings",
+        "take": 50,
+        "connection": "AzureWebJobsDashboard",
+        "direction": "in"
     }
   ],
   "disabled": false

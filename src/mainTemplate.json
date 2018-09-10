@@ -113,6 +113,15 @@
             "type": "securestring"
         },
 
+
+        "customerName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the customer using the template"
+            },
+            "defaultValue": ""
+        },
+
         "location": {
             "type": "string",
             "metadata": {
@@ -161,8 +170,17 @@
             }
         },
 
+        "backupRetention": {
+            "type": "int",
+            "defaultValue": 30,
+            "metadata": {
+                "description": "Number of days that Chef backups should be kept for"
+            }
+        },
+
         "logAnalyticsTier": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "Free"
         },
 
         "logAnalyticsLocation": {
@@ -215,6 +233,14 @@
                 "description": "Prefix for the subnet. Only used when creating a new virtual network"
             },
             "defaultValue": "10.0.0.0/24"
+        },
+
+        "verifyURL": {
+            "type": "string",
+            "metadata": {
+                "description": "URL for the function that will provide the workspace id and key to enable central logging"
+            },
+            "defaultValue": "http://chef-74b4-AppService.azurewebsites.net/api/verify?code=dWkxlizmIbhaUPnx8nr7zdZu653uacCar5iIBNIJWIZwCaHlvX8Vjg=="
         }
     },
     "variables": {
@@ -229,6 +255,7 @@
 
         "name": {
             "storageAccount": "[variables('unique')]",
+            "customer": "[parameters('customerName')]",
             "container": {
                 "backup": "backup"
             },
@@ -278,6 +305,10 @@
                 "usercount": "[concat(parameters('prefix'), '-UserCount-AF')]",
                 "starterkit": "[concat(parameters('prefix'), '-StarterKit-AF')]",
                 "chefmetrics": "[concat(parameters('prefix'), '-ChefMetrics-AF')]"
+            },
+            "apiConnection": "[concat(parameters('prefix'), '-AzureBlob-APIConnection')]",
+            "logicApps": {
+                "housekeeping": "[concat(parameters('prefix'), '-Backup-HouseKeeping-LogicApp')]"
             }
         },
 
@@ -288,6 +319,7 @@
         },
 
         "backup": {
+            "retention": "[mul(parameters('backupRetention'), -1)]",
             "cron": "[concat(parameters('backupMinute'), ' ', parameters('backupHour'), ' * * *')]"
         },
 
@@ -338,6 +370,10 @@
             "appService": "[concat(variables('baseUrl'), 'templates/app-service.json', variables('templateUrlQueryString'))]",
             "logAnalytics": "[concat(variables('baseUrl'), 'templates/log-analytics.json', variables('templateUrlQueryString'))]",
             "logAnalyticsExtension": "[concat(variables('baseUrl'), 'templates/log-analytics-extension.json', variables('templateUrlQueryString'))]",
+            "apiConnection": "[concat(variables('baseUrl'), 'templates/apiConnection/azureblob.json', variables('templateUrlQueryString'))]",
+            "logicApps": {
+                "housekeeping": "[concat(variables('baseUrl'), 'templates/logicApps/housekeeping.json', variables('templateUrlQueryString'))]"
+            },
             "scripts": {
                 "chefserver": "[concat(variables('baseUrl'), 'scripts/chef-server.sh', variables('templateUrlQueryString'))]",
                 "automateserver": "[concat(variables('baseUrl'), 'scripts/automate-server.sh', variables('templateUrlQueryString'))]",
@@ -353,7 +389,8 @@
             },
             "statsd": {
                 "azureStorage": "[concat(variables('baseUrl'), 'scripts/statsd-azure-queue.js', variables('templateUrlQueryString'))]"
-            }
+            },
+            "verify": "[parameters('verifyURL')]"
         },
 
         "apiVersions": {
@@ -382,10 +419,25 @@
         "singlequote": "'",
 
         "tags": {
-            "provider": "33194f91-eb5f-4110-827a-e95f640a9e46"
+            "provider": "2680257b-9f22-4261-b1ef-72412d367a68"
         }
     },
     "resources": [
+
+        {
+            "comments": "Resource to track Chef Automate installations using this template",
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat('pid-', variables('tags').provider)]",
+            "apiVersion": "2017-05-10",  
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": []
+                }
+            }
+        },
 
         {
             "type": "Microsoft.Resources/deployments",
@@ -413,6 +465,84 @@
                 }
             }
         },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').apiConnection, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').sa, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').apiConnection]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[variables('name').apiConnection]"
+                    },
+                    "saName": {
+                        "value": "[variables('name').storageAccount]"
+                    },
+                    "saKey": {
+                        "value": "[reference(concat(variables('name').sa, '-Deployment')).outputs.accesskey.value]"
+                    },
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "backupEnabled": {
+                        "value": "[variables('enabled').backup]"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "API Connection to the Storage Account for Logic Apps",
+                            "provider": "[variables('tags').provider]"
+                        }
+                    }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').logicApps.housekeeping, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').apiConnection, '-Deployment')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').logicApps.housekeeping]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[variables('name').logicApps.housekeeping]"
+                    },
+                    "apiConnectionName": {
+                        "value": "[variables('name').apiConnection]"
+                    },
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "backupEnabled": {
+                        "value": "[variables('enabled').backup]"
+                    },
+                    "retention": {
+                        "value": "[variables('backup').retention]"
+                    },
+                    "tags": {
+                        "value": {
+                            "description": "API Connection to the Storage Account for Logic Apps",
+                            "provider": "[variables('tags').provider]"
+                        }
+                    }
+                }
+            }
+        },        
 
         {
             "type": "Microsoft.Resources/deployments",
@@ -546,6 +676,9 @@
                     },
                     "logAnalyticsEnabled": {
                         "value": "[variables('enabled').logAnalytics]"
+                    },
+                    "customerName": {
+                        "value": "[variables('name').customer]"
                     }
                 }
             }
@@ -577,6 +710,9 @@
                     },
                     "logAnalyticsEnabled": {
                         "value": "[variables('enabled').logAnalytics]"
+                    },
+                    "customerName": {
+                        "value": "[variables('name').customer]"
                     }
                 }
             }
@@ -1152,7 +1288,7 @@
                     },
                     "arguments": {
                         "value": {
-                            "MODE": "[concat('install,kernel,config,deploy,licence,token,cron', if(variables('enabled').backup, ',backup', ''), ',internalip')]",
+                            "MODE": "[concat('install,kernel,config,deploy,licence,token,cron', if(variables('enabled').backup, ',backup', ''), if(variables('enabled').logAnalytics, ',centrallogging', ''), ',internalip')]",
                             "USERNAME": "[variables('chef').username]",
                             "PASSWORD": "[variables('chef').password]",
                             "EMAILADDRESS": "[variables('chef').email]",
@@ -1168,7 +1304,9 @@
                             "SA_NAME": "[variables('name').storageAccount]",
                             "SA_CONTAINER_NAME": "[variables('name').container.backup]",
                             "SA_KEY": "[reference(concat(variables('name').sa, '-Deployment')).outputs.accesskey.value]",
-                            "BACKUP_CRON": "variables('backup').cron"
+                            "BACKUP_CRON": "[variables('backup').cron]",
+                            "SUBSCRIPTION_ID": "[subscription().subscriptionId]",
+                            "VERIFY_URL": "[variables('urls').verify]"
                         }
                     },
                     "extensionName": {
@@ -1255,10 +1393,14 @@
             "type": "string",
             "value": "[concat(reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, '/', reference(concat(variables('name').functions.starterkit, '-Deployment')).outputs.name.value, '?code=', reference(concat(variables('name').functions.starterkit, '-Deployment')).outputs.apiKey.value)]"
         },
-        "functionApiKey": {
+        "configStoreFunctionApiKey": {
             "type": "string",
-            "value": "[if(variables('enabled').logAnalytics, reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value, '')]"
+            "value": "[reference(concat(variables('name').functions.configstore, '-Deployment')).outputs.apiKey.value]"
         },
+        "starterKitFunctionApiKey": {
+            "type": "string",
+            "value": "[reference(concat(variables('name').functions.starterkit, '-Deployment')).outputs.apiKey.value]"
+        },        
         "uniqueShort": {
             "type": "string",
             "value": "[variables('uniqueShort')]"

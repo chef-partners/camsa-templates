@@ -33,5 +33,9 @@ control 'Azure-Managed-Automate-Resources' do
     its('Microsoft.Web/sites') { should eq 1 }
 
     its('Microsoft.OperationalInsights/workspaces') { should eq 1 }
+
+    # There should be resources for the logic app
+    its('Microsoft.Web/connections') { should eq 1 } 
+    its('Microsoft.Logic/workflows') { should eq 1 }
   end
 end
