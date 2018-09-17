@@ -7,8 +7,11 @@
       "direction": "in",
       "methods": [
         "get",
-        "post"
-      ]
+        "post",
+        "put",
+        "delete"
+      ],
+      "route": "{optype}/{id?}/{category?}"
     },
     {
       "name": "$return",
@@ -20,9 +23,9 @@
       "name": "settingTable",
       "tableName": "settings",
       "take": 50,
-      "connection": "AzureWebJobsStorage",
-      "direction": "in"
+      "connection": "AzureWebJobsDashboard",
+      "direction": "inout"
     }
   ],
-  "disabled": true
+  "disabled": false
 }

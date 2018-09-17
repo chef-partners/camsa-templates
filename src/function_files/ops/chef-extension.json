@@ -1,0 +1,104 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vm_name": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Virtual Machine to which this extension should be attached"
+      }
+    },
+    "node_name": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the machine as it will be know in Chef"
+      }
+    },
+    "type": {
+      "type": "string",
+      "metadata": {
+        "description": "Type of machine that this is being installed on, e.g. Windows or Linux"
+      },
+      "allowedValues": [
+        "windows",
+        "linux"
+      ]
+    },
+    "chef_server_url": {
+      "type": "string",
+      "metadata": {
+        "description": "URL to the chef server"
+      },
+      "defaultValue": "{{ CHEF_SERVER_URL }}"
+    },
+    "chef_validation_name": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the validation client that the node can use to register itself"
+      },
+      "defaultValue": "{{ ORG_VALIDATOR_NAME }}"
+    },
+    "chef_validation_key": {
+      "type": "string",
+      "metadata": {
+        "description": "Base64 encoded key associated with the specific valdiation client"
+      },
+      "defaultValue": "{{ ORG_VALIDATOR_KEY }}"
+    },
+    "chef_runlist": {
+      "type": "string",
+      "metadata": {
+        "description": "Run list to be applied to the node"
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
+    }
+  },
+  "variables": {
+    "location": "[parameters('location')]",
+    "name": {
+      "vm": "[parameters('vm_name')]",
+      "extension": "ChefExtension",
+      "node": "[parameters('node_name')]"
+    },
+    "chef": {
+      "url": "[parameters('chef_server_url')]",
+      "validation": {
+        "name": "[parameters('chef_validation_name')]",
+        "key": "[parameters('chef_validation_key')]"
+      },
+      "runlist": "[parameters('chef_runlist')]",
+      "type": "[if(equals(toLower(parameters('type')), 'windows'), 'ChefClient', 'LinuxChefClient')]"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/virtualMachine/extensions",
+      "name": "[concat(variables('name').vm, '/', variables('name').extension)]",
+      "apiVersion": "2015-05-01-preview",
+      "location": "[variables('location')]",
+      "properties": {
+        "publisher": "Chef.Bootstrap.WindowsAzure",
+        "type": "[variables('chef').type]",
+        "typeHandlerVersion": "1210.12",
+        "settings": {
+          "bootstrap_options": {
+            "chef_node_name": "[variables('name').node]",
+            "chef_server_url": "[variables('chef').url]",
+            "validation_client_name": "[variables('chef').validation.name]"
+          },
+          "run_list": "[variables('chef').runlist]",
+          "validation_key_format": "base64encoded"
+        },
+        "protectedSettings": {
+          "validation_key": "[variables('chef').validation.key]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+
+  }
+}
