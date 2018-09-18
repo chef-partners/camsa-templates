@@ -27,6 +27,15 @@
                 },
                 "elements": [
                     {
+                        "name": "warning",
+                        "type": "Microsoft.Common.InfoBox",
+                        "options": {
+                            "icon": "Warning",
+                            "text": "The network will be created in the same resource group as the Managed Application. The resource group setting here will be ignored."
+                        },
+                        "visible": true
+                    },
+                    {
                         "name": "virtualNetwork",
                         "type": "Microsoft.Network.VirtualNetworkCombo",
                         "label": {
@@ -114,8 +123,8 @@
                     {
                         "name": "orgname",
                         "type": "Microsoft.Common.TextBox",
-                        "label": "Organisation Name",
-                        "toolTip": "Name of the organisation to create",
+                        "label": "Organization Name",
+                        "toolTip": "Name of the organization to create",
                         "constraints": {
                             "required": true,
                             "regex": "^[a-z0-9]+$",
@@ -126,7 +135,7 @@
                     {
                         "name": "orgdescription",
                         "type": "Microsoft.Common.TextBox",
-                        "label": "Organisation Description",
+                        "label": "Organization Description",
                         "toolTip": "A description of the organization, perhaps the epanded version of the name for example",
                         "constraints": {
                             "required": true,
@@ -471,6 +480,7 @@
             "prefix": "[basics('prefix')]",
             "virtualNetworkName": "[steps('customerNetworkStep').virtualNetwork.name]",
             "customerResourceGroupName": "[steps('customerNetworkStep').virtualNetwork.resourceGroup]",
+            "existingVNetFromUI": "[steps('customerNetworkStep').virtualNetwork.newOrExisting]",
             "subnetName": "[steps('customerNetworkStep').virtualNetwork.subnets.customer.name]",
             "chefUsername": "[steps('chefCredentialsStep').username]",
             "chefUserFullname": "[steps('chefCredentialsStep').fullname]",
