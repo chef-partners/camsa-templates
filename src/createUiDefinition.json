@@ -30,8 +30,8 @@
                         "name": "warning",
                         "type": "Microsoft.Common.InfoBox",
                         "options": {
-                            "icon": "Warning",
-                            "text": "The network will be created in the same resource group as the Managed Application. The resource group setting here will be ignored."
+                            "icon": "Info",
+                            "text": "If you choose to create a new network here, it will be part of the Managed Application resource group, thus you will not be able to manage it yourself."
                         },
                         "visible": true
                     },
