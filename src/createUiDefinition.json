@@ -393,6 +393,15 @@
                 },
                 "elements": [
                     {
+                        "name": "warning",
+                        "type": "Microsoft.Common.InfoBox",
+                        "options": {
+                            "icon": "Info",
+                            "text": "If you are on a Pay As You Go Azure Subscription you cannot use the Free Log Analytics tier."
+                        },
+                        "visible": true
+                    },
+                    {
                         "name": "tier",
                         "type": "Microsoft.Common.DropDown",
                         "label": "Tier",
