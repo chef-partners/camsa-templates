@@ -52,12 +52,11 @@ public class Config : TableEntity, IEntity
     HttpResponseMessage response = null;
     ResponseMessage msg = null;
 
-    DataService data_service = new DataService(table, log);
     if (req.Method == HttpMethod.Get)
     {
-      dynamic result = data_service.Get(this, identifier, category);
+      dynamic result = DataService.Get(table, this, identifier, category);
 
-      msg = data_service.GetResponseMessage();
+      msg = DataService.GetResponseMessage();
       response = msg.CreateResponse(result);
     }
     else 
@@ -85,7 +84,7 @@ public class Config : TableEntity, IEntity
         }
 
         // attempt to insert the data into the table
-        bool status = data_service.Insert(this, update);
+        bool status = DataService.Insert(table, this, update);
       }
 
     }

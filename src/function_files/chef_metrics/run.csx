@@ -21,10 +21,9 @@ public static void Run(string rawmetric, CloudTable settingTable, TraceWriter lo
 {
     // Instantiate objects to get relevant data from the configuration store
     IEntity config = new Config(ConfigStorePartitionKey);
-    DataService data_service = new DataService(settingTable, log);
 
     // Get all the settings for the CentralLogging partition
-    Dictionary<string, string> central_logging = data_service.GetAll(config, "centralLogging");
+    Dictionary<string, string> central_logging = DataService.GetAll(settingTable, config, "centralLogging");
 
     // Create an instance of the LogAnalyticsWriter
     LogAnalyticsWriter log_analytics_writer = new LogAnalyticsWriter(log);

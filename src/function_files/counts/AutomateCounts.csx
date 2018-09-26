@@ -34,10 +34,9 @@ public class AutomateCounts
   {
     // Create necessary objects to get information from the datastore
     IEntity config = new Config(ConfigStorePartitionKey);
-    DataService data_service = new DataService(settingTable, log);
 
     // Get all the settings for the CentralLogging partition
-    Dictionary<string, string> central_logging = data_service.GetAll(config, "centralLogging");
+    Dictionary<string, string> central_logging = DataService.GetAll(settingTable, config, "centralLogging");
 
     // Create an instance of the LogAnalyticsWriter
     LogAnalyticsWriter log_analytics_writer = new LogAnalyticsWriter(log);
@@ -52,8 +51,8 @@ public class AutomateCounts
     }
 
     // Get the Automate token and fqdn from the config store
-    Dictionary<string, string> token_setting = data_service.Get(config, AutomateLoggingTokenKey);
-    Dictionary<string, string> fqdn_setting = data_service.Get(config, AutomateServerFQDNKey);
+    Dictionary<string, string> token_setting = DataService.Get(settingTable, config, AutomateLoggingTokenKey);
+    Dictionary<string, string> fqdn_setting = DataService.Get(settingTable, config, AutomateServerFQDNKey);
 
     // Set the time that that count was performed
     DateTime time = DateTime.UtcNow;

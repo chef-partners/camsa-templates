@@ -26,11 +26,9 @@ public class AutomateLogListener
     // Only respond to an HTTP Post
     if (req.Method == HttpMethod.Post)
     {
-      // Create a DataService object to get the CentralLogging data from the config store
-      DataService data_service = new DataService(table, log);
 
       // Get all the settings for the CentralLogging partition
-      Dictionary<string, string> central_logging = data_service.GetAll(config, "centralLogging");
+      Dictionary<string, string> central_logging = DataService.GetAll(table, config, "centralLogging");
 
       // Get the body of the request
       string body = await req.Content.ReadAsStringAsync();

@@ -50,8 +50,7 @@ public class StarterKit
       }
 
       // create the data service to collect the data from the settings table
-      DataService data_service = new DataService(table, log);
-      Dictionary<string, string> config_store = data_service.GetAll(config, category);
+      Dictionary<string, string> config_store = DataService.GetAll(table, config, category);
 
       // Base64 decode the user key and set the path to the file
       if (config_store.ContainsKey(UserKey) && config_store.ContainsKey(UserKeyKey))

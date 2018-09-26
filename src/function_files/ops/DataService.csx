@@ -7,9 +7,9 @@ using Microsoft.WindowsAzure.Storage.Table;
 
 public class DataService
 {
-  private CloudTable _table;
+  /*
+  private static CloudTable _table;
   private TraceWriter _log;
-  private ResponseMessage _response;
 
   public DataService(CloudTable table, TraceWriter log)
   {
@@ -19,13 +19,16 @@ public class DataService
 
     _response = new ResponseMessage();
   }
+  */
+ 
+  private static ResponseMessage _response = new ResponseMessage();
 
-  public ResponseMessage GetResponseMessage()
+  public static ResponseMessage GetResponseMessage()
   {
     return _response;
   }
 
-  public dynamic Get(IEntity entity, string identifier, string category = null)
+  public static dynamic Get(CloudTable table, IEntity entity, string identifier, string category = null)
   {
     dynamic doc = null;
 
@@ -37,7 +40,7 @@ public class DataService
 
     // Retrieve the chosen valie from the table
     TableOperation operation = TableOperation.Retrieve<Config>(partition_key, identifier);
-    TableResult result = _table.Execute(operation);
+    TableResult result = table.Execute(operation);
 
     // if a result has been found, get the data
     if (result.Result != null)
@@ -59,7 +62,7 @@ public class DataService
     return doc;
   }
 
-  public dynamic GetAll(IEntity entity, string category = null)
+  public static dynamic GetAll(CloudTable table, IEntity entity, string category = null)
   {
 
     string partition_key = entity.GetPartitionKey();
@@ -75,7 +78,7 @@ public class DataService
     TableContinuationToken token = null;
     do
     {
-      TableQuerySegment<Config> resultSegment = _table.ExecuteQuerySegmented(query, token);
+      TableQuerySegment<Config> resultSegment = table.ExecuteQuerySegmented(query, token);
       token = resultSegment.ContinuationToken;
 
       foreach (Config item in resultSegment.Results)
@@ -88,7 +91,7 @@ public class DataService
     return entity.GetItems();
   }
 
-  public bool Insert(IEntity entity, bool update = false)
+  public static bool Insert(CloudTable table, IEntity entity, bool update = false)
   {
     bool status;
 
@@ -102,7 +105,7 @@ public class DataService
     {
       insertOperation = TableOperation.Insert(entity.GetItem());
     }
-    _table.Execute(insertOperation);
+    table.Execute(insertOperation);
 
     return true;
   }
