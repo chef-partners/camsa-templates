@@ -309,7 +309,7 @@ fi
 
 
 # Determine the full URL for the Azure function
-AF_URL=$(printf '%s/%s/config?code=%s' $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY)
+AF_URL=$(printf '%s/%s?code=%s' $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY)
 
 # Determine the necessary operations
 for operation in $MODE

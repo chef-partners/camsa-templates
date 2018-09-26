@@ -4,13 +4,14 @@ prefix = attribute('prefix', default: 'inspec')
 
 # set the fqdn of the webservice
 website_fqdn = format('%s-%s-appservice.azurewebsites.net', prefix, unique_string)
-website_url = format('https://%s/api/config?code=%s', website_fqdn, configstore_apikey)
+website_url_get = format('https://%s/api/config/%%s?code=%s', website_fqdn, configstore_apikey)
+website_url_post = format('https://%s/api/config?code=%s', website_fqdn, configstore_apikey)
 
 control 'POST information to the Azure Function' do
   impact 1.0
   title 'Add test data to the AMA Config Store'
 
-  post_data = http(website_url,
+  post_data = http(website_url_post,
                 method: 'POST',
                 data: '{"inspec_test": "it rocks"}')
 
@@ -25,7 +26,8 @@ control 'GET information from the Azure Function' do
   impact 1.0
   title 'Get test data from the AMA config store'
 
-  get_url = format('%s&key=inspec_test', website_url)
+#   get_url = format('%s&key=inspec_test', website_url)
+  get_url = format(website_url_get, 'inspec_test')
 
   get_data = http(get_url, method: 'GET')
 
@@ -71,7 +73,8 @@ items.each do |item|
     title format('%s', item)
 
     # Build up the url that is required to get the data
-    url = format('%s&key=%s', website_url, item)
+    # url = format('%s&key=%s', website_url, item)
+    url = format(website_url_get, item)
     item_exists = http(url, method: 'GET')
 
     # ensure that the content is not null and that get a 200
