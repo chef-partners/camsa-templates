@@ -76,6 +76,10 @@
       "subnetRef": {
         "value": "[concat(resourceId(variables('network').resourceGroup, 'Microsoft.Network/virtualNetworks', variables('name').vnet), '/subnets/', variables('name').subnet)]",
         "type": "string"
+      },
+      "existingVNet": {
+        "value": "[variables('network').existing]",
+        "type": "bool"
       }
     }
   }

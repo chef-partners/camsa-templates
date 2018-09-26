@@ -31,10 +31,9 @@ FULLNAME=""
 
 # Define the variables that hold information about the Azure functions
 FUNCTION_BASE_URL=""
-CONFIGSTORE_FUNCTION_APIKEY=""
-CONFIGSTORE_FUNCTION_NAME="chefAMAConfigStore"
+OPS_FUNCTION_APIKEY=""
+OPS_FUNCTION_NAME="config"
 
-AUTOMATELOG_FUNCTION_APIKEY=""
 AUTOMATELOG_FUNCTION_NAME="AutomateLog"
 
 BACKUP_SCRIPT_URL=""
@@ -217,19 +216,15 @@ do
     ;;
 
     -n|--configstorefunctioname)
-      CONFIGSTORE_FUNCTION_NAME="$2"
+      OPS_FUNCTION_NAME="$2"
     ;;
 
     -k|--configstorefunctionapikey)
-      CONFIGSTORE_FUNCTION_APIKEY="$2"
+      OPS_FUNCTION_APIKEY="$2"
     ;;
 
     -N|--automatelogfunctionname)
       AUTOMATELOG_FUNCTION_NAME="$2"
-    ;;
-
-    -K|--automatelogfunctionkey)
-      AUTOMATELOG_FUNCTION_APIKEY="$2"
     ;;
 
     -F|--automatefqdn)
@@ -402,7 +397,7 @@ do
         value=${line#*=}
 
         # add each value to the config store
-        cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_credentials_%s\": %s}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $name $value)
+        cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_credentials_%s\": %s}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $name $value)
         executeCmd "$cmd"
       done
     ;;
@@ -431,7 +426,7 @@ do
       automate_api_token=$(executeCmd "$cmd")
 
       # build up the command to curl information into the function
-      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"chef_automate_token\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $automate_api_token)
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"chef_automate_token\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $automate_api_token)
       executeCmd "$cmd"
 
       # build up command to generate a token for the remote stats
@@ -439,7 +434,7 @@ do
       automate_api_token=$(executeCmd "$cmd")
 
       # build up the command to curl information into the function
-      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"logging_automate_token\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $automate_api_token)
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"logging_automate_token\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $automate_api_token)
       executeCmd "$cmd"
 
       # build up command to generate a token for the remote stats
@@ -447,10 +442,10 @@ do
       automate_api_token=$(executeCmd "$cmd")
 
       # build up the command to curl information into the function
-      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"user_automate_token\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $automate_api_token)
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"user_automate_token\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $automate_api_token)
       executeCmd "$cmd"          
 
-      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_fqdn\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $AUTOMATE_SERVER_FQDN)
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_fqdn\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $AUTOMATE_SERVER_FQDN)
       executeCmd "$cmd"
 
       # Create the user using the Automate Server API
@@ -463,7 +458,7 @@ do
     cron)
 
       # Only perform the cron addition if the variables are set
-      if [ "X$AUTOMATELOG_FUNCTION_NAME" != "X" ] && [ "X$AUTOMATELOG_FUNCTION_APIKEY" != "X" ]
+      if [ "X$AUTOMATELOG_FUNCTION_NAME" != "X" ] && [ "X$OPS_FUNCTION_APIKEY" != "X" ]
       then
          
         log "Configuring CronJob for Log Analytics data"
@@ -474,7 +469,7 @@ do
 #!/usr/bin/env bash
 
 journalctl -fu chef-automate --since "5 minutes ago" --until "now" -o json > /var/log/jsondump.json
-curl -H "Content-Type: application/json" -X POST -d @/var/log/jsondump.json ${FUNCTION_BASE_URL}/${AUTOMATELOG_FUNCTION_NAME}?code=${AUTOMATELOG_FUNCTION_APIKEY}      
+curl -H "Content-Type: application/json" -X POST -d @/var/log/jsondump.json ${FUNCTION_BASE_URL}/${AUTOMATELOG_FUNCTION_NAME}?code=${OPS_FUNCTION_APIKEY}      
 EOF
 
         # Ensure that the script is executable
@@ -515,7 +510,7 @@ EOF
 VERIFY_URL="{{VERIFY_URL}}"
 SUBSCRIPTION_ID="{{SUBSCRIPTION_ID}}"
 AUTOMATE_LICENCE="{{AUTOMATE_LICENCE}}"
-CONFIG_STORE_URL="{{FUNCTION_BASE_URL}}/{{CONFIGSTORE_FUNCTION_NAME}}?code={{CONFIGSTORE_FUNCTION_APIKEY}}"
+CONFIG_STORE_URL="{{FUNCTION_BASE_URL}}/config?code={{OPS_FUNCTION_APIKEY}}"
 
 # Build up the curl command to call the remote function
 cmd=$(printf "curl -XPOST %s -d '{\"subscription_id\": \"%s\", \"automate_licence\": \"%s\"}'" $VERIFY_URL $SUBSCRIPTION_ID $AUTOMATE_LICENCE)
@@ -562,8 +557,8 @@ EOF
         sed -i.bak "s|{{SUBSCRIPTION_ID}}|$SUBSCRIPTION_ID|" $VERIFY_SCRIPT_LOCATION
         sed -i.bak "s|{{AUTOMATE_LICENCE}}|$AUTOMATE_LICENCE|" $VERIFY_SCRIPT_LOCATION
         sed -i.bak "s|{{FUNCTION_BASE_URL}}|$FUNCTION_BASE_URL|" $VERIFY_SCRIPT_LOCATION
-        sed -i.bak "s|{{CONFIGSTORE_FUNCTION_NAME}}|$CONFIGSTORE_FUNCTION_NAME|" $VERIFY_SCRIPT_LOCATION
-        sed -i.bak "s|{{CONFIGSTORE_FUNCTION_APIKEY}}|$CONFIGSTORE_FUNCTION_APIKEY|" $VERIFY_SCRIPT_LOCATION
+        sed -i.bak "s|{{OPS_FUNCTION_NAME}}|$OPS_FUNCTION_NAME|" $VERIFY_SCRIPT_LOCATION
+        sed -i.bak "s|{{OPS_FUNCTION_APIKEY}}|$OPS_FUNCTION_APIKEY|" $VERIFY_SCRIPT_LOCATION
 
         # Ensure correct line endings
         cmd="sed -i.bak 's/\r$//' ${VERIFY_SCRIPT_LOCATION}"
@@ -626,7 +621,7 @@ EOF
       internal_ip=`ip addr show eth0 | grep -Po 'inet \K[\d.]+'`
 
       # set the address in the config store
-      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_internal_ip\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $internal_ip)
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_internal_ip\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $internal_ip)
       executeCmd "$cmd" 
     ;;
   

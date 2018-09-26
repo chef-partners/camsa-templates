@@ -63,7 +63,7 @@
                         },
                         {
                             "name": "FUNCTIONS_EXTENSION_VERSION",
-                            "value": "latest"
+                            "value": "~1"
                         }
                     ]
                 }

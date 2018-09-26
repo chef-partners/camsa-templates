@@ -8,6 +8,10 @@
 
 #load "StarterKit.csx"
 
+#load "AutomateLogListener.csx"
+
+#load "../counts/AutomateCounts.csx"
+
 using System.Net;
 using System.Text;
 using Newtonsoft.Json;
@@ -33,6 +37,18 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, string
       entity = new Config(ConfigStorePartitionKey);
       StarterKit starter_kit = new StarterKit();
       response = await starter_kit.Process(req, settingTable, entity, log, category, executionContext);
+      break;
+
+    case "AutomateLog":
+      entity = new Config();
+      AutomateLogListener automate_log_listener = new AutomateLogListener();
+      response = await automate_log_listener.Process(req, settingTable, entity, log);
+      break;
+
+    case "counts":
+      await AutomateCounts.Process(settingTable, log);
+      msg = new ResponseMessage();
+      response = msg.CreateResponse();
       break;
 
     default:

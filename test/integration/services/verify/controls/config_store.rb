@@ -4,7 +4,7 @@ prefix = attribute('prefix', default: 'inspec')
 
 # set the fqdn of the webservice
 website_fqdn = format('%s-%s-appservice.azurewebsites.net', prefix, unique_string)
-website_url = format('https://%s/api/chefAMAConfigStore?code=%s', website_fqdn, configstore_apikey)
+website_url = format('https://%s/api/config?code=%s', website_fqdn, configstore_apikey)
 
 control 'POST information to the Azure Function' do
   impact 1.0

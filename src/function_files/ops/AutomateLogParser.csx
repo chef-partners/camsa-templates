@@ -32,7 +32,7 @@ public static class AutomateLogParser{
         automateMessage.time = DateTime.ParseExact(m.Groups[2].ToString(), dateFormat, CultureInfo.InvariantCulture);
         automateMessage.message = m.Groups[3].ToString();
         automateMessage.status = m.Groups[4].ToString();
-        automateMessage.request_time = System.Convert.ToDecimal(m.Groups[5].ToString());
+        automateMessage.requestTime = System.Convert.ToDecimal(m.Groups[5].ToString());
         automateMessage.customerName = customerName;
         automateMessage.subscriptionId = subscriptionId;
         return automateMessage;

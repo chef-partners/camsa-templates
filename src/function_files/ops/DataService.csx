@@ -25,7 +25,7 @@ public class DataService
     return _response;
   }
 
-  public dynamic Get(IEntity entity, string identifier, string category)
+  public dynamic Get(IEntity entity, string identifier, string category = null)
   {
     dynamic doc = null;
 
@@ -59,7 +59,7 @@ public class DataService
     return doc;
   }
 
-  public dynamic GetAll(IEntity entity, string category)
+  public dynamic GetAll(IEntity entity, string category = null)
   {
 
     string partition_key = entity.GetPartitionKey();

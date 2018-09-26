@@ -1,0 +1,117 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "siteName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the site into which the function should be deployed"
+            }
+        },
+        "functionName": {
+            "type": "string",
+            "metadata": {
+                "description": "name of the function"
+            },
+            "defaultValue": "ops"
+        },
+        "logAnalyticsWorkspaceId": {
+            "type": "string",
+            "metadata": {
+                "description": "The workspace ID to use when adding data to Log Analytics"
+            }
+        },
+        "logAnalyticsSharedKey": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Primary key to use for authentication to Log Analytics"
+            }
+        },
+        "logAnalyticsEnabled": {
+            "type": "bool"
+        },
+        "customerName": {
+            "type": "string",
+            "defaultValue": ""
+        }        
+    },
+    "variables": {
+        "name": {
+            "site": "[parameters('siteName')]",
+            "function": "[parameters('functionName')]",
+            "customer": "[parameters('customerName')]"
+        },
+        "apiVersions": {
+            "functions": "2016-08-01"
+        },        
+        "code": {
+            "automate_log_csx": "",
+            "automate_log_listener_csx": "",
+            "automate_log_parser_csx": "",
+            "automate_message_csx": "",
+            "base_message_csx": "",
+            "chef_extension_json": "",
+            "chef_metric_message_csx": "",
+            "config_csx": "",
+            "constants_csx": "",
+            "credentials_txt": "",
+            "data_service_csx": "",
+            "entity_csx": "",
+            "ientity_csx": "",
+            "imessage_csx": "",
+            "knife_rb": "",
+            "log_analytics_writer_csx": "",
+            "response_message_csx": "",
+            "run_csx": "",
+            "starter_kit_csx": ""
+        }  ,
+        "logAnalytics": {
+            "workspace_id": "[parameters('logAnalyticsWorkspaceId')]",
+            "shared_key": "[parameters('logAnalyticsSharedKey')]",
+            "enabled": "[parameters('logAnalyticsEnabled')]"
+        }   
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/sites/functions",
+            "name": "[concat(variables('name').site, '/', variables('name').function)]",
+            "apiVersion": "[variables('apiVersions').functions]",
+            "properties": {
+                "config": {
+                },
+                "files": {
+                    "AutomateLog.csx": "[base64ToString(variables('code').automate_log_csx)]",
+                    "AutomateLogListener.csx": "[base64ToString(variables('code').automate_log_listener_csx)]",
+                    "AutomateLogParser.csx": "[base64ToString(variables('code').automate_log_parser_csx)]",
+                    "AutomateMessage.csx": "[base64ToString(variables('code').automate_message_csx)]",
+                    "BaseMessage.csx": "[base64ToString(variables('code').base_message_csx)]",
+                    "chef-extension.json": "[base64ToString(variables('code').chef_extension_json)]",
+                    "ChefMetricMessage.csx": "[base64ToString(variables('code').chef_metric_message_csx)]",
+                    "Config.csx": "[base64ToString(variables('code').config_csx)]",
+                    "Constants.csx": "[base64ToString(variables('code').constants_csx)]",
+                    "credentials.txt": "[base64ToString(variables('code').credentials_txt)]",
+                    "DataService.csx": "[base64ToString(variables('code').data_service_csx)]",
+                    "Entity.csx": "[base64ToString(variables('code').entity_csx)]",
+                    "IEntity.csx": "[base64ToString(variables('code').ientity_csx)]",
+                    "IMessage.csx": "[base64ToString(variables('code').imessage_csx)]",
+                    "knife.rb": "[base64ToString(variables('code').knife_rb)]",
+                    "LogAnalyticsWriter.csx": "[base64ToString(variables('code').log_analytics_writer_csx)]",
+                    "ResponseMessage.csx": "[base64ToString(variables('code').response_message_csx)]",
+                    "run.csx": "[base64ToString(variables('code').run_csx)]",
+                    "StarterKit.csx": "[base64ToString(variables('code').starter_kit_csx)]",
+                    "workspace.csx": "[concat('static string customerId = \"', variables('logAnalytics').workspace_id, '\";\nstatic string sharedKey = \"', variables('logAnalytics').shared_key, '\";\nstatic string customerName = \"', variables('name').customer, '\";\nstatic string subscriptionId = \"', subscription().subscriptionId, '\";')]"
+                }
+            }
+        }      
+    ],
+    "outputs": {
+        "name": {
+            "type": "string",
+            "value": "[parameters('functionName')]"
+        },        
+        "apiKey": {
+            "type": "string",
+            "value": "[listsecrets(resourceId('Microsoft.Web/sites/functions', variables('name').site, variables('name').function), '2016-08-01').key]"
+        }
+    }
+}
