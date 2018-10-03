@@ -27,6 +27,15 @@
                 },
                 "elements": [
                     {
+                        "name": "warning",
+                        "type": "Microsoft.Common.InfoBox",
+                        "options": {
+                            "icon": "Info",
+                            "text": "If you choose to create a new network here, it will be part of the Managed Application resource group, thus you will not be able to manage it yourself."
+                        },
+                        "visible": true
+                    },
+                    {
                         "name": "virtualNetwork",
                         "type": "Microsoft.Network.VirtualNetworkCombo",
                         "label": {
@@ -114,8 +123,8 @@
                     {
                         "name": "orgname",
                         "type": "Microsoft.Common.TextBox",
-                        "label": "Organisation Name",
-                        "toolTip": "Name of the organisation to create",
+                        "label": "Organization Name",
+                        "toolTip": "Name of the organization to create",
                         "constraints": {
                             "required": true,
                             "regex": "^[a-z0-9]+$",
@@ -126,7 +135,7 @@
                     {
                         "name": "orgdescription",
                         "type": "Microsoft.Common.TextBox",
-                        "label": "Organisation Description",
+                        "label": "Organization Description",
                         "toolTip": "A description of the organization, perhaps the epanded version of the name for example",
                         "constraints": {
                             "required": true,
@@ -384,6 +393,15 @@
                 },
                 "elements": [
                     {
+                        "name": "warning",
+                        "type": "Microsoft.Common.InfoBox",
+                        "options": {
+                            "icon": "Info",
+                            "text": "If you are on a Pay As You Go Azure Subscription you cannot use the Free Log Analytics tier."
+                        },
+                        "visible": true
+                    },
+                    {
                         "name": "tier",
                         "type": "Microsoft.Common.DropDown",
                         "label": "Tier",
@@ -471,6 +489,7 @@
             "prefix": "[basics('prefix')]",
             "virtualNetworkName": "[steps('customerNetworkStep').virtualNetwork.name]",
             "customerResourceGroupName": "[steps('customerNetworkStep').virtualNetwork.resourceGroup]",
+            "existingVNetFromUI": "[steps('customerNetworkStep').virtualNetwork.newOrExisting]",
             "subnetName": "[steps('customerNetworkStep').virtualNetwork.subnets.customer.name]",
             "chefUsername": "[steps('chefCredentialsStep').username]",
             "chefUserFullname": "[steps('chefCredentialsStep').fullname]",
