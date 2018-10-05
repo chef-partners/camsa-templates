@@ -235,6 +235,19 @@
             "defaultValue": "10.0.0.0/24"
         },
 
+        "existingVNetFromUI": {
+            "type": "string",
+            "metadata": {
+                "description": "The output from the UI does not provide a boolean value, only `new` or `existing`. This parameter will take this value and produce a boolean if it is set. This should not be used for manual template deployments."
+            },
+            "defaultValue": "",
+            "allowedValues": [
+                "",
+                "new",
+                "existing"
+            ]
+        },        
+
         "verifyURL": {
             "type": "string",
             "metadata": {
@@ -343,7 +356,7 @@
         },
 
         "network": {
-            "existing": "[parameters('existingVNet')]",
+            "existing": "[if(empty(parameters('existingVNetFromUI')), parameters('existingVNet'), if(equals(parameters('existingVNetFromUI'), 'new'), bool(0), bool(1)))]",
             "resourceGroup": "[parameters('customerResourceGroupName')]",
             "prefix": {
                 "vnet": "[parameters('vnetPrefix')]",
