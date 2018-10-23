@@ -10,7 +10,7 @@ This README contains QuickStart information about how you can use the templates.
 
 All of the files in this repo are part of a Build and Release pipeline in VSTS. This pipeline deploys the template to Azure, runs a number of InSpec tests and then, if they all pass, a release is made to publiclly accessible blob storage. By deploying to Azure blob storage the issues regarding creating branches in git automatically are avoided.
 
-The main template is therefore hosted here https://chefarmstorage.blob.core.windows.net/scratch/mainTemplate.json. All of the other files are also hosted here and the main template references them during deployment.
+The main template is therefore hosted here https://chefmanagedapp.blob.core.windows.net/files/mainTemplate.json. All of the other files are also hosted here and the main template references them during deployment.
 
 As always there are a number of parameters that can be specified to adjust the deployment to your needs. The table below highlights the ones that are most common. For a complete list of available parameters and a description please refer to the Wiki.
 
@@ -58,12 +58,12 @@ az group create -l $LOCATION -n $RESOURCE_GROUP_NAME
 
 # Validate the deployment. If successful a JSON string of the template will be returned
 az group deployment validate -g $RESOURCE_GROUP_NAME \
-  --template-uri https://chefarmstorage.blob.core.windows.net/scratch/mainTemplate.json \
+  --template-uri https://chefmanagedapp.blob.core.windows.net/files/mainTemplate.json \
   --parameters $PARAMETERS_FILE
 
 # Perform the deployment
 az group deployment create -g $RESOURCE_GROUP_NAME \
-  --template-uri https://chefarmstorage.blob.core.windows.net/scratch/mainTemplate.json \
+  --template-uri https://chefmanagedapp.blob.core.windows.net/files/mainTemplate.json \
   --parameters $PARAMETERS_FILE \
   --no-wait
 ```
@@ -82,11 +82,11 @@ New-AzureRMResourceGroup -Location $LOCATION -Name $RESOURCE_GROUP_NAME
 # Validate the deployment
 Test-AzureRMResourceGroupDeployment -ResourceGroupName $RESOURCE_GROUP_NAME `
   -TemplateParameterFile $PARAMETERS_FILE `
-  -TemplateUri https://chefarmstorage.blob.core.windows.net/scratch/mainTemplate.json
+  -TemplateUri https://chefmanagedapp.blob.core.windows.net/files/mainTemplate.json
 
 # Perform the deployment
 New-AzureRMResourceGroupDeployment -ResourceGroupName $RESOURCE_GROUP_NAME `
   -TemplateParameterFile $PARAMETERS_FILE `
-  -TemplateUri https://chefarmstorage.blob.core.windows.net/scratch/mainTemplate.json
+  -TemplateUri https://chefmanagedapp.blob.core.windows.net/files/mainTemplate.json
 ```
 
