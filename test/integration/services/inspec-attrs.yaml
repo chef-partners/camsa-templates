@@ -1,6 +1,5 @@
 location: westeurope
 location_name: West Europe
-configstore_apikey: 
-starterkit_apikey: 
+ops_function_apikey: 
 unique_string: 
 prefix: 
