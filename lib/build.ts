@@ -237,11 +237,18 @@ function packageFiles(options, build_config) {
         }
     }
 
+    // add the branch that this has been built from to the filename
+    let branch = "local";
+    if (process.env.BUILD_SOURCEBRANCHNAME)
+    {
+        branch = process.env.BUILD_SOURCEBRANCHNAME.toLocaleLowerCase();
+    }
+
     // iterate around the production and staging directories
     Object.keys(build_config["dirs"]["working"]).forEach(function (key) {
 
         // determine the filename for the zip
-        let zip_filename = sprintf("%s-%s%s-%s.zip", build_config["package"]["name"], options.version, flag, key);
+        let zip_filename = sprintf("%s-%s%s-%s-%s.zip", build_config["package"]["name"], options.version, flag, branch, key);
         let zip_filepath = path.join(build_config["dirs"]["output"], zip_filename);
 
         // zip up the files
