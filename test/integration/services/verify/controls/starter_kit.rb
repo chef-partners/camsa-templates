@@ -1,10 +1,10 @@
 unique_string = attribute('unique_string', default: '9j2f')
-starterkit_apikey = attribute('starterkit_apikey', default: '')
+ops_function_apikey = attribute('ops_function_apikey', default: '')
 prefix = attribute('prefix', default: 'inspec')
 
 # set the fqdn of the webservice
 website_fqdn = format('%s-%s-appservice.azurewebsites.net', prefix, unique_string)
-website_url = format('https://%s/api/starterKit?code=%s', website_fqdn, starterkit_apikey)
+website_url = format('https://%s/api/starterKit?code=%s', website_fqdn, ops_function_apikey)
 
 # Ensure that the starter kit can be downloaded
 control 'Starter Kit' do
