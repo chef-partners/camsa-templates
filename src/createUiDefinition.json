@@ -43,13 +43,13 @@
                             "subnets": "Subnet"
                         },
                         "constraints": {
-                            "minAddressPrefixSize": "/24"
+                            "minAddressPrefixSize": "/26"
                         },
                         "subnets": {
                             "customer": {
                                 "label": "Subnet",
                                 "constraints": {
-                                    "minAddressPrefixSize": "/25"
+                                    "minAddressPrefixSize": "/28"
                                 }
                             }
                         },

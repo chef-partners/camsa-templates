@@ -246,7 +246,11 @@
                 "new",
                 "existing"
             ]
+<<<<<<< HEAD
         }, 
+=======
+        },        
+>>>>>>> origin/master
 
         "verifyURL": {
             "type": "string",
