@@ -22,8 +22,8 @@ function parseBuildConfig(app_root, build_config_file, workdir = null) {
         // read in the configuration file so that it can be passed to operations
         build_config = JSON.parse(fs.readFileSync(build_config_file, "utf8"));
 
-            // iterate around the dirs and prepend the app_root if it is not an absolute path
-            Object.keys(build_config["dirs"]).forEach(function (key) {
+        // iterate around the dirs and prepend the app_root if it is not an absolute path
+        Object.keys(build_config["dirs"]).forEach(function (key) {
             if (!path.isAbsolute(build_config["dirs"][key])) {
                 build_config["dirs"][key] = path.join(app_root, build_config["dirs"][key]);
             };
@@ -31,16 +31,21 @@ function parseBuildConfig(app_root, build_config_file, workdir = null) {
             // add in the extra directories below the build dir
             build_config["dirs"]["app_root"] = app_root;
             build_config["dirs"]["output"] = path.join(build_config["dirs"]["build"], "output");
+            build_config["dirs"]["working"] = {};
 
             // set the work directory based on whether it has been set in options
             if (workdir == null) {
-                build_config["dirs"]["working"] = path.join(build_config["dirs"]["build"], "working");
+                build_config["dirs"]["working"]["production"] = path.join(build_config["dirs"]["build"], "working", "production");
+                build_config["dirs"]["working"]["staging"] = path.join(build_config["dirs"]["build"], "working", "staging");
             } else {
                 if (!path.isAbsolute(workdir)) {
                     workdir = path.join(app_root, workdir);
                 }
-                build_config["dirs"]["working"] = workdir;
+                build_config["dirs"]["working"]["production"] = path.join(workdir, "production");
+                build_config["dirs"]["working"]["staging"] = path.join(workdir, "staging");
             }
+
+            
         });
     } else {
         console.log("##vso[task.logissue type=error]Build configuration file not found: %s", build_config_file)
@@ -61,10 +66,14 @@ function init(options, build_config) {
     }
 
     // create the necessary directories if they do not exist
-    for (var dir of ['working', 'output']) {
-        if (!fs.existsSync(build_config['dirs'][dir])) {
-            console.log("Creating %s directory: %s", dir, build_config['dirs'][dir]);
-            fs.ensureDirSync(build_config['dirs'][dir]);
+    if (!fs.existsSync(build_config["dirs"]["output"])) {
+        console.log("Creating output directory: %s", build_config['dirs']['output']);
+        fs.ensureDirSync(build_config['dirs']['output']);
+    }
+    for (var dir of ['production', 'staging']) {
+        if (!fs.existsSync(build_config['dirs']['working'][dir])) {
+            console.log("Creating %s directory: %s", dir, build_config['dirs']['working'][dir]);
+            fs.ensureDirSync(build_config['dirs']['working'][dir]);
         }
     }
 }
@@ -95,7 +104,7 @@ function copy(build_config) {
             source = path.join(build_config["dirs"]["app_root"], source);
         }
         if (!path.isAbsolute(target)) {
-            target = path.join(build_config["dirs"]["working"], target);
+            target = path.join(build_config["dirs"]["working"]["production"], target);
         }
 
         // is the source is a directory, ensure that the target dir exists
@@ -129,7 +138,7 @@ function patch(options, build_config) {
 
         // determine the full path to the file that needs to be updated
         if (!path.isAbsolute(f["template_file"])) {
-            f["template_file"] = path.join(build_config["dirs"]["working"], f["template_file"])
+            f["template_file"] = path.join(build_config["dirs"]["working"]["production"], f["template_file"])
         }
 
         // determine the full path to the configuration file
@@ -175,7 +184,7 @@ function patch(options, build_config) {
     }
 
     // Patch the mainTemplate so that it has the correct BaseURl if it has been specified in options
-    let main_template_file = path.join(build_config["dirs"]["working"], "mainTemplate.json");
+    let main_template_file = path.join(build_config["dirs"]["working"]["production"], "mainTemplate.json");
     if (fs.existsSync(main_template_file)) {
         if (options.baseurl != "") {
             console.log("Patching main template: %s", main_template_file);
@@ -184,6 +193,30 @@ function patch(options, build_config) {
 
             // patch the default value for the parameter
             main_template["parameters"]["baseUrl"]["defaultValue"] = options.baseurl;
+            fs.writeFileSync(main_template_file, JSON.stringify(main_template, null, 4), 'utf8');
+        }
+    } else {
+        console.log("##vso[task.issue type=error]Unable to find main template: %s", main_template_file);
+    }
+}
+
+function createStaging(options, build_config)
+{
+    console.log("Creating staging files");
+
+    // copy the contents of the production directory to staging
+    fs.copySync(build_config['dirs']['working']['production'], build_config['dirs']['working']['staging']);
+
+    // patch the mainTemplate with the staging URL
+    let main_template_file = path.join(build_config["dirs"]["working"]["staging"], "mainTemplate.json");
+    if (fs.existsSync(main_template_file)) {
+        if (options.url != "") {
+            console.log("Patching main template: %s", main_template_file);
+
+            let main_template = JSON.parse(fs.readFileSync(main_template_file, 'utf8'));
+
+            // patch the default value for the parameter
+            main_template["parameters"]["baseUrl"]["defaultValue"] = options.url;
             fs.writeFileSync(main_template_file, JSON.stringify(main_template, null, 4), 'utf8');
         }
     } else {
@@ -204,22 +237,33 @@ function packageFiles(options, build_config) {
         }
     }
 
-    // determine the filename for the zip
-    let zip_filename = sprintf("%s-%s%s.zip", build_config["package"]["name"], options.version, flag);
-    let zip_filepath = path.join(build_config["dirs"]["output"], zip_filename);
+    // add the branch that this has been built from to the filename
+    let branch = "local";
+    if (process.env.BUILD_SOURCEBRANCHNAME)
+    {
+        branch = process.env.BUILD_SOURCEBRANCHNAME.toLocaleLowerCase();
+    }
 
-    // zip up the files
-    zip(build_config["dirs"]["working"], zip_filepath, function(err) {
-        if (err) {
-            console.log("##vso[task.logissue type=error]Packaging Failed: %s", err);
-        } else {
-            console.log("Packaging Successful: %s", zip_filename);
+    // iterate around the production and staging directories
+    Object.keys(build_config["dirs"]["working"]).forEach(function (key) {
 
-            // set a variable as the path to the zip_file, this can then be used in subsequent
-            // tasks to add the zip to the artefacts
-            console.log("##vso[task.setvariable variable=%s]%s", options.outputvar, zip_filepath);
-        }
-    })
+        // determine the filename for the zip
+        let zip_filename = sprintf("%s-%s%s-%s-%s.zip", build_config["package"]["name"], options.version, flag, branch, key);
+        let zip_filepath = path.join(build_config["dirs"]["output"], zip_filename);
+
+        // zip up the files
+        zip(build_config["dirs"]["working"][key], zip_filepath, function(err) {
+            if (err) {
+                console.log("##vso[task.logissue type=error]Packaging Failed: %s", err);
+            } else {
+                console.log("Packaging Successful: %s", zip_filename);
+
+                // set a variable as the path to the zip_file, this can then be used in subsequent
+                // tasks to add the zip to the artefacts
+                console.log("##vso[task.setvariable variable=%s]%s", options.outputvar, zip_filepath);
+            }
+        })
+    });
 }
 
 // Main -------------------------------------------------------------------
@@ -227,7 +271,6 @@ function packageFiles(options, build_config) {
 // Set the application root so that files can be found
 let app_root = path.resolve(__dirname, "..");
 let build_config_file = path.join(app_root, "build.json");
-let build_config;
 
 // Setup the way the script operates
 program.version('0.0.1')
@@ -258,6 +301,14 @@ program.command("patch")
            patch(options, parseBuildConfig(app_root, program.config, options.directory));
        })
 
+// Create the staging directory
+program.command("staging")
+       .description("Create staging version of the templates")
+       .option("-u, --url [staging_url]", "Base URL from which the staging files can be located")
+       .action(function (options) {
+           createStaging(options, parseBuildConfig(app_root, program.config, options.directory));
+       })
+
 // Package up the files into a zip file
 program.command("package")
        .option("-v, --version <version>", "Version to be applied to the zip file", "0.0.1")
@@ -270,6 +321,7 @@ program.command("package")
 // Command to run all the stages in one go
 program.command("run")
        .option("-b, --baseurl <base_url>", "Base URL from which the nested templates can be found", "")
+       .option("-u, --url <staging_url>", "Base URL for the staging files")
        .option("-v, --version <version>", "Version to be applied to the zip file", "0.0.1")
        .option("--outputvar <variable_name>", "Name of the variable to output the filename to in VSTS", "AMA_ZIP_PATH")  
        .option('--clean', 'Optionally remove the build directory if it already exists', true)
@@ -278,6 +330,7 @@ program.command("run")
            init(options, build_config);
            copy(build_config);
            patch(options, build_config);
+           createStaging(options, build_config);
            packageFiles(options, build_config);
        })    
 

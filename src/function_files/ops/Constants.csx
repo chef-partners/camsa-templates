@@ -1,4 +1,4 @@
-static string PartitionKey = "ChefAMA";
+static string ConfigStorePartitionKey = "ChefAMA";
 
 // Define chef server keys
 static string ChefServerFQDNKey = "chefserver_fqdn";
@@ -17,6 +17,7 @@ static string AutomateCredentialsURLKey = "automate_credentials_url";
 static string AutomateCredentialsAdminUsernameKey = "automate_credentials_username";
 static string AutomateCredentialsAdminPasswordKey = "automate_credentials_password";
 static string AutomateTokenKey = "user_automate_token";
+static string AutomateLoggingTokenKey = "logging_automate_token";
 
 // Define the monitoring user keys
 static string MonitorUserPasswordKey = "monitor_user_password";

@@ -13,7 +13,7 @@
             "metadata": {
                 "description": "name of the function"
             },
-            "defaultValue": "starterKit"
+            "defaultValue": "counts"
         }
     },
     "variables": {
@@ -25,10 +25,12 @@
             "functions": "2016-08-01"
         },        
         "code": {
+            "automate_counts_csx": "",
+            "base_count_csx": "",
+            "icount_csx": "",
+            "node_count_csx": "",
             "run_csx": "",
-            "constants_csx": "",
-            "knife_rb": "",
-            "chef_extension_json": ""
+            "user_count_csx": ""
         }     
     },
     "resources": [
@@ -40,10 +42,12 @@
                 "config": {
                 },
                 "files": {
+                    "AutomateCounts.csx": "[base64ToString(variables('code').automate_counts_csx)]",
+                    "BaseCount.csx": "[base64ToString(variables('code').base_count_csx)]",
+                    "ICount.csx": "[base64ToString(variables('code').icount_csx)]",
+                    "NodeCount.csx": "[base64ToString(variables('code').node_count_csx)]",
                     "run.csx": "[base64ToString(variables('code').run_csx)]",
-                    "constants.csx": "[base64ToString(variables('code').constants_csx)]",
-                    "knife.rb": "[base64ToString(variables('code').knife_rb)]",
-                    "chef_extension.json": "[base64ToString(variables('code').chef_extension_json)]"
+                    "UserCount.csx": "[base64ToString(variables('code').user_count_csx)]"
                 }
             }
         }      

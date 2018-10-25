@@ -9,17 +9,20 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 public class LogAnalyticsWriter {
-        // Update customerId to your Operations Management Suite workspace ID
-        string CustomerId;
-        // For sharedKey, use either the primary or the secondary Connected Sources client authentication key   
-        string SharedKey;
-        TraceWriter AFLog;
 
-    public LogAnalyticsWriter(string customerId, string sharedKey, TraceWriter log){
-        CustomerId = customerId;
-        SharedKey = sharedKey;
+    // Create a dictionary to hold the necessary workspaces
+    Dictionary<string, string> workspaces = new Dictionary<string, string>();
+    TraceWriter AFLog;
+
+    public LogAnalyticsWriter(TraceWriter log)
+    {
         AFLog = log;
-        AFLog.Info(CustomerId);
+    }
+
+    public void AddWorkspace(string customerId, string sharedKey)
+    {
+        // Add the ID and key to the workspaces dictionary
+        workspaces.Add(customerId, sharedKey);
     }
 
     // Build the API signature
@@ -36,11 +39,11 @@ public class LogAnalyticsWriter {
         }
     }
 
-    private void PostData(string signature, string json, string logName, string date, string timestamp = "")
+    private void PostData(string customer_id, string signature, string json, string logName, string date, string timestamp = "")
     {       
         try
         {
-            string url = "https://" + CustomerId + ".ods.opinsights.azure.com/api/logs?api-version=2016-04-01";
+            string url = "https://" + customer_id + ".ods.opinsights.azure.com/api/logs?api-version=2016-04-01";
             AFLog.Info(url);
     
             System.Net.Http.HttpClient client = new System.Net.Http.HttpClient();
@@ -64,19 +67,30 @@ public class LogAnalyticsWriter {
         }
     }
 
-    public void Submit(ChefMetricMessage metricMessage, string logName){
-        var json = JsonConvert.SerializeObject(metricMessage);
+    public void Submit(IMessage automateMessage, string logName){
 
-        var datestring = DateTime.UtcNow.ToString("r");
-        string stringToHash = "POST\n" + json.Length + "\napplication/json\n" + "x-ms-date:" + datestring + "\n/api/logs";
-        string hashedString = BuildSignature(stringToHash, SharedKey);
-        string signature = "SharedKey " + CustomerId + ":" + hashedString;
+        string customer_id;
+        string shared_key;
 
-        string timestamp = metricMessage.cm_time.ToString("yyyy-MM-ddThh:mm:ssZ");
-        AFLog.Info(timestamp);
+        // iterate around the workspaces
+        foreach (KeyValuePair<string, string> workspace in workspaces)
+        {
+            customer_id = workspace.Key;
+            shared_key = workspace.Value;
 
-        AFLog.Info("submiting log");
-        PostData(signature, json, logName, datestring, timestamp);
+            var json = JsonConvert.SerializeObject(automateMessage);
+
+            var datestring = DateTime.UtcNow.ToString("r");
+            string stringToHash = "POST\n" + json.Length + "\napplication/json\n" + "x-ms-date:" + datestring + "\n/api/logs";
+            string hashedString = BuildSignature(stringToHash, shared_key);
+            string signature = "SharedKey " + customer_id + ":" + hashedString;
+
+            string timestamp = automateMessage.time.ToString("YYYY-MM-DDThh:mm:ssZ");
+            AFLog.Info(timestamp);
+
+            AFLog.Info("submiting log");
+            PostData(customer_id, signature, json, logName, datestring, timestamp);
+        }
     }
 
 }

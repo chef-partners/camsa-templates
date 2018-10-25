@@ -1,16 +1,17 @@
 unique_string = attribute('unique_string', default: '9j2f')
-configstore_apikey = attribute('configstore_apikey', default: '')
+ops_function_apikey = attribute('ops_function_apikey', default: '')
 prefix = attribute('prefix', default: 'inspec')
 
 # set the fqdn of the webservice
 website_fqdn = format('%s-%s-appservice.azurewebsites.net', prefix, unique_string)
-website_url = format('https://%s/api/chefAMAConfigStore?code=%s', website_fqdn, configstore_apikey)
+website_url_get = format('https://%s/api/config/%%s?code=%s', website_fqdn, ops_function_apikey)
+website_url_post = format('https://%s/api/config?code=%s', website_fqdn, ops_function_apikey)
 
 control 'POST information to the Azure Function' do
   impact 1.0
   title 'Add test data to the AMA Config Store'
 
-  post_data = http(website_url,
+  post_data = http(website_url_post,
                 method: 'POST',
                 data: '{"inspec_test": "it rocks"}')
 
@@ -25,7 +26,7 @@ control 'GET information from the Azure Function' do
   impact 1.0
   title 'Get test data from the AMA config store'
 
-  get_url = format('%s&key=inspec_test', website_url)
+  get_url = format(website_url_get, 'inspec_test')
 
   get_data = http(get_url, method: 'GET')
 
@@ -71,7 +72,8 @@ items.each do |item|
     title format('%s', item)
 
     # Build up the url that is required to get the data
-    url = format('%s&key=%s', website_url, item)
+    # url = format('%s&key=%s', website_url, item)
+    url = format(website_url_get, item)
     item_exists = http(url, method: 'GET')
 
     # ensure that the content is not null and that get a 200
@@ -86,53 +88,3 @@ items.each do |item|
     end
   end
 end
-
-=begin
-# Create a control that checks that the three entries from the scripts exist
-control 'Configuration Data - Automate Token' do
-  impact 1.0
-  title 'Automate token exists in the config store'
-
-  # automate token exists and has a value
-  get_url = format('%s&key=automate_token', website_url)
-  token_exists = http(get_url, method: 'GET')
-
-  describe token_exists do
-    it 'should have an automate_token' do
-      expect(JSON.parse(described_class.body)['automate_token']).to_not be_nil
-    end
-  end
-end
-
-control 'Configuration Data - Chef user key' do
-  impact 1.0
-  title 'Chef user key exists in the config store'
-
-  # user key exists and has a value
-  config_key = format('%s_key', username)
-  get_url = format('%s&key=%s', website_url, config_key)
-  user_key_exists = http(get_url, method: 'GET')
-
-  describe user_key_exists do
-    it format('should have a user key for Chef (%s)', config_key) do
-      expect(JSON.parse(described_class.body)[config_key]).to_not be_empty
-    end
-  end
-end
-
-control 'Configuration Data - Chef org key' do
-  impact 1.0
-  title 'Chef org key exists in the config store'
-
-  # org key exists and has a value
-  config_key = format('%s_validator_key', org)
-  get_url = format('%s&key=%s', website_url, config_key)
-  org_key_exists = http(get_url, method: 'GET')
-
-  describe org_key_exists do
-    it format('should have a organisation key for Chef (%s)', config_key) do
-      expect(JSON.parse(described_class.body)[config_key]).to_not be_empty
-    end
-  end
-end
-=end

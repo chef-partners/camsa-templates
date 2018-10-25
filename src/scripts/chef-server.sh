@@ -23,8 +23,8 @@ AUTOMATE_SERVER_FQDN=""
 CHEF_SERVER_FQDN=""
 
 FUNCTION_BASE_URL=""
-CONFIGSTORE_FUNCTION_APIKEY=""
-CONFIGSTORE_FUNCTION_NAME="chefAMAConfigStore"
+OPS_FUNCTION_APIKEY=""
+OPS_FUNCTION_NAME="config"
 
 MONITOR_USER="monitor"
 MONITOR_EMAIL="monitor@chef.io"
@@ -197,11 +197,11 @@ do
     ;;
 
     -n|--functioname)
-      CONFIGSTORE_FUNCTION_NAME="$2"
+      OPS_FUNCTION_NAME="$2"
     ;;
 
     -k|--functionapikey)
-      CONFIGSTORE_FUNCTION_APIKEY="$2"
+      OPS_FUNCTION_APIKEY="$2"
     ;;
 
     -F|--automatefqdn)
@@ -309,7 +309,7 @@ fi
 
 
 # Determine the full URL for the Azure function
-AF_URL=$(printf '%s/%s?code=%s' $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY)
+AF_URL=$(printf '%s/%s?code=%s' $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY)
 
 # Determine the necessary operations
 for operation in $MODE
@@ -426,7 +426,7 @@ do
 
       # Get the token from the azure function
       log "Retrieving token" 1
-      cmd=$(printf "curl -s -XGET '%s&key=chef_automate_token' | jq -r .chef_automate_token " $AF_URL)
+      cmd=$(printf "curl -s -XGET '%s/%s/chef_automate_token?code=%s' | jq -r .chef_automate_token" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY)
       automate_token=$(executeCmd "$cmd")
 
       # Use this token to configure the chef server
@@ -495,7 +495,7 @@ EOF
       internal_ip=`ip addr show eth0 | grep -Po 'inet \K[\d.]+'`
 
       # set the address in the config store
-      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"chef_internal_ip\": \"%s\"}'" $FUNCTION_BASE_URL $CONFIGSTORE_FUNCTION_NAME $CONFIGSTORE_FUNCTION_APIKEY $internal_ip)
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"chef_internal_ip\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $internal_ip)
       executeCmd "$cmd" 
     ;;
 

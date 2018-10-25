@@ -14,3 +14,5 @@ package-lock.json
 .vscode
 .ruby-version
 .envrc
+local.settings.json
+chef-repo
