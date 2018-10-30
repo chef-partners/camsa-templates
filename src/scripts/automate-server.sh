@@ -406,6 +406,29 @@ do
     licence)
       log "Apply licence"
 
+      if [ -z "$AUTOMATE_LICENCE" ]
+      then
+        log "requesting trial licence" 1
+        FIRSTNAME=$(echo $FULLNAME | cut -d ' ' -f 1)
+        LASTNAME=$(echo $FULLNAME | cut -d ' ' -f 2)
+
+        cmd=$(printf "curl -s -X POST https://licensing.chef.io/create-trial \
+            -H 'Content-Type: application/json' \
+            -H 'cache-control: no-cache' \
+            -d '{
+                \"first_name\": \"%s\",
+                \"last_name\": \"%s\",
+                \"email\": \"%s\",
+                \"gdpr_agree\": true,
+                \"deployment_id\": \"1\",
+                \"chef_automate_version\": \"%s\"
+            }' | jq -r '.license'" $FIRSTNAME $LASTNAME $EMAILADDRESS $AUTOMATE_SERVER_VERSION)
+
+        AUTOMATE_LICENCE=executeCmd "$cmd"
+      else
+        log "applying provided licence" 1
+      fi
+
       cmd=$(printf 'chef-automate license apply %s' $AUTOMATE_LICENCE)
       executeCmd "$cmd"
     ;;

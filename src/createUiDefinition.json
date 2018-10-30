@@ -169,16 +169,38 @@
                         "visible": true
                     },
                     {
-                        "name": "licence",
-                        "type": "Microsoft.Common.TextBox",
-                        "label": "Automate Licence",
-                        "toolTip": "Please paste your Automate licence file here",
-                        "constraints": {
-                            "required": true,
-                            "regex": "^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+\/=]*$",
-                            "validationMessage": "The Automate licence should be a Json Web Token provided by Chef Software"
-                        },
-                        "visible": true
+                      "name": "hasLicence",
+                      "type": "Microsoft.Common.OptionsGroup",
+                      "label": "Do you have an Automate Licence?",
+                      "defaultValue": "No",
+                      "toolTip": "Choose whether or not you currently have an Automate Licence. If not, a trial licence will be provided.",
+                      "constraints": {
+                        "allowedValues": [
+                          {
+                            "label": "Yes",
+                            "value": true
+                          },
+                          {
+                            "label": "No",
+                            "value": false
+                          }
+                        ],
+                        "required": true
+                      },
+                      "visible": true
+                    },
+                    {
+                      "name": "licence",
+                      "type": "Microsoft.Common.TextBox",
+                      "label": "Automate Licence",
+                      "defaultValue": "",
+                      "toolTip": "Please enter your automate licence",
+                      "constraints": {
+                        "required": "[steps('automateLicenceStep').hasLicence]",
+                        "regex": "^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+\/=]*$",
+                        "validationMessage": "Your Automate licence should be a Json Web Token provided by Chef Software."
+                      },
+                      "visible": "[steps('automateLicenceStep').hasLicence]"
                     }
                 ]
             },
