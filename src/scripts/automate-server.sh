@@ -424,7 +424,7 @@ do
                 \"chef_automate_version\": \"%s\"
             }' | jq -r '.license'" $FIRSTNAME $LASTNAME $EMAILADDRESS $AUTOMATE_SERVER_VERSION)
 
-        AUTOMATE_LICENCE=executeCmd "$cmd"
+        AUTOMATE_LICENCE=`executeCmd "$cmd"`
       else
         log "applying provided licence" 1
       fi
