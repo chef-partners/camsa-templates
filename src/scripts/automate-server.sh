@@ -412,17 +412,17 @@ do
         FIRSTNAME=$(echo $FULLNAME | cut -d ' ' -f 1)
         LASTNAME=$(echo $FULLNAME | cut -d ' ' -f 2)
 
-        cmd=$(printf "curl -s -X POST https://licensing.chef.io/create-trial \
-            -H 'Content-Type: application/json' \
-            -H 'cache-control: no-cache' \
-            -d '{
+        cmd=$(printf "curl https://automate-gateway:2000/license/request --resolve automate-gateway:2000:127.0.0.1 \
+        --cert /hab/svc/deployment-service/data/deployment-service.crt \
+        --cacert /hab/svc/deployment-service/data/root.crt \
+        --key /hab/svc/deployment-service/data/deployment-service.key \
+        -d '{
                 \"first_name\": \"%s\",
                 \"last_name\": \"%s\",
                 \"email\": \"%s\",
-                \"gdpr_agree\": true,
-                \"deployment_id\": \"1\",
-                \"chef_automate_version\": \"%s\"
-            }' | jq -r '.license'" $FIRSTNAME $LASTNAME $EMAILADDRESS $AUTOMATE_SERVER_VERSION)
+                \"gdpr_agree\": true
+            }' -s | jq -r '.license'" $FIRSTNAME $LASTNAME $EMAILADDRESS $AUTOMATE_SERVER_VERSION)
+
 
         AUTOMATE_LICENCE=`executeCmd "$cmd"`
       else

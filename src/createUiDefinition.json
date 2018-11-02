@@ -121,6 +121,27 @@
                         "visible": true
                     },
                     {
+                      "name": "gdprAgree",
+                      "type": "Microsoft.Common.OptionsGroup",
+                      "label": "I would like to receive email communications from Chef",
+                      "defaultValue": "Yes",
+                      "toolTip": "",
+                      "constraints": {
+                        "allowedValues": [
+                          {
+                            "label": "Yes",
+                            "value": true
+                          },
+                          {
+                            "label": "No",
+                            "value": false
+                          }
+                        ],
+                        "required": true
+                      },
+                      "visible": true
+                    },
+                    {
                         "name": "orgname",
                         "type": "Microsoft.Common.TextBox",
                         "label": "Organization Name",
@@ -516,6 +537,7 @@
             "chefUsername": "[steps('chefCredentialsStep').username]",
             "chefUserFullname": "[steps('chefCredentialsStep').fullname]",
             "chefUserEmailaddress": "[steps('chefCredentialsStep').emailaddress]",
+            "chefUserGdprAgree": "[steps('chefCredentialsStep').gdprAgree]",
             "chefUserPassword": "[steps('chefCredentialsStep').password]",
             "chefOrg": "[steps('chefCredentialsStep').orgname]",
             "chefOrgDescription": "[steps('chefCredentialsStep').orgdescription]",
