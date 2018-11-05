@@ -27,6 +27,7 @@ AUTOMATE_COMMAND="chef-automate"
 USERNAME=""
 PASSWORD=""
 EMAILADDRESS=""
+GDPR_AGREE=""
 FULLNAME=""
 
 # Define the variables that hold information about the Azure functions
@@ -417,16 +418,17 @@ do
         --cacert /hab/svc/deployment-service/data/root.crt \
         --key /hab/svc/deployment-service/data/deployment-service.key \
         -d '{
-                \"first_name\": \"%s\",
-                \"last_name\": \"%s\",
-                \"email\": \"%s\",
-                \"gdpr_agree\": true
-            }' -s | jq -r '.license'" $FIRSTNAME $LASTNAME $EMAILADDRESS $AUTOMATE_SERVER_VERSION)
-
+              \"first_name\": \"%s\",
+              \"last_name\": \"%s\",
+              \"email\": \"%s\",
+              \"gdpr_agree\": %s
+            }'
+        -s | jq -r '.license'" $FIRSTNAME $LASTNAME $EMAILADDRESS $GDPR_AGREE)
 
         AUTOMATE_LICENCE=`executeCmd "$cmd"`
+        log "applying trial license: $AUTOMATE_LICENCE" 1
       else
-        log "applying provided licence" 1
+        log "applying provided licence: $AUTOMATE_LICENCE" 1
       fi
 
       cmd=$(printf 'chef-automate license apply %s' $AUTOMATE_LICENCE)

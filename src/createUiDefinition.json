@@ -215,7 +215,7 @@
                       "type": "Microsoft.Common.TextBox",
                       "label": "Automate Licence",
                       "defaultValue": "",
-                      "toolTip": "Please enter your automate licence",
+                      "toolTip": "Please enter your Automate Licence",
                       "constraints": {
                         "required": "[steps('automateLicenceStep').hasLicence]",
                         "regex": "^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+\/=]*$",
