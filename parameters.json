@@ -1,0 +1,52 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "prefix": {
+      "value": "rfennell-ama"
+    },
+    "existingVNet": {
+      "value": false
+    },
+    "virtualNetworkName": {
+      "value": "rfennell-ama-vnet"
+    },
+    "customerResourceGroupName": {
+      "value": ""
+    },
+    "subnetName": {
+      "value": ""
+    },
+    "sshSourceAddresses": {
+      "value": [
+        "212.250.191.68"
+      ]
+    },
+    "chefUsername": {
+      "value": "rfennell"
+    },
+    "chefUserFullname": {
+      "value": "Ruairi Fennell"
+    },
+    "chefUserEmailaddress": {
+      "value": "rfennell@chef.io"
+    },
+    "chefUserPassword": {
+      "value": "root"
+    },
+    "chefOrg": {
+      "value": "Chef"
+    },
+    "chefOrgDescription": {
+      "value": "Cheffing"
+    },
+    "automateLicence": {
+      "value": ""
+    },
+    "sshPublicKeys": {
+      "value": [
+        "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDLrSgq6+91c9t9p8A1bN+OGH/ZLJGBiDFsOPKNQxiWvm1Mh99xC8r24B8ahbudirolyFcy3y4IMxRpztKmmjNikM0yVrmcKxXUA1TZKZZhLbEigIjuCfpwOAW71mOO8s3GF17XvSG8KGrOb6nEyadk+R4TxmyQ1PU4z45VpEbY9nTa0ac+OMqqKUT/USW54MzOLoRwBwogCmlqqJdiLwgFBoPsDA/BEpAGJ3LYWphKzlggdbxM8vAJC56v3vCQSlCvM8qn87uSxPslmW1KYHRpjtJ3PZgInC4S6RKLun0PxioE+HqHQGSdl+/zymoZJeUvbwE6a2BIWefVNjQgbsBb rfennell@Ruairis-MacBook-Pro.local"
+      ]
+    }
+  }
+}

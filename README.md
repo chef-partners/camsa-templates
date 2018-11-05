@@ -1,3 +1,4 @@
+
 # Azure Managed Chef Automate
 
 This repository holds all of the ARM templates, functions and scripts that make up the Azure Managed App for Chef Automate 2. 
