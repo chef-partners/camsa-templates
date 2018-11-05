@@ -98,7 +98,7 @@
         "chefUserGdprAgree": {
             "type": "bool",
             "metadata": {
-                "description": "Whether the user has agreed to receive emails from Chef."
+                "description": "Whether or not the user has agreed to receive emails from Chef."
             },
             "defaultValue": true
         },
