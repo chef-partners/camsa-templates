@@ -91,7 +91,7 @@
         "chefUserEmailaddress": {
             "type": "string",
             "metadata": {
-                "description": "Email address associated with the chef user"
+                "description": "Email address associated with the Chef user"
             }
         },
 
