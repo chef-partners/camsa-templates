@@ -100,7 +100,7 @@
             "metadata": {
                 "description": "Whether or not the user has agreed to receive emails from Chef."
             },
-            "defaultValue": true
+            "defaultValue": false
         },
 
         "chefOrg": {
