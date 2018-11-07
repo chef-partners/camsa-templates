@@ -91,8 +91,16 @@
         "chefUserEmailaddress": {
             "type": "string",
             "metadata": {
-                "description": "Email address associated with the chef user"
+                "description": "Email address associated with the Chef user"
             }
+        },
+
+        "chefUserGdprAgree": {
+            "type": "bool",
+            "metadata": {
+                "description": "Whether or not the user has agreed to receive emails from Chef."
+            },
+            "defaultValue": false
         },
 
         "chefOrg": {
@@ -409,6 +417,7 @@
             "version": "[parameters('chefServerVersion')]",
             "username": "[parameters('chefUsername')]",
             "email": "[parameters('chefUserEmailaddress')]",
+            "gdprAgree": "[parameters('chefUserGdprAgree')]",
             "fullname": "[parameters('chefUserFullname')]",
             "password": "[parameters('chefUserPassword')]",
             "org": "[toLower(parameters('chefOrg'))]",
@@ -1272,6 +1281,7 @@
                             "CHEF_USER_FULLNAME": "[variables('chef').fullname]",
                             "CHEF_USER_PASSWORD": "[variables('chef').password]",
                             "CHEF_USER_EMAILADDRESS": "[variables('chef').email]",
+                            "CHEF_USER_GDPR_AGREE": "[variables('chef').gdprAgree]",
                             "CHEF_ORGNAME": "[variables('chef').org]",
                             "CHEF_ORG_DESCRIPTION": "[variables('chef').orgDescription]",
                             "FUNCTION_BASE_URL": "[reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value]",

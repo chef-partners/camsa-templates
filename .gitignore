@@ -16,3 +16,6 @@ package-lock.json
 .envrc
 local.settings.json
 chef-repo
+parameters.json
+inspec.lock
+Gemfile.lock
