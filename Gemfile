@@ -7,6 +7,7 @@ group :development do
   gem 'inifile'
   gem 'azure_mgmt_resources'
   gem 'gist'
+  gem 'pastebin'
 end
 
 group :debug do
