@@ -417,13 +417,14 @@ do
         --cert /hab/svc/deployment-service/data/deployment-service.crt \
         --cacert /hab/svc/deployment-service/data/root.crt \
         --key /hab/svc/deployment-service/data/deployment-service.key \
+        -s \
         -d '{
               \"first_name\": \"%s\",
               \"last_name\": \"%s\",
               \"email\": \"%s\",
               \"gdpr_agree\": %s
-            }'
-        -s | jq -r '.license'" $FIRSTNAME $LASTNAME $EMAILADDRESS $GDPR_AGREE)
+            }' \
+        | jq '.license'" $FIRSTNAME $LASTNAME $EMAILADDRESS $GDPR_AGREE)
 
         AUTOMATE_LICENCE=`executeCmd "$cmd"`
         log "applying trial license: $AUTOMATE_LICENCE" 1
