@@ -413,18 +413,12 @@ do
         FIRSTNAME=$(echo $FULLNAME | cut -d ' ' -f 1)
         LASTNAME=$(echo $FULLNAME | cut -d ' ' -f 2)
 
-        cmd=$(printf "curl https://automate-gateway:2000/license/request --resolve automate-gateway:2000:127.0.0.1 \
+        cmd=$(printf "curl -s https://automate-gateway:2000/license/request --resolve automate-gateway:2000:127.0.0.1 \
         --cert /hab/svc/deployment-service/data/deployment-service.crt \
         --cacert /hab/svc/deployment-service/data/root.crt \
         --key /hab/svc/deployment-service/data/deployment-service.key \
-        -s \
-        -d '{
-              \"first_name\": \"%s\",
-              \"last_name\": \"%s\",
-              \"email\": \"%s\",
-              \"gdpr_agree\": %s
-            }' \
-        | jq '.license'" $FIRSTNAME $LASTNAME $EMAILADDRESS $GDPR_AGREE)
+        -d '{ \"first_name\": \"%s\", \"last_name\": \"%s\", \"email\": \"%s\", \"gdpr_agree\": %s }' \
+        | jq -r '.license'" $FIRSTNAME $LASTNAME $EMAILADDRESS $GDPR_AGREE)
 
         AUTOMATE_LICENCE=`executeCmd "$cmd"`
         log "applying trial license: $AUTOMATE_LICENCE" 1
