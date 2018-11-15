@@ -125,6 +125,7 @@ function parseConfig(app_root, filepath, options, cmd) {
 
   } else {
     console.log("Deploy configuration file not found: %s", filepath);
+    process.exit(2);
   }
 
   // add the command line options to the config
@@ -134,8 +135,13 @@ function parseConfig(app_root, filepath, options, cmd) {
   config["control_file"] = path.join(app_root, ".deploy");
   if (!fs.existsSync(config["control_file"])) {
 
-    // set the content of the control_file, as it does not exist, with an interation
+    // set the content of the control_file, as it does not exist, with an iteration
     // value of 1
+    // The iteration is used to track what the resource group that was created on this deployment
+    // It is used to delete that resource group on the next deployment and then increment the iteration to create
+    // the new resource group
+    // This is to speed up the deployments as much as possible by not having to wait for the resource group
+    // to deploy before a new deployment can be done.
     let content = sprintf('{"%s": {"iteration": 1}}', config["resourceGroup"]["name"]);
 
     // write out the file
@@ -237,7 +243,7 @@ async function deploy(config, subscription) {
       })
     })
     if (exists) {
-      console.log("   exists, deleting");
+      console.log("\texists, deleting");
 
       let delete_status = new Promise<void> ((resolve, reject) => {
         rmClient.resourceGroups.deleteMethod(rg_name_existing, (error) => {
@@ -249,7 +255,7 @@ async function deploy(config, subscription) {
       })
 
     } else {
-      console.log("   does not exist");
+      console.log("\tdoes not exist");
     }
 
     // determine the next iteration and therefore the name of the new RG
@@ -261,7 +267,7 @@ async function deploy(config, subscription) {
 
     // create the rg
     console.log("Creating Resource Group: %s", rg_name);
-    console.log("  Location: %s", config["resourceGroup"]["location"]);
+    console.log("\tLocation: %s", config["resourceGroup"]["location"]);
 
     await new Promise<void> ((resolve, reject) => {
       // define the parameters for the new RG
@@ -285,7 +291,7 @@ async function deploy(config, subscription) {
     if (fs.existsSync(config["resourceGroup"]["parameters_file"])) {
       template_parameters = JSON.parse(fs.readFileSync(config["resourceGroup"]["parameters_file"], "utf8"));
     } else {
-      console.error("  cannot find file");
+      console.error("\tcannot find file");
       process.exit(3);
     }
 
@@ -317,11 +323,7 @@ async function deploy(config, subscription) {
         resolve();
       })
     });
-
-
-
   }
-
 }
 
 function get_client(authfile, subscription, type) {
