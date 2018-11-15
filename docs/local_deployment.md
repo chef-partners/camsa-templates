@@ -2,9 +2,11 @@
 
 When using nested templates against Azure, they need to be publicly accessible. This is not easy to accomplish if you are developing on a laptop within a corporate network for example. To assist with this a local script has been setup that will perform the deployment for you.
 
-When the script stages are executed the following occurs:
+## Process
 
- - Does the resource group already exist
+When the script is executed it runs through the following process all of which are automatic.
+
+ - Does the resource group already exist?
    - If this is the first time the script has been run this will be false
    - If this is not the first time, then a local file `.deploy` will be read and the iteration found. The resource group name is thus `<RESCOURCE_GROUP>-<ITERATION>`. Delete the resource group.
  - Increment the iteration and write out to the `.deploy` file
@@ -22,6 +24,11 @@ The are currently some few limitations on the tooling. These will be addressed
 
 ## Pre-requisites
 
+In order to perform a local deployment the following pre-requisites must be met:
+
+  - Publicly accessible storage account and container
+  - Azure Service principal in your credentials file (default location is `~/.azure/credentials`)
+
 For the moment a storage account and container with public access needs to be configured.
 
 An Azure Service Principal Name stored in a credentials file. By default it will be looked for in `~/.azure/credentials`.
@@ -35,12 +42,12 @@ This file should contain the following information:
 
 | Attribute | Description | Example |
 |---|---|---|
-| resource_group.name | The name of the resource group to create to perform the deployment into | |
-| resource_group.location | Azure location for the resource group | |
-| resource_group.parameters_file | Path to the parameters file for the deployment | `.local/parameters.json` |
-| storage_account.name | Name of the storage account that the files are to be uploaded to | |
-| storage_account.container | Container within the storage account for the files | |
-| storage_account.group_name | Resource group that contains the storage account for uploads | |
+| resourceGroup.name | The name of the resource group to create to perform the deployment into | |
+| resourceGroup.location | Azure location for the resource group | |
+| resourceGroup.parameters_file | Path to the parameters file for the deployment | `.local/parameters.json` |
+| storageAccount.name | Name of the storage account that the files are to be uploaded to | |
+| storageAccount.container | Container within the storage account for the files | |
+| storageAccount.group_name | Resource group that contains the storage account for uploads | |
 | dirs.working | The directory containing the built template files | `build/working` |
 
 ### Upload

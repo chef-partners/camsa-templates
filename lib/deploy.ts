@@ -42,74 +42,74 @@ function parseConfig(app_root, filepath, options, cmd) {
     });
 
     // ensure that the resource group section exists
-    if (!("resource_group" in config)) {
-      config["resource_group"] = {}
+    if (!("resourceGroup" in config)) {
+      config["resourceGroup"] = {}
     }
 
-    if (!("name" in config["resource_group"])) {
-      config["resource_group"]["name"] = "";
+    if (!("name" in config["resourceGroup"])) {
+      config["resourceGroup"]["name"] = "";
     }
 
-    if (!("location" in config["resource_group"])) {
-      config["resource_group"]["location"] = "";
+    if (!("location" in config["resourceGroup"])) {
+      config["resourceGroup"]["location"] = "";
     }
 
-    if (!("parameters_file" in config["resource_group"])) {
-      config["resource_group"]["parameters_file"] = "";
+    if (!("parametersFile" in config["resourceGroup"])) {
+      config["resourceGroup"]["parameters_file"] = "";
     }        
 
     // determine if a storage_account section exists
-    if (!("storage_account" in config)) {
-      config["storage_account"] = {}
+    if (!("storageAccount" in config)) {
+      config["storageAccount"] = {}
     }
 
     // esnure that the children of the storage_account exists
-    if (!("name" in config["storage_account"])) {
-      config["storage_account"]["name"] = "";
+    if (!("name" in config["storageAccount"])) {
+      config["storageAccount"]["name"] = "";
     }
 
-    if (!("container" in config["storage_account"])) {
-      config["storage_account"]["container"] = "";
+    if (!("container" in config["storageAccount"])) {
+      config["storageAccount"]["container"] = "";
     }
 
-    if (!("resource_group" in config["storage_account"])) {
-      config["storage_account"]["resource_group"] = "";
+    if (!("resourceGroup" in config["storageAccount"])) {
+      config["storageAccount"]["resourceGroup"] = "";
     }
 
     // determine if the options for these values have been set, if they
     // have then overwrite the values that have come from the configuration file
     if (options.saname) {
-      config["storage_account"]["name"] = options.saname;
+      config["storageAccount"]["name"] = options.saname;
     }
 
     if (options.container) {
-      config["storage_account"]["container"] = options.container;
+      config["storageAccount"]["container"] = options.container;
     }
 
     if (options.sagroupname) {
-      config["storage_account"]["group_name"] = options.sagroupname;
+      config["storageAccount"]["groupName"] = options.sagroupname;
     }
 
     if (options.groupname) {
-      config["resource_group"]["name"] = options.groupname;
+      config["resourceGroup"]["name"] = options.groupname;
     }
 
     if (options.location) {
-      config["resource_group"]["location"] = options.location;
+      config["resourceGroup"]["location"] = options.location;
     }
 
     if (options.parameters) {
-      config["resource_group"]["parameters_file"] = options.parameters;
+      config["resourceGroup"]["parameters_file"] = options.parameters;
     }
 
     // perform some validation checks
     let validation_errors = [];
     if (cmd == "upload") {
-      if (config["storage_account"]["name"] == "") {
+      if (config["storageAccount"]["name"] == "") {
         validation_errors.push("Storage account name has not been specified. Use -s or --saname or set in the configuration file");
       }
 
-      if (config["storage_account"]["container"] == "") {
+      if (config["storageAccount"]["container"] == "") {
         validation_errors.push("Container name must be specified. Use -n or --container or set in the configuration file");
       }
     }
@@ -136,7 +136,7 @@ function parseConfig(app_root, filepath, options, cmd) {
 
     // set the content of the control_file, as it does not exist, with an interation
     // value of 1
-    let content = sprintf('{"%s": {"iteration": 1}}', config["resource_group"]["name"]);
+    let content = sprintf('{"%s": {"iteration": 1}}', config["resourceGroup"]["name"]);
 
     // write out the file
     fs.writeFileSync(config["control_file"], content, "utf8");
@@ -149,13 +149,22 @@ async function upload(config, subscription) {
   
   // create the necessary storage client
   let smClient = get_client(config["options"]["authfile"], subscription, "storage");
+  let rmClient = get_client(config["options"]["authfile"], subscription, "resource");
+
+  // Perform some checks to ensure that all necessary resources exist
+  // - resource group
+  let rg_exists = await rmClient.resourceGroups.checkExistence(config["storageAccount"]["groupName"]);
+  // - storage account
+  let sa_exists = await checkStorageAccountExists(smClient, config["storageAccount"]["name"]);
+  // - container
+  let container_exists = await checkContainerExists(smClient, config["storageAccount"]["groupName"], config["storageAccount"]["name"], config["storageAccount"]["container"]);
 
   // determine if the credentials file can be located
-  if (smClient != false) {
+  if (rg_exists && sa_exists && container_exists) {
 
     // create blob service so that files can be uploaded
-    let sakeys = await smClient.storageAccounts.listKeys(config["storage_account"]["group_name"], config["storage_account"]["name"], {});
-    let blob_service = azureStorage.createBlobService(config["storage_account"]["name"], sakeys.keys[0].value);
+    let sakeys = await smClient.storageAccounts.listKeys(config["storageAccount"]["groupName"], config["storageAccount"]["name"], {});
+    let blob_service = azureStorage.createBlobService(config["storageAccount"]["name"], sakeys.keys[0].value);
 
     // get all the files in the specified directory to be uploaded
     let items = listdir(config["dirs"]["working"]);
@@ -182,7 +191,7 @@ async function upload(config, subscription) {
       name = name.replace(string_to_check, '')
 
       // upload the item
-      blob_service.createBlockBlobFromLocalFile(config["storage_account"]["container"], name, item, {}, (error, result) => {
+      blob_service.createBlockBlobFromLocalFile(config["storageAccount"]["container"], name, item, {}, (error, result) => {
         if (error) {
           console.log("FAILED to upload: %s", getError(error)) 
         } else {
@@ -191,6 +200,12 @@ async function upload(config, subscription) {
       });
     }
 
+  } else {
+    console.error("Resource Group '%s' exists: %s", config["storageAccount"]["groupName"], rg_exists);
+    console.error("Storage Account '%s' exists: %s", config["storageAccount"]["name"], sa_exists);
+    console.error("Container '%s' exists: %s", config["storageAccount"]["container"], container_exists);
+    console.error("Errors have occurred, please ensure that all the above resources exist");
+    process.exit(4);
   }
 }
 
@@ -199,12 +214,12 @@ async function deploy(config, subscription) {
   // read the local control file to determine the name of the resource group
   // to delete and then create
   let deploy_settings = JSON.parse(fs.readFileSync(config["control_file"], 'utf8'));
-  if (!(config["resource_group"]["name"] in deploy_settings)) {
-    deploy_settings[config["resource_group"]["name"]] = {"iteration": 0};
+  if (!(config["resourceGroup"]["name"] in deploy_settings)) {
+    deploy_settings[config["resourceGroup"]["name"]] = {"iteration": 0};
   }
 
   // determine the name of the resource group to delete
-  let rg_name_existing = sprintf("%s-%s", config["resource_group"]["name"], deploy_settings[config["resource_group"]["name"]]["iteration"]);
+  let rg_name_existing = sprintf("%s-%s", config["resourceGroup"]["name"], deploy_settings[config["resourceGroup"]["name"]]["iteration"]);
 
   // create the necessary resource manager client
   let rmClient = get_client(config["options"]["authfile"], subscription, "resource");
@@ -238,15 +253,15 @@ async function deploy(config, subscription) {
     }
 
     // determine the next iteration and therefore the name of the new RG
-    deploy_settings[config["resource_group"]["name"]]["iteration"] += 1;
-    let rg_name = sprintf("%s-%s", config["resource_group"]["name"], deploy_settings[config["resource_group"]["name"]]["iteration"]);
+    deploy_settings[config["resourceGroup"]["name"]]["iteration"] += 1;
+    let rg_name = sprintf("%s-%s", config["resourceGroup"]["name"], deploy_settings[config["resourceGroup"]["name"]]["iteration"]);
 
     // write out the new iteration to the deployment file
     fs.writeFileSync(config["control_file"], JSON.stringify(deploy_settings), "utf8");
 
     // create the rg
     console.log("Creating Resource Group: %s", rg_name);
-    console.log("  Location: %s", config["resource_group"]["location"]);
+    console.log("  Location: %s", config["resourceGroup"]["location"]);
 
     await new Promise<void> ((resolve, reject) => {
       // define the parameters for the new RG
@@ -266,16 +281,16 @@ async function deploy(config, subscription) {
     // perform the deployment of the template and parameters
     // read in the parameters file
     let template_parameters;
-    console.log("Reading parameters file: %s", config["resource_group"]["parameters_file"]);
-    if (fs.existsSync(config["resource_group"]["parameters_file"])) {
-      template_parameters = JSON.parse(fs.readFileSync(config["resource_group"]["parameters_file"], "utf8"));
+    console.log("Reading parameters file: %s", config["resourceGroup"]["parameters_file"]);
+    if (fs.existsSync(config["resourceGroup"]["parameters_file"])) {
+      template_parameters = JSON.parse(fs.readFileSync(config["resourceGroup"]["parameters_file"], "utf8"));
     } else {
       console.error("  cannot find file");
       process.exit(3);
     }
 
     // determine the template-uri
-    let template_uri = sprintf("https://%s.blob.core.windows.net/%s/mainTemplate.json", config["storage_account"]["name"], config["storage_account"]["container"]);
+    let template_uri = sprintf("https://%s.blob.core.windows.net/%s/mainTemplate.json", config["storageAccount"]["name"], config["storageAccount"]["container"]);
 
     console.log("Deploying template: %s", template_uri);
 
@@ -356,6 +371,47 @@ function getError(error: any): string {
   }
 
   return JSON.stringify(error)
+}
+
+async function checkStorageAccountExists(client, storage_account_name) {
+  return new Promise<boolean>((resolve, reject) => {
+
+      client.storageAccounts.checkNameAvailability(storage_account_name, 
+                                                  (error, exists, request, response) => {
+          if (error) {
+              if (this.taskParameters.isDev) {
+                  console.log(Utils.getError(error))
+              }
+          }
+          resolve(!exists.nameAvailable);                
+      })                   
+  })
+
+}
+
+async function checkContainerExists(client, resource_group_name, storage_account_name, container_name) {
+  return new Promise<boolean>((resolve, reject) => {
+      client.blobContainers.get(resource_group_name,
+                                 storage_account_name,
+                                 container_name,
+                                 {},
+                                 (error, result, request, response) => {
+
+          let exists: boolean;
+
+          if (!error) {
+              exists = true
+          } else {
+              if (error.message.startsWith("The specified container does not")) {
+                  exists = false
+              } else {
+                  return reject(sprintf("Failed to return list of storage account containers: %s", Utils.getError(error)))
+              }
+          }
+
+          resolve(exists)
+      })
+  })
 }
 
 // Main -------------------------------------------------------------------
