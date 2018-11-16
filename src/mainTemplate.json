@@ -1217,6 +1217,7 @@
                             "PASSWORD": "[variables('chef').password]",
                             "EMAILADDRESS": "[variables('chef').email]",
                             "FULLNAME": "[variables('chef').fullname]",
+                            "GDPR_AGREE": "[variables('chef').gdprAgree]",
                             "AUTOMATE_LICENCE": "[variables('automate').licence]",
                             "FUNCTION_BASE_URL": "[reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value]",
                             "OPS_FUNCTION_APIKEY": "[reference(concat(variables('name').functions.ops, '-Deployment')).outputs.apiKey.value]",
