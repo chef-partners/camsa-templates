@@ -11,15 +11,15 @@
 
 // Libraries --------------------------------------------------------------
 import * as program from "commander";
-import * as path from "path";
-import * as fs from "fs-extra";
+import {isAbsolute, join as pathJoin, resolve} from "path";
+import {existsSync, readFileSync, writeFileSync, lstatSync} from "fs-extra";
 import {sprintf} from "sprintf-js"
-import * as os from "os";
-import * as ini from "ini";
-import * as msRestAzure from "ms-rest-azure";
-import * as armStorage from "azure-arm-storage";
-import * as armResource from "azure-arm-resource";
-import * as azureStorage from "azure-storage";
+import {homedir} from "os";
+import {parse as iniParse} from "ini";
+import {ApplicationTokenCredentials} from "ms-rest-azure";
+import {StorageManagementClient} from "azure-arm-storage";
+import {ResourceManagementClient} from "azure-arm-resource";
+import {createBlobService} from "azure-storage";
 import * as listdir from "recursive-readdir-synchronous";
 
 import {Utils} from "./Utils";
@@ -44,14 +44,14 @@ function parseConfig(appRoot, filepath, options, cmd) {
   let config = {};
 
   // determine if the deploy configuration file exists
-  if (fs.existsSync(filepath)) {
+  if (existsSync(filepath)) {
     // read in the configuration file
-    config = JSON.parse(fs.readFileSync(filepath, 'utf8'));
+    config = JSON.parse(readFileSync(filepath, 'utf8'));
 
     // iterate around the dirs and prepend the appRoot if it is not an absolute path
     Object.keys(config["dirs"]).forEach(function (key) {
-      if (!path.isAbsolute(config["dirs"][key])) {
-          config["dirs"][key] = path.join(appRoot, config["dirs"][key]);
+      if (!isAbsolute(config["dirs"][key])) {
+          config["dirs"][key] = pathJoin(appRoot, config["dirs"][key]);
       };
     });
 
@@ -146,8 +146,8 @@ function parseConfig(appRoot, filepath, options, cmd) {
   config[optionsKey] = options;
 
   // configure the locale deployment file
-  config[controlFileKey] = path.join(appRoot, ".deploy");
-  if (!fs.existsSync(config[controlFileKey])) {
+  config[controlFileKey] = pathJoin(appRoot, ".deploy");
+  if (!existsSync(config[controlFileKey])) {
 
     // set the content of the controlFile, as it does not exist, with an iteration
     // value of 1
@@ -159,7 +159,7 @@ function parseConfig(appRoot, filepath, options, cmd) {
     let content = sprintf('{"%s": {"%s": 1}}', config[resourceGroupKey][resourceGroupNameKey], iterationKey);
 
     // write out the file
-    fs.writeFileSync(config[controlFileKey], content, "utf8");
+    writeFileSync(config[controlFileKey], content, "utf8");
   }
 
   return config;
@@ -184,7 +184,7 @@ async function upload(config, subscription) {
 
     // create blob service so that files can be uploaded
     let sakeys = await smClient.storageAccounts.listKeys(config[storageAccountKey][groupNameKey], config[storageAccountKey][storageAccountNameKey], {});
-    let blobService = azureStorage.createBlobService(config[storageAccountKey][storageAccountNameKey], sakeys.keys[0].value);
+    let blobService = createBlobService(config[storageAccountKey][storageAccountNameKey], sakeys.keys[0].value);
 
     // get all the files in the specified directory to be uploaded
     let items = listdir(config["dirs"]["working"]);
@@ -195,7 +195,7 @@ async function upload(config, subscription) {
     for (let item of items) {
 
       // continue onto the next item if this is is a directory
-      stats = fs.lstatSync(item);
+      stats = lstatSync(item);
       if (stats.isDirectory()) {
         continue;
       }
@@ -233,7 +233,7 @@ async function deploy(config, subscription) {
 
   // read the local control file to determine the name of the resource group
   // to delete and then create
-  let deploy_settings = JSON.parse(fs.readFileSync(config[controlFileKey], 'utf8'));
+  let deploy_settings = JSON.parse(readFileSync(config[controlFileKey], 'utf8'));
   if (!(config[resourceGroupKey][resourceGroupNameKey] in deploy_settings)) {
     deploy_settings[config[resourceGroupKey][name]] = {iterationKey: 0};
   }
@@ -277,7 +277,7 @@ async function deploy(config, subscription) {
     let rg_name = sprintf("%s-%s", config[resourceGroupKey][resourceGroupNameKey], deploy_settings[config[resourceGroupKey][resourceGroupNameKey]][iterationKey]);
 
     // write out the new iteration to the deployment file
-    fs.writeFileSync(config[controlFileKey], JSON.stringify(deploy_settings), "utf8");
+    writeFileSync(config[controlFileKey], JSON.stringify(deploy_settings), "utf8");
 
     // create the rg
     console.log("Creating Resource Group: %s", rg_name);
@@ -302,8 +302,8 @@ async function deploy(config, subscription) {
     // read in the parameters file
     let template_parameters;
     console.log("Reading parameters file: %s", config[resourceGroupKey][parametersFileKey]);
-    if (fs.existsSync(config[resourceGroupKey][parametersFileKey])) {
-      template_parameters = JSON.parse(fs.readFileSync(config[resourceGroupKey][parametersFileKey], "utf8"));
+    if (existsSync(config[resourceGroupKey][parametersFileKey])) {
+      template_parameters = JSON.parse(readFileSync(config[resourceGroupKey][parametersFileKey], "utf8"));
     } else {
       console.error("\tcannot find file");
       process.exit(3);
@@ -345,10 +345,10 @@ function get_client(authfile, subscription, type) {
   // define the client to return
   let client;
 
-  if (fs.existsSync(authfile)) {
+  if (existsSync(authfile)) {
     
     // read in the configuration file
-    let credentials = ini.parse(fs.readFileSync(authfile, 'utf-8'));
+    let credentials = iniParse(readFileSync(authfile, 'utf-8'));
 
     // ensure that the specified subscription can be found in the file
     if (subscription in credentials) {
@@ -359,13 +359,13 @@ function get_client(authfile, subscription, type) {
       let tenant_id = credentials[subscription].tenant_id;
 
       // create token credentials with access to Azure
-      let azure_token_creds = new msRestAzure.ApplicationTokenCredentials(client_id, tenant_id, client_secret);
+      let azure_token_creds = new ApplicationTokenCredentials(client_id, tenant_id, client_secret);
 
       // create the necessary storage client
       if (type == "storage") {
-        client = new armStorage.StorageManagementClient(azure_token_creds, subscription);
+        client = new StorageManagementClient(azure_token_creds, subscription);
       } else if (type == "resource") {
-        client = new armResource.ResourceManagementClient(azure_token_creds, subscription);
+        client = new ResourceManagementClient(azure_token_creds, subscription);
       } else {
         client = false;
       }
@@ -433,8 +433,8 @@ async function checkContainerExists(client, resource_group_name, storage_account
 // Main -------------------------------------------------------------------
 
 // Set the application root so that configuration files can be located
-let appRoot = path.resolve(__dirname, "..");
-let deploy_config_file = path.join(appRoot, "deploy.json");
+let appRoot = resolve(__dirname, "..");
+let deploy_config_file = pathJoin(appRoot, "deploy.json");
 
 // Configure the script
 program.version('0.0.1')
@@ -446,7 +446,7 @@ program.command('upload <subscription>')
        .description('Upload files to blob storage. Storage account and container are taken from configuration or overridden with options')
        .option('-s, --saname [name]', 'Storage account name')
        .option('-n, --container [container]', 'Name of container within specified storage')
-       .option('-a, --authfile [authfilename]', 'Path to Azure credentials file', path.join(os.homedir(), '.azure', 'credentials'))
+       .option('-a, --authfile [authfilename]', 'Path to Azure credentials file', pathJoin(homedir(), '.azure', 'credentials'))
        .option('-G, --groupname [sagroupname]', 'Name of the resource group that contains the storage account')
        .action(function (subscription, options) {
           upload(parseConfig(appRoot, program.config, options, "upload"), subscription)
@@ -458,9 +458,9 @@ program.command('deploy <subscription>')
        .option('-l, --location [location]', 'Azure location that the template should be deployed to', 'eastus')
        .option('-s, --saname [name]', 'Storage account name')
        .option('-n, --container [container]', 'Name of container within specified storage')
-       .option('-a, --authfile [authfilename]', 'Path to Azure credentials file', path.join(os.homedir(), '.azure', 'credentials'))
+       .option('-a, --authfile [authfilename]', 'Path to Azure credentials file', pathJoin(homedir(), '.azure', 'credentials'))
        .option('-g, --groupname [groupname]', 'Name of the resource group to deploy into')
-       .option('-p, --parameters [parameters]', 'Path to the parameters file', path.join(appRoot, "local", "parameters.json"))
+       .option('-p, --parameters [parameters]', 'Path to the parameters file', pathJoin(appRoot, "local", "parameters.json"))
        .action(function (subscription, options) {
           deploy(parseConfig(appRoot, program.config, options, "deploy"), subscription)
        });
