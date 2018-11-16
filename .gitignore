@@ -16,3 +16,5 @@ package-lock.json
 .envrc
 local.settings.json
 chef-repo
+deploy.json
+.deploy
