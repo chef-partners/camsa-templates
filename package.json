@@ -34,7 +34,6 @@
         "mocha-clean": "^1.0.0",
         "mochawesome": "^3.0.2",
         "recursive-readdir": "^2.2.1",
-        "recursive-readdir-synchronous": "0.0.3",
         "rimraf": "^2.6.2",
         "should": "^13.1.2",
         "sprintf-js": "^1.1.1",

@@ -12,7 +12,7 @@
 // Libraries --------------------------------------------------------------
 import * as program from "commander";
 import {isAbsolute, join as pathJoin, resolve} from "path";
-import {existsSync, readFileSync, writeFileSync, lstatSync} from "fs-extra";
+import {existsSync, readFileSync, writeFileSync, lstatSync, readdirSync} from "fs-extra";
 import {sprintf} from "sprintf-js"
 import {homedir} from "os";
 import {parse as iniParse} from "ini";
@@ -20,7 +20,6 @@ import {ApplicationTokenCredentials} from "ms-rest-azure";
 import {StorageManagementClient} from "azure-arm-storage";
 import {ResourceManagementClient} from "azure-arm-resource";
 import {createBlobService} from "azure-storage";
-import * as listdir from "recursive-readdir-synchronous";
 
 import {Utils} from "./Utils";
 
@@ -428,6 +427,24 @@ async function checkContainerExists(client, resource_group_name, storage_account
           resolve(exists)
       })
   })
+}
+
+function listdir(path) {
+  var list = []
+    , files = readdirSync(path)
+    , stats
+    ;
+
+  files.forEach(function (file) {
+    stats = lstatSync(pathJoin(path, file));
+    if(stats.isDirectory()) {
+      list = list.concat(listdir(pathJoin(path, file)));
+    } else {
+      list.push(pathJoin(path, file));
+    }
+  });
+
+  return list;
 }
 
 // Main -------------------------------------------------------------------
