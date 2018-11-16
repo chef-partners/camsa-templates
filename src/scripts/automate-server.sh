@@ -27,6 +27,7 @@ AUTOMATE_COMMAND="chef-automate"
 USERNAME=""
 PASSWORD=""
 EMAILADDRESS=""
+GDPR_AGREE=""
 FULLNAME=""
 
 # Define the variables that hold information about the Azure functions
@@ -405,6 +406,25 @@ do
     # Apply the licence to automate
     licence)
       log "Apply licence"
+
+      if [ -z "$AUTOMATE_LICENCE" ]
+      then
+        log "requesting trial licence" 1
+        FIRSTNAME=$(echo $FULLNAME | cut -d ' ' -f 1)
+        LASTNAME=$(echo $FULLNAME | cut -d ' ' -f 2)
+
+        cmd=$(printf "curl -s https://automate-gateway:2000/license/request --resolve automate-gateway:2000:127.0.0.1 \
+        --cert /hab/svc/deployment-service/data/deployment-service.crt \
+        --cacert /hab/svc/deployment-service/data/root.crt \
+        --key /hab/svc/deployment-service/data/deployment-service.key \
+        -d '{ \"first_name\": \"%s\", \"last_name\": \"%s\", \"email\": \"%s\", \"gdpr_agree\": %s }' \
+        | jq -r '.license'" $FIRSTNAME $LASTNAME $EMAILADDRESS $GDPR_AGREE)
+
+        AUTOMATE_LICENCE=`executeCmd "$cmd"`
+        log "applying trial license: $AUTOMATE_LICENCE" 1
+      else
+        log "applying provided licence: $AUTOMATE_LICENCE" 1
+      fi
 
       cmd=$(printf 'chef-automate license apply %s' $AUTOMATE_LICENCE)
       executeCmd "$cmd"
