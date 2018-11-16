@@ -24,9 +24,23 @@ import * as listdir from "recursive-readdir-synchronous";
 
 import {Utils} from "./Utils";
 
+// Define constants for the keys in the configuration arrays
+const resourceGroupKey = "resourceGroup";
+const resourceGroupNameKey = "name";
+const storageAccountKey = "storageAccount";
+const storageAccountNameKey = "name";
+const parametersFileKey = "parametersFile";
+const containerNameKey = "container";
+const controlFileKey = "controlFile";
+const groupNameKey = "groupName";
+const optionsKey = "options";
+const authFileKey = "authfile";
+const iterationKey = "iteration";
+const locationKey = "location";
+
 // Functions --------------------------------------------------------------
 
-function parseConfig(app_root, filepath, options, cmd) {
+function parseConfig(appRoot, filepath, options, cmd) {
   let config = {};
 
   // determine if the deploy configuration file exists
@@ -34,90 +48,90 @@ function parseConfig(app_root, filepath, options, cmd) {
     // read in the configuration file
     config = JSON.parse(fs.readFileSync(filepath, 'utf8'));
 
-    // iterate around the dirs and prepend the app_root if it is not an absolute path
+    // iterate around the dirs and prepend the appRoot if it is not an absolute path
     Object.keys(config["dirs"]).forEach(function (key) {
       if (!path.isAbsolute(config["dirs"][key])) {
-          config["dirs"][key] = path.join(app_root, config["dirs"][key]);
+          config["dirs"][key] = path.join(appRoot, config["dirs"][key]);
       };
     });
 
     // ensure that the resource group section exists
-    if (!("resourceGroup" in config)) {
-      config["resourceGroup"] = {}
+    if (!(resourceGroupKey in config)) {
+      config[resourceGroupKey] = {}
     }
 
-    if (!("name" in config["resourceGroup"])) {
-      config["resourceGroup"]["name"] = "";
+    if (!(resourceGroupNameKey in config[resourceGroupKey])) {
+      config[resourceGroupKey][resourceGroupNameKey] = "";
     }
 
-    if (!("location" in config["resourceGroup"])) {
-      config["resourceGroup"]["location"] = "";
+    if (!(locationKey in config[resourceGroupKey])) {
+      config[resourceGroupKey][locationKey] = "";
     }
 
-    if (!("parametersFile" in config["resourceGroup"])) {
-      config["resourceGroup"]["parameters_file"] = "";
+    if (!(parametersFileKey in config[resourceGroupKey])) {
+      config[resourceGroupKey][parametersFileKey] = "";
     }        
 
     // determine if a storage_account section exists
-    if (!("storageAccount" in config)) {
-      config["storageAccount"] = {}
+    if (!(storageAccountKey in config)) {
+      config[storageAccountKey] = {}
     }
 
     // esnure that the children of the storage_account exists
-    if (!("name" in config["storageAccount"])) {
-      config["storageAccount"]["name"] = "";
+    if (!(storageAccountNameKey in config[storageAccountKey])) {
+      config[storageAccountKey][storageAccountNameKey] = "";
     }
 
-    if (!("container" in config["storageAccount"])) {
-      config["storageAccount"]["container"] = "";
+    if (!(containerNameKey in config[storageAccountKey])) {
+      config[storageAccountKey][containerNameKey] = "";
     }
 
-    if (!("resourceGroup" in config["storageAccount"])) {
-      config["storageAccount"]["resourceGroup"] = "";
+    if (!(resourceGroupKey in config[storageAccountKey])) {
+      config[storageAccountKey][resourceGroupKey] = "";
     }
 
     // determine if the options for these values have been set, if they
     // have then overwrite the values that have come from the configuration file
     if (options.saname) {
-      config["storageAccount"]["name"] = options.saname;
+      config[storageAccountKey][storageAccountNameKey] = options.saname;
     }
 
     if (options.container) {
-      config["storageAccount"]["container"] = options.container;
+      config[storageAccountKey][containerNameKey] = options.container;
     }
 
     if (options.sagroupname) {
-      config["storageAccount"]["groupName"] = options.sagroupname;
+      config[storageAccountKey][groupNameKey] = options.sagroupname;
     }
 
     if (options.groupname) {
-      config["resourceGroup"]["name"] = options.groupname;
+      config[resourceGroupKey][resourceGroupNameKey] = options.groupname;
     }
 
     if (options.location) {
-      config["resourceGroup"]["location"] = options.location;
+      config[resourceGroupKey][locationKey] = options.location;
     }
 
     if (options.parameters) {
-      config["resourceGroup"]["parameters_file"] = options.parameters;
+      config[resourceGroupKey][parametersFileKey] = options.parameters;
     }
 
     // perform some validation checks
-    let validation_errors = [];
+    let validationErrors = [];
     if (cmd == "upload") {
-      if (config["storageAccount"]["name"] == "") {
-        validation_errors.push("Storage account name has not been specified. Use -s or --saname or set in the configuration file");
+      if (config[storageAccountKey][storageAccountNameKey] == "") {
+        validationErrors.push("Storage account name has not been specified. Use -s or --saname or set in the configuration file");
       }
 
-      if (config["storageAccount"]["container"] == "") {
-        validation_errors.push("Container name must be specified. Use -n or --container or set in the configuration file");
+      if (config[storageAccountKey][containerNameKey] == "") {
+        validationErrors.push("Container name must be specified. Use -n or --container or set in the configuration file");
       }
     }
 
     // if there are validation errors write them out
-    if (validation_errors.length > 0) {
-      console.log(sprintf("Errors have been detected: %s", validation_errors.length));
-      for (let message of validation_errors) {
+    if (validationErrors.length > 0) {
+      console.log(sprintf("Errors have been detected: %s", validationErrors.length));
+      for (let message of validationErrors) {
         console.log(sprintf(" - %s", message));
       }
       process.exit(1);
@@ -129,23 +143,23 @@ function parseConfig(app_root, filepath, options, cmd) {
   }
 
   // add the command line options to the config
-  config["options"] = options;
+  config[optionsKey] = options;
 
   // configure the locale deployment file
-  config["control_file"] = path.join(app_root, ".deploy");
-  if (!fs.existsSync(config["control_file"])) {
+  config[controlFileKey] = path.join(appRoot, ".deploy");
+  if (!fs.existsSync(config[controlFileKey])) {
 
-    // set the content of the control_file, as it does not exist, with an iteration
+    // set the content of the controlFile, as it does not exist, with an iteration
     // value of 1
     // The iteration is used to track what the resource group that was created on this deployment
     // It is used to delete that resource group on the next deployment and then increment the iteration to create
     // the new resource group
     // This is to speed up the deployments as much as possible by not having to wait for the resource group
     // to deploy before a new deployment can be done.
-    let content = sprintf('{"%s": {"iteration": 1}}', config["resourceGroup"]["name"]);
+    let content = sprintf('{"%s": {"%s": 1}}', config[resourceGroupKey][resourceGroupNameKey], iterationKey);
 
     // write out the file
-    fs.writeFileSync(config["control_file"], content, "utf8");
+    fs.writeFileSync(config[controlFileKey], content, "utf8");
   }
 
   return config;
@@ -154,23 +168,23 @@ function parseConfig(app_root, filepath, options, cmd) {
 async function upload(config, subscription) {
   
   // create the necessary storage client
-  let smClient = get_client(config["options"]["authfile"], subscription, "storage");
-  let rmClient = get_client(config["options"]["authfile"], subscription, "resource");
+  let smClient = get_client(config[optionsKey][authFileKey], subscription, "storage");
+  let rmClient = get_client(config[optionsKey][authFileKey], subscription, "resource");
 
   // Perform some checks to ensure that all necessary resources exist
   // - resource group
-  let rg_exists = await rmClient.resourceGroups.checkExistence(config["storageAccount"]["groupName"]);
+  let rgExists = await rmClient.resourceGroups.checkExistence(config[storageAccountKey][groupNameKey]);
   // - storage account
-  let sa_exists = await checkStorageAccountExists(smClient, config["storageAccount"]["name"]);
+  let saExists = await checkStorageAccountExists(smClient, config[storageAccountKey][storageAccountNameKey]);
   // - container
-  let container_exists = await checkContainerExists(smClient, config["storageAccount"]["groupName"], config["storageAccount"]["name"], config["storageAccount"]["container"]);
+  let containerExists = await checkContainerExists(smClient, config[storageAccountKey][groupNameKey], config[storageAccountKey][storageAccountNameKey], config[storageAccountKey][containerNameKey]);
 
   // determine if the credentials file can be located
-  if (rg_exists && sa_exists && container_exists) {
+  if (rgExists && saExists && containerExists) {
 
     // create blob service so that files can be uploaded
-    let sakeys = await smClient.storageAccounts.listKeys(config["storageAccount"]["groupName"], config["storageAccount"]["name"], {});
-    let blob_service = azureStorage.createBlobService(config["storageAccount"]["name"], sakeys.keys[0].value);
+    let sakeys = await smClient.storageAccounts.listKeys(config[storageAccountKey][groupNameKey], config[storageAccountKey][storageAccountNameKey], {});
+    let blobService = azureStorage.createBlobService(config[storageAccountKey][storageAccountNameKey], sakeys.keys[0].value);
 
     // get all the files in the specified directory to be uploaded
     let items = listdir(config["dirs"]["working"]);
@@ -197,7 +211,7 @@ async function upload(config, subscription) {
       name = name.replace(string_to_check, '')
 
       // upload the item
-      blob_service.createBlockBlobFromLocalFile(config["storageAccount"]["container"], name, item, {}, (error, result) => {
+      blobService.createBlockBlobFromLocalFile(config[storageAccountKey][containerNameKey], name, item, {}, (error, result) => {
         if (error) {
           console.log("FAILED to upload: %s", getError(error)) 
         } else {
@@ -207,9 +221,9 @@ async function upload(config, subscription) {
     }
 
   } else {
-    console.error("Resource Group '%s' exists: %s", config["storageAccount"]["groupName"], rg_exists);
-    console.error("Storage Account '%s' exists: %s", config["storageAccount"]["name"], sa_exists);
-    console.error("Container '%s' exists: %s", config["storageAccount"]["container"], container_exists);
+    console.error("Resource Group '%s' exists: %s", config[storageAccountKey][groupNameKey], rgExists);
+    console.error("Storage Account '%s' exists: %s", config[storageAccountKey][storageAccountNameKey], saExists);
+    console.error("Container '%s' exists: %s", config[storageAccountKey][containerNameKey], containerExists);
     console.error("Errors have occurred, please ensure that all the above resources exist");
     process.exit(4);
   }
@@ -219,16 +233,16 @@ async function deploy(config, subscription) {
 
   // read the local control file to determine the name of the resource group
   // to delete and then create
-  let deploy_settings = JSON.parse(fs.readFileSync(config["control_file"], 'utf8'));
-  if (!(config["resourceGroup"]["name"] in deploy_settings)) {
-    deploy_settings[config["resourceGroup"]["name"]] = {"iteration": 0};
+  let deploy_settings = JSON.parse(fs.readFileSync(config[controlFileKey], 'utf8'));
+  if (!(config[resourceGroupKey][resourceGroupNameKey] in deploy_settings)) {
+    deploy_settings[config[resourceGroupKey][name]] = {iterationKey: 0};
   }
 
   // determine the name of the resource group to delete
-  let rg_name_existing = sprintf("%s-%s", config["resourceGroup"]["name"], deploy_settings[config["resourceGroup"]["name"]]["iteration"]);
+  let rg_name_existing = sprintf("%s-%s", config[resourceGroupKey][resourceGroupNameKey], deploy_settings[config[resourceGroupKey][resourceGroupNameKey]][iterationKey]);
 
   // create the necessary resource manager client
-  let rmClient = get_client(config["options"]["authfile"], subscription, "resource");
+  let rmClient = get_client(config[optionsKey][authFileKey], subscription, "resource");
 
   // determine if the rg exists
   if (rmClient != false) {
@@ -259,21 +273,21 @@ async function deploy(config, subscription) {
     }
 
     // determine the next iteration and therefore the name of the new RG
-    deploy_settings[config["resourceGroup"]["name"]]["iteration"] += 1;
-    let rg_name = sprintf("%s-%s", config["resourceGroup"]["name"], deploy_settings[config["resourceGroup"]["name"]]["iteration"]);
+    deploy_settings[config[resourceGroupKey][resourceGroupNameKey]]["iteration"] += 1;
+    let rg_name = sprintf("%s-%s", config[resourceGroupKey][resourceGroupNameKey], deploy_settings[config[resourceGroupKey][resourceGroupNameKey]][iterationKey]);
 
     // write out the new iteration to the deployment file
-    fs.writeFileSync(config["control_file"], JSON.stringify(deploy_settings), "utf8");
+    fs.writeFileSync(config[controlFileKey], JSON.stringify(deploy_settings), "utf8");
 
     // create the rg
     console.log("Creating Resource Group: %s", rg_name);
-    console.log("\tLocation: %s", config["resourceGroup"]["location"]);
+    console.log("\tLocation: %s", config[resourceGroupKey][locationKey]);
 
     await new Promise<void> ((resolve, reject) => {
       // define the parameters for the new RG
       let parameters = {
-        "name": rg_name,
-        "location": config["options"]["location"]
+        name: rg_name,
+        location: config[optionsKey][locationKey]
       }
 
       rmClient.resourceGroups.createOrUpdate(rg_name, parameters, (error) => {
@@ -287,16 +301,16 @@ async function deploy(config, subscription) {
     // perform the deployment of the template and parameters
     // read in the parameters file
     let template_parameters;
-    console.log("Reading parameters file: %s", config["resourceGroup"]["parameters_file"]);
-    if (fs.existsSync(config["resourceGroup"]["parameters_file"])) {
-      template_parameters = JSON.parse(fs.readFileSync(config["resourceGroup"]["parameters_file"], "utf8"));
+    console.log("Reading parameters file: %s", config[resourceGroupKey][parametersFileKey]);
+    if (fs.existsSync(config[resourceGroupKey][parametersFileKey])) {
+      template_parameters = JSON.parse(fs.readFileSync(config[resourceGroupKey][parametersFileKey], "utf8"));
     } else {
       console.error("\tcannot find file");
       process.exit(3);
     }
 
     // determine the template-uri
-    let template_uri = sprintf("https://%s.blob.core.windows.net/%s/mainTemplate.json", config["storageAccount"]["name"], config["storageAccount"]["container"]);
+    let template_uri = sprintf("https://%s.blob.core.windows.net/%s/mainTemplate.json", config[storageAccountKey][storageAccountNameKey], config[storageAccountKey][containerNameKey]);
 
     console.log("Deploying template: %s", template_uri);
 
@@ -419,8 +433,8 @@ async function checkContainerExists(client, resource_group_name, storage_account
 // Main -------------------------------------------------------------------
 
 // Set the application root so that configuration files can be located
-let app_root = path.resolve(__dirname, "..");
-let deploy_config_file = path.join(app_root, "deploy.json");
+let appRoot = path.resolve(__dirname, "..");
+let deploy_config_file = path.join(appRoot, "deploy.json");
 
 // Configure the script
 program.version('0.0.1')
@@ -435,7 +449,7 @@ program.command('upload <subscription>')
        .option('-a, --authfile [authfilename]', 'Path to Azure credentials file', path.join(os.homedir(), '.azure', 'credentials'))
        .option('-G, --groupname [sagroupname]', 'Name of the resource group that contains the storage account')
        .action(function (subscription, options) {
-          upload(parseConfig(app_root, program.config, options, "upload"), subscription)
+          upload(parseConfig(appRoot, program.config, options, "upload"), subscription)
        });
 
 // Add command to manage resource group and deploy the template
@@ -446,9 +460,9 @@ program.command('deploy <subscription>')
        .option('-n, --container [container]', 'Name of container within specified storage')
        .option('-a, --authfile [authfilename]', 'Path to Azure credentials file', path.join(os.homedir(), '.azure', 'credentials'))
        .option('-g, --groupname [groupname]', 'Name of the resource group to deploy into')
-       .option('-p, --parameters [parameters]', 'Path to the parameters file', path.join(app_root, "local", "parameters.json"))
+       .option('-p, --parameters [parameters]', 'Path to the parameters file', path.join(appRoot, "local", "parameters.json"))
        .action(function (subscription, options) {
-          deploy(parseConfig(app_root, program.config, options, "deploy"), subscription)
+          deploy(parseConfig(appRoot, program.config, options, "deploy"), subscription)
        });
 
 // Execute the program
