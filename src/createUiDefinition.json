@@ -227,6 +227,78 @@
             },
 
             {
+                "name": "customDNSStep",
+                "label": "Custom DNS",
+                "bladeTitle": "Configure Custom DNS Name",
+                "subLabel": {
+                    "preValidation": "Please state if you wish to use a custom domain name or not",
+                    "postValidation": "Custom DNS configuration complete"
+                },
+                "elements": [
+                    {
+                        "name": "useCustomDomainName",
+                        "type": "Microsoft.Common.OptionsGroup",
+                        "label": "Do you wish to have a custom domain name for your servers?",
+                        "defaultValue": "No",
+                        "toolTip": "If you want to have control over how the servers are identified please select 'Yes' here",
+                        "constraints": {
+                            "allowedValues": [
+                                {
+                                    "label": "Yes",
+                                    "value": true
+                                },
+                                {
+                                    "label": "No",
+                                    "value": false
+                                }
+                            ],
+                            "required": true
+                        },
+                        "visible": true
+                    },
+                    {
+                        "name": "domainName",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Domain Name",
+                        "defaultValue": "",
+                        "toolTip": "Please enter the domain name for the servers",
+                        "constraints": {
+                            "required": "[steps('customDNSStep').useCustomDomainName]",
+                            "regex": "^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]",
+                            "validationMessage": "Please provide a valid domain name"
+                        },
+                        "visible": "[steps('customDNSStep').useCustomDomainName]"
+                    },
+                    {
+                        "name": "chefServerHostname",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Chef Server Hostname",
+                        "defaultValue": "",
+                        "toolTip": "Please provide a hostname for the Chef Server",
+                        "constraints": {
+                            "required": "[steps('customDNSStep').useCustomDomainName]",
+                            "regex": "^[a-z0-9]+$",
+                            "validationMessage": "Please provide a hostname for the chef server"
+                        },
+                        "visible": "[steps('customDNSStep').useCustomDomainName]"
+                    },
+                    {
+                        "name": "automateServerHostname",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Automate Server Hostname",
+                        "defaultValue": "",
+                        "toolTip": "Please provide a hostname for the Automate Server",
+                        "constraints": {
+                            "required": "[steps('customDNSStep').useCustomDomainName]",
+                            "regex": "^[a-z0-9]+$",
+                            "validationMessage": "Please provide a hostname for the automate server"
+                        },
+                        "visible": "[steps('customDNSStep').useCustomDomainName]"
+                    }
+                ]
+            },
+
+            {
                 "name": "backupStep",
                 "label": "Backup",
                 "bladeTitle": "Configure Backup",
@@ -547,7 +619,11 @@
             "logAnalyticsLocation": "[steps('logAnalyticsStep').location]",
             "backupHour": "[steps('backupStep').hour]",
             "backupMinute": "[steps('backupStep').minute]",
-            "location": "[location()]"
+            "location": "[location()]",
+            "managedApp": true,
+            "customDomainName": "[steps('customDNSStep').domainName]",
+            "customChefServerHostname": "[steps('customDNSStep').chefServerHostname]",
+            "customAutomateServerHostname": "[steps('customDNSStep').automateServerHostname]"
         }
     }
 }

@@ -57,6 +57,15 @@ VERIFY_SCRIPT_LOCATION="/usr/local/bin/verify.sh"
 SUBSCRIPTION_ID=""
 VERIFY_URL=""
 
+# Initialise variables to handle custom DNS Domain name and server FQDN names
+CUSTOM_DOMAIN_NAME=""
+CHEF_SERVER_FQDN=""
+
+# In order to configure the DNS for the ManagedApp the script needs to know the
+# Public FQDN of the public IP address to create the alias from
+PIP_CHEF_SERVER_FQDN=""
+PIP_AUTOMATE_SERVER_FQDN=""
+
 #
 # Do not modify variables below here
 #
@@ -266,6 +275,24 @@ do
     --verifyurl)
       VERIFY_URL="$2"
     ;;
+
+    --customdomainname)
+      CUSTOM_DOMAIN_NAME="$2"
+    ;;
+
+    -C|--chefserverfqdn)
+      CHEF_SERVER_FQDN="$2"
+    ;;
+
+    --pipautomate)
+      PIP_AUTOMATE_SERVER_FQDN="$2"
+    ;;
+
+    --pipchef)
+      PIP_CHEF_SERVER_FQDN="$2"
+    ;;
+
+
   esac
 
   # move onto the next argument
@@ -468,6 +495,9 @@ do
       cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_fqdn\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $AUTOMATE_SERVER_FQDN)
       executeCmd "$cmd"
 
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"pip_automate_fqdn\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $PIP_AUTOMATE_SERVER_FQDN)
+      executeCmd "$cmd"      
+
       # Create the user using the Automate Server API
       cmd=$(printf "curl -H 'api-token: %s' -H 'Content-Type: application/json' -d '{\"name\": \"%s\", \"username\": \"%s\", \"password\": \"%s\"}' --insecure https://localhost/api/v0/auth/users" $automate_api_token $FULLNAME $USERNAME $PASSWORD)
       executeCmd "$cmd"
@@ -549,7 +579,7 @@ then
   done
 
   # if the error is false add the workspaceid and key to the config store
-  if [ $error == "false" ]
+  if [ "$error" == "false" ]
   then
     # Perform CURL operations to add the data to the config store
     # Going to use a PUT here so that the item is either created or updated, this is so that it will be updated
@@ -643,6 +673,47 @@ EOF
       # set the address in the config store
       cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_internal_ip\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $internal_ip)
       executeCmd "$cmd" 
+    ;;
+
+    # Set the DNS entries for the servers, as long as the custom domain name has not been set
+    dns)
+
+      if [ "X$CUSTOM_DOMAIN_NAME" == "X" ]
+      then
+
+        # Call the service to add the DNS Entries for the Chef and Automate servers
+        # Determine the hostnames of the Automate and Chef servers
+        AUTOMATE_SERVER_HOSTNAME=`echo $AUTOMATE_SERVER_FQDN | awk -F '.' '{print $1}'`
+        CHEF_SERVER_HOSTNAME=`echo $CHEF_SERVER_FQDN | awk -F '.' '{print $1}'`
+
+        # Build up the JSON payload that needs to be sent
+        cat << EOF > dns_entries.json
+{
+  "name": "${FULLNAME}",
+  "automate_licence": "${AUTOMATE_LICENCE}",
+  "entries": [
+    {
+      "name": "${CHEF_SERVER_HOSTNAME}",
+      "target": "${PIP_CHEF_SERVER_FQDN}",
+      "type": "cname"
+    },
+    {
+      "name": "${AUTOMATE_SERVER_HOSTNAME}",
+      "target": "${PIP_AUTOMATE_SERVER_FQDN}",
+      "type": "cname"
+    }    
+  ]
+}
+EOF
+
+        # Build up the CURL command
+        cmd=$(printf "curl -XPOST %s/dns -d @dns_entries.json" $VERIFY_URL)
+        executeCmd "$cmd"
+
+      else
+        log "Configuring DNS entries for custom domains is not supported" 0 err
+      fi
+
     ;;
   
   esac

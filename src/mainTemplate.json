@@ -261,7 +261,39 @@
             "metadata": {
                 "description": "URL for the function that will provide the workspace id and key to enable central logging"
             },
-            "defaultValue": "http://chef-74b4-AppService.azurewebsites.net/api/verify?code=dWkxlizmIbhaUPnx8nr7zdZu653uacCar5iIBNIJWIZwCaHlvX8Vjg=="
+            "defaultValue": "https://whitelist.managedautomate.io/api/automate"
+        },
+
+        "managedApp": {
+            "type": "bool",
+            "metadata": {
+                "description": "States if this template is being deployed as an a Managed App"
+            },
+            "defaultValue": false
+        },
+
+        "customDomainName": {
+            "type": "string",
+            "metadata": {
+                "description": "Allows the use of a customer specified domain for the CHef and Automate servers"
+            },
+            "defaultValue": ""
+        },
+
+        "customChefServerHostname": {
+            "type": "string",
+            "metadata": {
+                "description": "If using a custom domain, what is the hostname of the Chef server"
+            },
+            "defaultValue": ""
+        },
+
+        "customAutomateServerHostname": {
+            "type": "string",
+            "metadata": {
+                "description": "If using a custom domain, what is the hostname of the Automate server"
+            },
+            "defaultValue": ""
         }
     },
     "variables": {
@@ -432,12 +464,55 @@
             "sku": "[parameters('logAnalyticsTier')]"
         },
 
-        "singlequote": "'",
-
         "tags": {
             "provider": "2680257b-9f22-4261-b1ef-72412d367a68"
+        },
+
+        "isManagedApp": "[parameters('managedApp')]",
+
+        "custom": {
+            "domain": "[parameters('customDomainName')]",
+            "hostname": {
+                "chef": "[parameters('customChefServerHostname')]",
+                "automate": "[parameters('customAutomateServerHostname')]"
+            }
         }
     },
+    "functions": [
+        {
+            "namespace": "chefSoftware",
+            "members": {
+                "getFQDN": {
+                    "parameters": [
+                        {
+                            "name": "isManagedApp",
+                            "type": "bool"
+                        },
+                        {
+                            "name": "customDomainName",
+                            "type": "string"
+                        },
+                        {
+                            "name": "customHostname",
+                            "type": "string"
+                        },
+                        {
+                            "name": "hostname",
+                            "type": "string"
+                        },
+                        {
+                            "name": "fqdn",
+                            "type": "string"
+                        }
+                    ],
+                    "output": {
+                        "type": "string",
+                        "value": "[if(not(empty(parameters('customDomainName'))), concat(parameters('customHostname'), '.', parameters('customDomainName')), if(parameters('isManagedApp'), concat(parameters('hostname'), '.managedautomate.io'), parameters('fqdn')))]"
+                    }
+                }
+            }
+        }
+    ],
     "resources": [
 
         {
@@ -1006,9 +1081,6 @@
                     "vmName": {
                         "value": "[variables('name').vm.chef]"
                     },
-                    "computerName": {
-                        "value": "[variables('name').computer.chef]"
-                    },
                     "vmSize": {
                         "value": "[variables('vmSize').chef]"
                     },
@@ -1028,7 +1100,7 @@
                         "value": "[reference(concat(variables('name').nic.customer.chef, '-Deployment')).outputs.ref.value]"
                     },
                     "fqdn": {
-                        "value": "[reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value]"
+                        "value": "[chefSoftware.getFQDN(variables('isManagedApp'), variables('custom').domain, variables('custom').hostname.chef, variables('name').computer.chef, reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value)]"
                     },
                     "tags": {
                         "value": {
@@ -1061,9 +1133,6 @@
                     "vmName": {
                         "value": "[variables('name').vm.automate]"
                     },
-                    "computerName": {
-                        "value": "[variables('name').computer.automate]"
-                    },
                     "vmSize": {
                         "value": "[variables('vmSize').automate]"
                     },
@@ -1083,7 +1152,7 @@
                         "value": "[reference(concat(variables('name').nic.customer.automate, '-Deployment')).outputs.ref.value]"
                     },
                     "fqdn": {
-                        "value": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value]"
+                        "value": "[chefSoftware.getFQDN(variables('isManagedApp'), variables('custom').domain, variables('custom').hostname.automate, variables('name').computer.automate, reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value)]"
                     },
                     "tags": {
                         "value": {
@@ -1212,7 +1281,7 @@
                     },
                     "arguments": {
                         "value": {
-                            "MODE": "[concat('install,kernel,config,deploy,license,token,cron', if(variables('enabled').backup, ',backup', ''), if(variables('enabled').logAnalytics, ',centrallogging', ''), ',internalip')]",
+                            "MODE": "[concat('install,kernel,config,deploy,licence,token,cron', if(variables('isManagedApp'), ',dns', ''), if(variables('enabled').backup, ',backup', ''), if(variables('enabled').logAnalytics, ',centrallogging', ''), ',internalip')]",
                             "USERNAME": "[variables('chef').username]",
                             "PASSWORD": "[variables('chef').password]",
                             "EMAILADDRESS": "[variables('chef').email]",
@@ -1221,14 +1290,18 @@
                             "AUTOMATE_LICENSE": "[variables('automate').license]",
                             "FUNCTION_BASE_URL": "[reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value]",
                             "OPS_FUNCTION_APIKEY": "[reference(concat(variables('name').functions.ops, '-Deployment')).outputs.apiKey.value]",
-                            "AUTOMATE_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value]",
+                            "AUTOMATE_SERVER_FQDN": "[concat(reference(concat(variables('name').vm.automate, '-Deployment')).outputs.fqdn.value)]",
                             "BACKUP_SCRIPT_URL": "[variables('urls').scripts.backup]",
                             "SA_NAME": "[variables('name').storageAccount]",
                             "SA_CONTAINER_NAME": "[variables('name').container.backup]",
                             "SA_KEY": "[reference(concat(variables('name').sa, '-Deployment')).outputs.accesskey.value]",
                             "BACKUP_CRON": "[variables('backup').cron]",
                             "SUBSCRIPTION_ID": "[subscription().subscriptionId]",
-                            "VERIFY_URL": "[variables('urls').verify]"
+                            "VERIFY_URL": "[variables('urls').verify]",
+                            "CUSTOM_DOMAIN_NAME": "[variables('custom').domain]",
+                            "CHEF_SERVER_FQDN": "[concat(reference(concat(variables('name').vm.chef, '-Deployment')).outputs.fqdn.value)]",
+                            "PIP_CHEF_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value]",
+                            "PIP_AUTOMATE_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value]"
                         }
                     },
                     "extensionName": {
@@ -1287,8 +1360,8 @@
                             "CHEF_ORG_DESCRIPTION": "[variables('chef').orgDescription]",
                             "FUNCTION_BASE_URL": "[reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value]",
                             "OPS_FUNCTION_APIKEY": "[reference(concat(variables('name').functions.ops, '-Deployment')).outputs.apiKey.value]",
-                            "AUTOMATE_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value]",
-                            "CHEF_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value]",
+                            "AUTOMATE_SERVER_FQDN": "[concat(reference(concat(variables('name').vm.automate, '-Deployment')).outputs.fqdn.value)]",
+                            "CHEF_SERVER_FQDN": "[concat(reference(concat(variables('name').vm.chef, '-Deployment')).outputs.fqdn.value)]",
                             "BACKUP_SCRIPT_URL": "[variables('urls').scripts.backup]",
                             "BACKUP_CRON": "[variables('backup').cron]",
                             "SA_NAME": "[variables('name').storageAccount]",
@@ -1311,6 +1384,14 @@
         }
     ],
     "outputs": {
+        "automateServerFQDN": {
+            "type": "string",
+            "value": "[concat(reference(concat(variables('name').vm.automate, '-Deployment')).outputs.fqdn.value)]"
+        },
+        "chefServerFQDN": {
+            "type": "string",
+            "value": "[concat(reference(concat(variables('name').vm.chef, '-Deployment')).outputs.fqdn.value)]"
+        },
         "starterKitDownloadUrl": {
             "type": "string",
             "value": "[concat(reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value, '/starterKit?code=', reference(concat(variables('name').functions.ops, '-Deployment')).outputs.apiKey.value)]"

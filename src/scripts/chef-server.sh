@@ -22,6 +22,10 @@ CHEF_ORG_DESCRIPTION=""
 AUTOMATE_SERVER_FQDN=""
 CHEF_SERVER_FQDN=""
 
+# In order to configure the DNS for the ManagedApp the script needs to know the
+# Public FQDN of the public IP address to create the alias from
+PIP_CHEF_SERVER_FQDN=""
+
 FUNCTION_BASE_URL=""
 OPS_FUNCTION_APIKEY=""
 OPS_FUNCTION_NAME="config"
@@ -245,6 +249,10 @@ do
     --backend-script-url)
       STATSD_BACKEND_SCRIPT_URL="$2"  
     ;;
+
+    --pipchef)
+      PIP_CHEF_SERVER_FQDN="$2"
+    ;;    
   esac
 
   # move onto the next argument
@@ -408,6 +416,9 @@ do
       # Set extra information in the configuration store such as the server FQDN and monitor key
       cmd=$(printf "curl -XPOST %s -d '{\"chefserver_fqdn\": \"%s\"}'" $AF_URL $CHEF_SERVER_FQDN)
       executeCmd "$cmd"
+
+      cmd=$(printf "curl -XPOST %s -d '{\"pip_chefserver_fqdn\": \"%s\"}'" $AF_URL $PIP_CHEF_SERVER_FQDN)
+      executeCmd "$cmd"      
 
       cmd=$(printf "curl -XPOST %s -d '{\"monitor_user\": \"%s\"}'" $AF_URL $MONITOR_USER)
       executeCmd "$cmd"
