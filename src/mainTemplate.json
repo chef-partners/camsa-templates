@@ -1301,7 +1301,8 @@
                             "CUSTOM_DOMAIN_NAME": "[variables('custom').domain]",
                             "CHEF_SERVER_FQDN": "[concat(reference(concat(variables('name').vm.chef, '-Deployment')).outputs.fqdn.value)]",
                             "PIP_CHEF_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value]",
-                            "PIP_AUTOMATE_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value]"
+                            "PIP_AUTOMATE_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value]",
+                            "MANAGED_APP": "[variables('isManagedApp')]"
                         }
                     },
                     "extensionName": {

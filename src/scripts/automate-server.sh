@@ -66,6 +66,9 @@ CHEF_SERVER_FQDN=""
 PIP_CHEF_SERVER_FQDN=""
 PIP_AUTOMATE_SERVER_FQDN=""
 
+# State if this is a Managed App or not
+MANAGED_APP=false
+
 #
 # Do not modify variables below here
 #
@@ -290,6 +293,10 @@ do
 
     --pipchef)
       PIP_CHEF_SERVER_FQDN="$2"
+    ;;
+
+    --managedapp)
+      MANAGED_APP=$2
     ;;
 
 
@@ -678,7 +685,7 @@ EOF
     # Set the DNS entries for the servers, as long as the custom domain name has not been set
     dns)
 
-      if [ "X$CUSTOM_DOMAIN_NAME" == "X" ]
+      if [ "X$CUSTOM_DOMAIN_NAME" == "X" ] && [ "$MANAGED_APP" = true ]
       then
 
         # Call the service to add the DNS Entries for the Chef and Automate servers
