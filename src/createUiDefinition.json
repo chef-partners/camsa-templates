@@ -169,19 +169,19 @@
             },
 
             {
-                "name": "automateLicenceStep",
-                "label": "Automate Licence",
-                "bladeTitle": "Licence",
+                "name": "automateLicenseStep",
+                "label": "Automate License",
+                "bladeTitle": "License",
                 "subLabel": {
-                    "preValidation": "Please provide your supplied Automate licence",
-                    "postValidation": "Automate licence has been specified"
+                    "preValidation": "Please provide your supplied Automate license",
+                    "postValidation": "Automate license has been specified"
                 },
                 "elements": [
                     {
                         "name": "customerName",
                         "type": "Microsoft.Common.TextBox",
                         "label": "Customer Name",
-                        "toolTip": "Your name or company name. This should be the same as the name registered for the Automate Licence",
+                        "toolTip": "Your name or company name. This should be the same as the name registered for the Automate License",
                         "constraints": {
                             "required": true,
                             "regex": "^[a-zA-Z0-9 ]+$",
@@ -190,11 +190,11 @@
                         "visible": true
                     },
                     {
-                      "name": "hasLicence",
+                      "name": "hasLicense",
                       "type": "Microsoft.Common.OptionsGroup",
-                      "label": "Do you have an Automate Licence?",
+                      "label": "Do you have an Automate License?",
                       "defaultValue": "No",
-                      "toolTip": "Choose whether or not you currently have an Automate Licence. If not, a trial licence will be provided.",
+                      "toolTip": "Choose whether or not you currently have an Automate License. If not, a trial license will be provided.",
                       "constraints": {
                         "allowedValues": [
                           {
@@ -211,17 +211,17 @@
                       "visible": true
                     },
                     {
-                      "name": "licence",
+                      "name": "license",
                       "type": "Microsoft.Common.TextBox",
-                      "label": "Automate Licence",
+                      "label": "Automate License",
                       "defaultValue": "",
-                      "toolTip": "Please enter your Automate Licence",
+                      "toolTip": "Please enter your Automate License",
                       "constraints": {
-                        "required": "[steps('automateLicenceStep').hasLicence]",
+                        "required": "[steps('automateLicenseStep').hasLicense]",
                         "regex": "^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+\/=]*$",
-                        "validationMessage": "Your Automate licence should be a Json Web Token provided by Chef Software."
+                        "validationMessage": "Your Automate license should be a Json Web Token provided by Chef Software."
                       },
-                      "visible": "[steps('automateLicenceStep').hasLicence]"
+                      "visible": "[steps('automateLicenseStep').hasLicense]"
                     }
                 ]
             },
@@ -541,8 +541,8 @@
             "chefUserPassword": "[steps('chefCredentialsStep').password]",
             "chefOrg": "[steps('chefCredentialsStep').orgname]",
             "chefOrgDescription": "[steps('chefCredentialsStep').orgdescription]",
-            "automateLicence": "[steps('automateLicenceStep').licence]",
-            "customerName": "[steps('automateLicenceStep').customerName]",
+            "automateLicense": "[steps('automateLicenseStep').license]",
+            "customerName": "[steps('automateLicenseStep').customerName]",
             "logAnalyticsTier": "[steps('logAnalyticsStep').tier]",
             "logAnalyticsLocation": "[steps('logAnalyticsStep').location]",
             "backupHour": "[steps('backupStep').hour]",

@@ -117,7 +117,7 @@
             }
         },
 
-        "automateLicence": {
+        "automateLicense": {
             "type": "securestring"
         },
 
@@ -425,7 +425,7 @@
         },
 
         "automate": {
-            "licence": "[parameters('automateLicence')]"
+            "license": "[parameters('automateLicense')]"
         },
 
         "la": {
@@ -1212,13 +1212,13 @@
                     },
                     "arguments": {
                         "value": {
-                            "MODE": "[concat('install,kernel,config,deploy,licence,token,cron', if(variables('enabled').backup, ',backup', ''), if(variables('enabled').logAnalytics, ',centrallogging', ''), ',internalip')]",
+                            "MODE": "[concat('install,kernel,config,deploy,license,token,cron', if(variables('enabled').backup, ',backup', ''), if(variables('enabled').logAnalytics, ',centrallogging', ''), ',internalip')]",
                             "USERNAME": "[variables('chef').username]",
                             "PASSWORD": "[variables('chef').password]",
                             "EMAILADDRESS": "[variables('chef').email]",
                             "FULLNAME": "[variables('chef').fullname]",
                             "GDPR_AGREE": "[variables('chef').gdprAgree]",
-                            "AUTOMATE_LICENCE": "[variables('automate').licence]",
+                            "AUTOMATE_LICENSE": "[variables('automate').license]",
                             "FUNCTION_BASE_URL": "[reference(concat(variables('name').appService, '-Deployment')).outputs.baseUrl.value]",
                             "OPS_FUNCTION_APIKEY": "[reference(concat(variables('name').functions.ops, '-Deployment')).outputs.apiKey.value]",
                             "AUTOMATE_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value]",
