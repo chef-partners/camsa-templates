@@ -118,9 +118,9 @@
         },
 
         "automateLicense": {
-            "type": "securestring"
+            "type": "securestring",
+            "defaultValue": ""
         },
-
 
         "customerName": {
             "type": "string",
