@@ -697,7 +697,7 @@ EOF
         cat << EOF > dns_entries.json
 {
   "name": "${FULLNAME}",
-  "automate_licence": "${AUTOMATE_LICENCE}",
+  "automate_licence": "${AUTOMATE_LICENSE}",
   "entries": [
     {
       "name": "${CHEF_SERVER_HOSTNAME}",
