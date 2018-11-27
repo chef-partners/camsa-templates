@@ -28,7 +28,7 @@ As always there are a number of parameters that can be specified to adjust the d
 | `chefUserEmailaddress` | EMail address associated with the user | [X] | | 
 | `chefOrg` | Short name of the organisation to create. Must not contain spaces | [X] | |
 | `chefOrgDescription` | Description of the organisation | [X] | |
-| `automateLicence` | Automate licence as provided by Chef. If not specified a 30 day trial is enabled. | [] | "" |
+| `automateLicense` | Automate license as provided by Chef. If not specified a 30 day trial is enabled. | [] | "" |
 | `enableLogAnalytics` | If enabled then a Log Analytics workspace will be created for monitoring purposes | [] | true |
 | `enableBackup` | If enabled a backup will be taken, as specified, and placed in blob storage | [] | true |
 | `backupHour` | The hour at which the backup should occur. Time is taken as UTC | [] | 1 |

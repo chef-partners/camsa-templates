@@ -40,7 +40,7 @@
     "chefOrgDescription": {
       "value": ""
     },
-    "automateLicence": {
+    "automateLicense": {
       "value": ""
     },
     "sshPublicKeys": {

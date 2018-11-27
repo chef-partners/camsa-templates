@@ -11,7 +11,7 @@
                 "toolTip": "A prefix that should be applied to all resources that are created",
                 "constraints": {
                     "required": true,
-                    "regex": "^[a-z0-9]{1,5}$",
+                    "regex": "^[a-z][a-z0-9]{1,4}$",
                     "validationMessage": "This must be a lowercase aplhanumeric string and no more than 5 characters"
                 }
             }
@@ -121,6 +121,27 @@
                         "visible": true
                     },
                     {
+                      "name": "gdprAgree",
+                      "type": "Microsoft.Common.OptionsGroup",
+                      "label": "I would like to receive email communications from Chef",
+                      "defaultValue": "Yes",
+                      "toolTip": "",
+                      "constraints": {
+                        "allowedValues": [
+                          {
+                            "label": "Yes",
+                            "value": true
+                          },
+                          {
+                            "label": "No",
+                            "value": false
+                          }
+                        ],
+                        "required": true
+                      },
+                      "visible": true
+                    },
+                    {
                         "name": "orgname",
                         "type": "Microsoft.Common.TextBox",
                         "label": "Organization Name",
@@ -148,19 +169,19 @@
             },
 
             {
-                "name": "automateLicenceStep",
-                "label": "Automate Licence",
-                "bladeTitle": "Licence",
+                "name": "automateLicenseStep",
+                "label": "Automate License",
+                "bladeTitle": "License",
                 "subLabel": {
-                    "preValidation": "Please provide your supplied Automate licence",
-                    "postValidation": "Automate licence has been specified"
+                    "preValidation": "Please provide your supplied Automate license",
+                    "postValidation": "Automate license has been specified"
                 },
                 "elements": [
                     {
                         "name": "customerName",
                         "type": "Microsoft.Common.TextBox",
                         "label": "Customer Name",
-                        "toolTip": "Your name or company name. This should be the same as the name registered for the Automate Licence",
+                        "toolTip": "Your name or company name. This should be the same as the name registered for the Automate License",
                         "constraints": {
                             "required": true,
                             "regex": "^[a-zA-Z0-9 ]+$",
@@ -169,16 +190,38 @@
                         "visible": true
                     },
                     {
-                        "name": "licence",
-                        "type": "Microsoft.Common.TextBox",
-                        "label": "Automate Licence",
-                        "toolTip": "Please paste your Automate licence file here",
-                        "constraints": {
-                            "required": true,
-                            "regex": "^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+\/=]*$",
-                            "validationMessage": "The Automate licence should be a Json Web Token provided by Chef Software"
-                        },
-                        "visible": true
+                      "name": "hasLicense",
+                      "type": "Microsoft.Common.OptionsGroup",
+                      "label": "Do you have an Automate License?",
+                      "defaultValue": "No",
+                      "toolTip": "Choose whether or not you currently have an Automate License. If not, a trial license will be provided.",
+                      "constraints": {
+                        "allowedValues": [
+                          {
+                            "label": "Yes",
+                            "value": true
+                          },
+                          {
+                            "label": "No",
+                            "value": false
+                          }
+                        ],
+                        "required": true
+                      },
+                      "visible": true
+                    },
+                    {
+                      "name": "license",
+                      "type": "Microsoft.Common.TextBox",
+                      "label": "Automate License",
+                      "defaultValue": "",
+                      "toolTip": "Please enter your Automate License",
+                      "constraints": {
+                        "required": "[steps('automateLicenseStep').hasLicense]",
+                        "regex": "^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+\/=]*$",
+                        "validationMessage": "Your Automate license should be a Json Web Token provided by Chef Software."
+                      },
+                      "visible": "[steps('automateLicenseStep').hasLicense]"
                     }
                 ]
             },
@@ -494,11 +537,12 @@
             "chefUsername": "[steps('chefCredentialsStep').username]",
             "chefUserFullname": "[steps('chefCredentialsStep').fullname]",
             "chefUserEmailaddress": "[steps('chefCredentialsStep').emailaddress]",
+            "chefUserGdprAgree": "[steps('chefCredentialsStep').gdprAgree]",
             "chefUserPassword": "[steps('chefCredentialsStep').password]",
             "chefOrg": "[steps('chefCredentialsStep').orgname]",
             "chefOrgDescription": "[steps('chefCredentialsStep').orgdescription]",
-            "automateLicence": "[steps('automateLicenceStep').licence]",
-            "customerName": "[steps('automateLicenceStep').customerName]",
+            "automateLicense": "[steps('automateLicenseStep').license]",
+            "customerName": "[steps('automateLicenseStep').customerName]",
             "logAnalyticsTier": "[steps('logAnalyticsStep').tier]",
             "logAnalyticsLocation": "[steps('logAnalyticsStep').location]",
             "backupHour": "[steps('backupStep').hour]",

@@ -19,7 +19,7 @@ AUTOMATE_SERVER_FQDN=""
 # The download URL for Automate
 AUTOMATE_DOWNLOAD_URL="https://packages.chef.io/files/current/automate/latest/chef-automate_linux_amd64.zip"
 
-AUTOMATE_LICENCE=""
+AUTOMATE_LICENSE=""
 
 # SPecify the automate command that is used to execute commands
 AUTOMATE_COMMAND="chef-automate"
@@ -27,6 +27,7 @@ AUTOMATE_COMMAND="chef-automate"
 USERNAME=""
 PASSWORD=""
 EMAILADDRESS=""
+GDPR_AGREE=""
 FULLNAME=""
 
 # Define the variables that hold information about the Azure functions
@@ -190,8 +191,8 @@ do
       AUTOMATE_DOWNLOAD_URL="$2"
     ;;
 
-    -l|--licence)
-      AUTOMATE_LICENCE="$2"
+    -l|--license)
+      AUTOMATE_LICENSE="$2"
     ;;
 
     -u|--username)
@@ -402,11 +403,30 @@ do
       done
     ;;
 
-    # Apply the licence to automate
-    licence)
-      log "Apply licence"
+    # Apply the license to automate
+    license)
+      log "Apply license"
 
-      cmd=$(printf 'chef-automate license apply %s' $AUTOMATE_LICENCE)
+      if [ -z "$AUTOMATE_LICENSE" ]
+      then
+        log "requesting trial license" 1
+        FIRSTNAME=$(echo $FULLNAME | cut -d ' ' -f 1)
+        LASTNAME=$(echo $FULLNAME | cut -d ' ' -f 2)
+
+        cmd=$(printf "curl -s https://automate-gateway:2000/license/request --resolve automate-gateway:2000:127.0.0.1 \
+        --cert /hab/svc/deployment-service/data/deployment-service.crt \
+        --cacert /hab/svc/deployment-service/data/root.crt \
+        --key /hab/svc/deployment-service/data/deployment-service.key \
+        -d '{ \"first_name\": \"%s\", \"last_name\": \"%s\", \"email\": \"%s\", \"gdpr_agree\": %s }' \
+        | jq -r '.license'" $FIRSTNAME $LASTNAME $EMAILADDRESS $GDPR_AGREE)
+
+        AUTOMATE_LICENSE=`executeCmd "$cmd"`
+        log "applying trial license: $AUTOMATE_LICENSE" 1
+      else
+        log "applying provided license: $AUTOMATE_LICENSE" 1
+      fi
+
+      cmd=$(printf 'chef-automate license apply %s' $AUTOMATE_LICENSE)
       executeCmd "$cmd"
     ;;
 
@@ -504,16 +524,16 @@ EOF
 # Script to call the verification endpoint and return the workspace id and key for
 # central logging
 #
-# Data will only be returned if the subscription is in the whitelist and the automate licence is verified
+# Data will only be returned if the subscription is in the whitelist and the automate license is verified
 #
 
 VERIFY_URL="{{VERIFY_URL}}"
 SUBSCRIPTION_ID="{{SUBSCRIPTION_ID}}"
-AUTOMATE_LICENCE="{{AUTOMATE_LICENCE}}"
+AUTOMATE_LICENSE="{{AUTOMATE_LICENSE}}"
 CONFIG_STORE_URL="{{FUNCTION_BASE_URL}}/config?code={{OPS_FUNCTION_APIKEY}}"
 
 # Build up the curl command to call the remote function
-cmd=$(printf "curl -XPOST %s -d '{\"subscription_id\": \"%s\", \"automate_licence\": \"%s\"}'" $VERIFY_URL $SUBSCRIPTION_ID $AUTOMATE_LICENCE)
+cmd=$(printf "curl -XPOST %s -d '{\"subscription_id\": \"%s\", \"automate_license\": \"%s\"}'" $VERIFY_URL $SUBSCRIPTION_ID $AUTOMATE_LICENSE)
 response=`eval "$cmd"`
 
 # if the response is not null, turn the response into variables
@@ -555,7 +575,7 @@ EOF
 
         sed -i.bak "s|{{VERIFY_URL}}|$VERIFY_URL|" $VERIFY_SCRIPT_LOCATION
         sed -i.bak "s|{{SUBSCRIPTION_ID}}|$SUBSCRIPTION_ID|" $VERIFY_SCRIPT_LOCATION
-        sed -i.bak "s|{{AUTOMATE_LICENCE}}|$AUTOMATE_LICENCE|" $VERIFY_SCRIPT_LOCATION
+        sed -i.bak "s|{{AUTOMATE_LICENSE}}|$AUTOMATE_LICENSE|" $VERIFY_SCRIPT_LOCATION
         sed -i.bak "s|{{FUNCTION_BASE_URL}}|$FUNCTION_BASE_URL|" $VERIFY_SCRIPT_LOCATION
         sed -i.bak "s|{{OPS_FUNCTION_NAME}}|$OPS_FUNCTION_NAME|" $VERIFY_SCRIPT_LOCATION
         sed -i.bak "s|{{OPS_FUNCTION_APIKEY}}|$OPS_FUNCTION_APIKEY|" $VERIFY_SCRIPT_LOCATION

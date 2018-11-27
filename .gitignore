@@ -1,20 +1,29 @@
-local/
-.direnv
-.uru
+# Files
 .byebug_history
-bin/*.js
-bin/*.js.map
-!src/scripts/statsd-azure-queue.js
-node_modules/
-build/
+.deploy
+.direnv
+.envrc
+.ruby-version
+.vscode
+.uru
 test/integration/build/parameters.json
-*.pdf
 inspec.out
 package-lock.json
-.vscode
-.ruby-version
-.envrc
 local.settings.json
-chef-repo
 deploy.json
-.deploy
+parameters.json
+inspec.lock
+Gemfile.lock
+!src/scripts/statsd-azure-queue.js
+
+# Folders
+local/
+build/
+node_modules/
+chef-repo
+
+# Patterns
+bin/*.js.map
+bin/*.js
+*.pdf
+
