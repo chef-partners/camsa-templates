@@ -722,6 +722,78 @@ EOF
       fi
 
     ;;
+
+    # Configure SSL for the server
+    # If this is for the ManagedApp and a Custom Domain Name has not been set then a
+    # Lets Encrypt certificate will be used, otherwise use the certificate and key
+    # that have been supplied to the script
+    certificate)
+
+      if [ "X$CUSTOM_DOMAIN_NAME" == "X" ] && [ "$MANAGED_APP" = true ]
+      then
+
+        # Use Let's Encrypt to get certificate
+        # Install the necessary software, if not already installed
+        certbot=`which certbot`
+        if [ "X$certbot" == "X" ]
+        then
+          log "Installing CertBot for Let's Encrypt Certificates"
+          cmd="apt-get update && apt-get install software-properties-common && add-apt-repository ppa:certbot/certbot -y && apt-get update && apt-get install certbot -y"
+          executeCmd "$cmd"
+        fi
+
+        # Use the standalone webserver for certbot validation
+        # In order to do this, the service has to be stopped
+        automate_cmd=`which chef-automate`
+        if [ "X$automate_cmd" != "X" ]
+        then
+          log "Stopping Automate"
+          cmd="chef-automate stop"
+          executeCmd "$cmd"
+        fi
+
+        # Call the certbot command to create a certificate for this node
+        cmd=$(printf "certbot certonly --standalone -d %s -m %s --agree-tos -n" $AUTOMATE_SERVER_FQDN $EMAILADDRESS)
+        executeCmd "$cmd"
+
+        # Set the path to the CERT and KEY files
+        SSL_CERT_PATH=$(printf "/etc/letsencrypt/live/%s/fullchain.pem" $AUTOMATE_SERVER_FQDN)
+        SSL_KEY_PATH=$(printf "/etc/letsencrypt/live/%s/privkey.pem" $AUTOMATE_SERVER_FQDN)
+
+        # Start Automate again
+        if [ "X$automate_cmd" != "X" ]
+        then
+          log "Starting Automate"
+          cmd="chef-automate start"
+          executeCmd "$cmd"
+        fi        
+      fi
+
+      # Create a toml file with the necessary contents that can be applied to Automate
+      # https://automate.chef.io/docs/configuration/#load-balancer-certificate-and-private-key
+
+      # Read the certificate and the provate key
+      ssl_certificate=`cat $SSL_CERT_PATH`
+      ssl_key=`cat $SSL_KEY_PATH`
+
+      cat << EOF > ssl_cert.toml
+[[load_balancer.v1.sys.frontend_tls]]
+# The TLS certificate for the load balancer frontend
+cert = """
+${ssl_certificate}
+"""
+
+# The TLS RSA key for the load balancer frontend
+key = """
+${ssl_key}
+"""
+EOF
+
+      # Run command to patch the automate deployment
+      cmd="chef-automate config patch ssl_cert.toml"
+      executeCmd "$cmd"
+
+    ;;
   
   esac
 

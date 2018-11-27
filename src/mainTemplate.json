@@ -1281,7 +1281,7 @@
                     },
                     "arguments": {
                         "value": {
-                            "MODE": "[concat('install,kernel,config,deploy,licence,token,cron', if(variables('isManagedApp'), ',dns', ''), if(variables('enabled').backup, ',backup', ''), if(variables('enabled').logAnalytics, ',centrallogging', ''), ',internalip')]",
+                            "MODE": "[concat('install,kernel,config,deploy,licence,token,cron', if(variables('isManagedApp'), ',dns', ''), ',certificate', if(variables('enabled').backup, ',backup', ''), if(variables('enabled').logAnalytics, ',centrallogging', ''), ',internalip')]",
                             "USERNAME": "[variables('chef').username]",
                             "PASSWORD": "[variables('chef').password]",
                             "EMAILADDRESS": "[variables('chef').email]",
@@ -1350,7 +1350,7 @@
                     },
                     "arguments":{
                         "value": {
-                            "MODE": "[concat('install,config,storekeys,integrate,', if(variables('enabled').logAnalytics, 'metrics,', ''), 'reconfigure,internalip', if(variables('enabled').backup, ',backup', ''))]",
+                            "MODE": "[concat('install,config,storekeys,integrate,', if(variables('enabled').logAnalytics, 'metrics,', ''), 'reconfigure,internalip', if(variables('enabled').backup, ',backup', ''), ',certificate')]",
                             "CHEF_SERVER_VERSION": "[variables('chef').version]",
                             "CHEF_USER_NAME": "[variables('chef').username]",
                             "CHEF_USER_FULLNAME": "[variables('chef').fullname]",
@@ -1368,7 +1368,10 @@
                             "SA_NAME": "[variables('name').storageAccount]",
                             "SA_CONTAINER_NAME": "[variables('name').container.backup]",
                             "SA_KEY": "[reference(concat(variables('name').sa, '-Deployment')).outputs.accesskey.value]",
-                            "STATSD_BACKEND_SCRIPT_URL": "[variables('urls').statsd.azureStorage]"
+                            "STATSD_BACKEND_SCRIPT_URL": "[variables('urls').statsd.azureStorage]",
+                            "PIP_CHEF_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value]",
+                            "MANAGED_APP": "[variables('isManagedApp')]",
+                            "CUSTOM_DOMAIN_NAME": "[variables('custom').domain]"
                         }
                     },
                     "extensionName": {

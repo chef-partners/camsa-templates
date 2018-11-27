@@ -22,6 +22,9 @@ CHEF_ORG_DESCRIPTION=""
 AUTOMATE_SERVER_FQDN=""
 CHEF_SERVER_FQDN=""
 
+# Initialise variables to handle custom DNS Domain name and server FQDN names
+CUSTOM_DOMAIN_NAME=""
+
 # In order to configure the DNS for the ManagedApp the script needs to know the
 # Public FQDN of the public IP address to create the alias from
 PIP_CHEF_SERVER_FQDN=""
@@ -46,6 +49,9 @@ STATSD_BACKEND_SCRIPT_URL=""
 # to the script. An existing decoded file can also be used
 ENCODED_ARGS=""
 ARG_FILE=""
+
+# State if this is a Managed App or not
+MANAGED_APP=false
 
 #
 # Do not modify variables below here
@@ -252,6 +258,14 @@ do
 
     --pipchef)
       PIP_CHEF_SERVER_FQDN="$2"
+    ;;
+
+    --customdomainname)
+      CUSTOM_DOMAIN_NAME="$2"
+    ;;
+
+    --managedapp)
+      MANAGED_APP=$2
     ;;    
   esac
 
@@ -593,6 +607,66 @@ estatsd["protocol"] = "statsd"
 estatsd["port"] = "8125"
 
 EOF
+    ;;
+
+        # Configure SSL for the server
+    # If this is for the ManagedApp and a Custom Domain Name has not been set then a
+    # Lets Encrypt certificate will be used, otherwise use the certificate and key
+    # that have been supplied to the script
+    certificate)
+
+      if [ "X$CUSTOM_DOMAIN_NAME" == "X" ] && [ "$MANAGED_APP" = true ]
+      then
+
+        # Use Let's Encrypt to get certificate
+        # Install the necessary software, if not already installed
+        certbot=`which certbot`
+        if [ "X$certbot" == "X" ]
+        then
+          log "Installing CertBot for Let's Encrypt Certificates"
+          cmd="apt-get update && apt-get install software-properties-common && add-apt-repository ppa:certbot/certbot -y && apt-get update && apt-get install certbot -y"
+          executeCmd "$cmd"
+        fi
+
+        # Use the standalone webserver for certbot validation
+        # In order to do this, the service has to be stopped
+        chef_server_cmd=`which chef-server-ctl`
+        if [ "X$chef_server_cmd" != "X" ]
+        then
+          log "Stopping Chef Server - Nginx"
+          cmd="chef-server-ctl stop nginx"
+          executeCmd "$cmd"
+        fi
+
+        # Call the certbot command to create a certificate for this node
+        cmd=$(printf "certbot certonly --standalone -d %s -m %s --agree-tos -n" $CHEF_SERVER_FQDN $CHEF_USER_EMAILADDRESS)
+        executeCmd "$cmd"
+
+        # Set the path to the CERT and KEY files
+        SSL_CERT_PATH=$(printf "/etc/letsencrypt/live/%s/fullchain.pem" $CHEF_SERVER_FQDN)
+        SSL_KEY_PATH=$(printf "/etc/letsencrypt/live/%s/privkey.pem" $CHEF_SERVER_FQDN)
+
+        # Start Nginx again
+        if [ "X$chef_server_cmd" != "X" ]
+        then
+          log "Starting Chef Server - Nginx"
+          cmd="chef-server-ctl start nginx"
+          executeCmd "$cmd"
+        fi
+      fi
+
+      # Add the necessary updates to the Chef server configuation file
+      cmd=$(printf "echo 'nginx[\"ssl_certificate\"] = \"%s\"' >> /etc/opscode/chef-server.rb" $SSL_CERT_PATH)
+      executeCmd "$cmd"
+
+      cmd=$(printf "echo 'nginx[\"ssl_certificate_key\"] = \"%s\"' >> /etc/opscode/chef-server.rb" $SSL_KEY_PATH)
+      executeCmd "$cmd"
+
+      # Reconfigure the server
+      cmd="chef-server-ctl reconfigure"
+      executeCmd "$cmd"
+
+
     ;;
 
   esac
