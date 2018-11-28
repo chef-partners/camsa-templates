@@ -56,6 +56,7 @@ VERIFY_SCRIPT_LOCATION="/usr/local/bin/verify.sh"
 # Set the subscription id which will be used for verification for centralLogging
 SUBSCRIPTION_ID=""
 VERIFY_URL=""
+VERIFY_API_KEY=""
 
 # Initialise variables to handle custom DNS Domain name and server FQDN names
 CUSTOM_DOMAIN_NAME=""
@@ -277,6 +278,10 @@ do
 
     --verifyurl)
       VERIFY_URL="$2"
+    ;;
+
+    --verifyurlapikey)
+      VERIFY_API_KEY="$2"
     ;;
 
     --customdomainname)
@@ -565,12 +570,13 @@ EOF
 #
 
 VERIFY_URL="{{VERIFY_URL}}"
+VERIFY_API_KEY="{{VERIFY_API_KEY}}"
 SUBSCRIPTION_ID="{{SUBSCRIPTION_ID}}"
 AUTOMATE_LICENSE="{{AUTOMATE_LICENSE}}"
 CONFIG_STORE_URL="{{FUNCTION_BASE_URL}}/config?code={{OPS_FUNCTION_APIKEY}}"
 
 # Build up the curl command to call the remote function
-cmd=$(printf "curl -XPOST %s -d '{\"subscription_id\": \"%s\", \"automate_license\": \"%s\"}'" $VERIFY_URL $SUBSCRIPTION_ID $AUTOMATE_LICENSE)
+cmd=$(printf "curl -XPOST %s?code=%s -d '{\"subscription_id\": \"%s\", \"automate_license\": \"%s\"}'" $VERIFY_URL $VERIFY_API_KEY $SUBSCRIPTION_ID $AUTOMATE_LICENSE)
 response=`eval "$cmd"`
 
 # if the response is not null, turn the response into variables
@@ -611,6 +617,7 @@ EOF
         log "Patching script" 1
 
         sed -i.bak "s|{{VERIFY_URL}}|$VERIFY_URL|" $VERIFY_SCRIPT_LOCATION
+        sed -i.bak "s|{{VERIFY_API_KEY}}|$VERIFY_API_KEY|" $VERIFY_SCRIPT_LOCATION
         sed -i.bak "s|{{SUBSCRIPTION_ID}}|$SUBSCRIPTION_ID|" $VERIFY_SCRIPT_LOCATION
         sed -i.bak "s|{{AUTOMATE_LICENSE}}|$AUTOMATE_LICENSE|" $VERIFY_SCRIPT_LOCATION
         sed -i.bak "s|{{FUNCTION_BASE_URL}}|$FUNCTION_BASE_URL|" $VERIFY_SCRIPT_LOCATION
@@ -714,7 +721,7 @@ EOF
 EOF
 
         # Build up the CURL command
-        cmd=$(printf "curl -XPOST %s/dns -d @dns_entries.json" $VERIFY_URL)
+        cmd=$(printf "curl -XPOST %s/dns?code=%s -d @dns_entries.json" $VERIFY_URL $VERIFY_API_KEY)
         executeCmd "$cmd"
 
       else

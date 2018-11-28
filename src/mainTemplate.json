@@ -264,12 +264,9 @@
             "defaultValue": "https://whitelist.managedautomate.io/api/automate"
         },
 
-        "managedApp": {
-            "type": "bool",
-            "metadata": {
-                "description": "States if this template is being deployed as an a Managed App"
-            },
-            "defaultValue": false
+        "verifyURLApiKey": {
+            "type": "securestring",
+            "defaultValue": ""
         },
 
         "customDomainName": {
@@ -436,8 +433,7 @@
             },
             "statsd": {
                 "azureStorage": "[concat(variables('baseUrl'), 'scripts/statsd-azure-queue.js', variables('templateUrlQueryString'))]"
-            },
-            "verify": "[parameters('verifyURL')]"
+            }
         },
 
         "apiVersions": {
@@ -468,7 +464,12 @@
             "provider": "2680257b-9f22-4261-b1ef-72412d367a68"
         },
 
-        "isManagedApp": "[parameters('managedApp')]",
+        "isManagedApp": "[not(empty(parameters('verifyURLApiKey')))]",
+
+        "verify": {
+            "url": "[parameters('verifyURL')]",
+            "apiKey": "[parameters('verifyURLApiKey')]"
+        },
 
         "custom": {
             "domain": "[parameters('customDomainName')]",
@@ -1297,7 +1298,8 @@
                             "SA_KEY": "[reference(concat(variables('name').sa, '-Deployment')).outputs.accesskey.value]",
                             "BACKUP_CRON": "[variables('backup').cron]",
                             "SUBSCRIPTION_ID": "[subscription().subscriptionId]",
-                            "VERIFY_URL": "[variables('urls').verify]",
+                            "VERIFY_URL": "[variables('verify').url]",
+                            "VERIFY_API_KEY": "[variables('verify').apiKey]",
                             "CUSTOM_DOMAIN_NAME": "[variables('custom').domain]",
                             "CHEF_SERVER_FQDN": "[concat(reference(concat(variables('name').vm.chef, '-Deployment')).outputs.fqdn.value)]",
                             "PIP_CHEF_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value]",
