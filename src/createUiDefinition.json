@@ -696,7 +696,8 @@
             "customChefServerSSLCertificateKey": "[encodeBase64(steps('customDNSStep').chefServerSection.chefServerCertificateKey)]",
             "customAutomateServerHostname": "[steps('customDNSStep').automateServerSection.automateServerHostname]",
             "customAutomateServerSSLCertificate": "[encodeBase64(steps('customDNSStep').automateServerSection.automateServerCertificate)]",
-            "customAutomateServerSSLCertificateKey": "[encodeBase64(steps('customDNSStep').automateServerSection.automateServerCertificateKey)]"
+            "customAutomateServerSSLCertificateKey": "[encodeBase64(steps('customDNSStep').automateServerSection.automateServerCertificateKey)]",
+            "verifyURLApiKey": ""
         }
     }
 }

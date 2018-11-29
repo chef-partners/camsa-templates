@@ -162,7 +162,7 @@ function patch(options, build_config) {
 
             // set the base64 encoding of the file, if it exists
             if (fs.existsSync(f["code_files"][name])) {
-                f["code_files"][name] = new Buffer(fs.readFileSync(f["code_files"][name], 'utf8')).toString('base64');
+                f["code_files"][name] = Buffer.from(fs.readFileSync(f["code_files"][name], 'utf8')).toString('base64');
             } else {
                 console.log("##vso[task.issue type=error]Function file cannot be found: %s", f["code_files"][name]);
             }
@@ -197,6 +197,17 @@ function patch(options, build_config) {
         }
     } else {
         console.log("##vso[task.issue type=error]Unable to find main template: %s", main_template_file);
+    }
+
+    // Patch the createUIDefinition.json file with the API key for the verifyurl
+    let ui_definition_file = path.join(build_config["dirs"]["working"]["production"], "createUIDefinition.json");
+    if (fs.existsSync(ui_definition_file) && process.env.VERIFY_URL_API_KEY) {
+        console.log("Patching createUIDefinition.json with API key");
+        let ui_definition = JSON.parse(fs.readFileSync(ui_definition_file, 'utf8'));
+
+        // patch the parameter value
+        ui_definition["parameters"]["outputs"]["verifyURLApiKey"] = process.env.VERIFY_URL_API_KEY;
+        fs.writeFileSync(ui_definition_file, JSON.stringify(ui_definition, null, 4), 'utf8');
     }
 }
 
@@ -261,6 +272,14 @@ function packageFiles(options, build_config) {
                 // set a variable as the path to the zip_file, this can then be used in subsequent
                 // tasks to add the zip to the artefacts
                 console.log("##vso[task.setvariable variable=%s]%s", options.outputvar, zip_filepath);
+
+                // remove the createUIdefinition file from the working dir as this will be uploaded to
+                // blob storage and the API key should not be visible
+                let ui_definition_file = path.join(build_config["dirs"]["working"][key], "createUiDefinition.json");
+                if (fs.existsSync(ui_definition_file)) {
+                    console.log("Removing UI definition file: ", ui_definition_file);
+                    fs.unlinkSync(ui_definition_file);
+                }
             }
         })
     });
