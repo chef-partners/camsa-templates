@@ -31,7 +31,7 @@
                         "type": "Microsoft.Common.InfoBox",
                         "options": {
                             "icon": "Info",
-                            "text": "If you choose to create a new network here, it will be part of the Managed Application resource group, thus you will not be able to manage it yourself."
+                            "text": "If you choose to create a new network here, it will be part of the Managed Application resource group, thus you will not be able to manage it yourself nor add machines to it."
                         },
                         "visible": true
                     },
