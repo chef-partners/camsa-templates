@@ -285,13 +285,45 @@
             "defaultValue": ""
         },
 
+        "customChefServerSSLCertificate": {
+            "type": "string",
+            "metadata": {
+                "description": "If using a custom domain, the Base64 encoded certificate for the Chef server"
+            },
+            "defaultValue": ""
+        },
+
+        "customChefServerSSLCertificateKey": {
+            "type": "string",
+            "metadata": {
+                "description": "If using a custom domain, the Base64 encoded associated key for the Chef Server certificate"
+            },
+            "defaultValue": ""
+        },
+
         "customAutomateServerHostname": {
             "type": "string",
             "metadata": {
                 "description": "If using a custom domain, what is the hostname of the Automate server"
             },
             "defaultValue": ""
-        }
+        },
+
+        "customAutomateServerSSLCertificate": {
+            "type": "string",
+            "metadata": {
+                "description": "If using a custom domain, the Base64 encoded certificate for the Automate server"
+            },
+            "defaultValue": ""
+        },
+
+        "customAutomateServerSSLCertificateKey": {
+            "type": "string",
+            "metadata": {
+                "description": "If using a custom domain, the Base64 encoded associated key for the Automate Server certificate"
+            },
+            "defaultValue": ""
+        }        
     },
     "variables": {
 
@@ -473,9 +505,15 @@
 
         "custom": {
             "domain": "[parameters('customDomainName')]",
-            "hostname": {
-                "chef": "[parameters('customChefServerHostname')]",
-                "automate": "[parameters('customAutomateServerHostname')]"
+            "chef": {
+                "hostname": "[parameters('customChefServerHostname')]",
+                "certificate": "[parameters('customChefServerSSLCertificate')]",
+                "certificateKey": "[parameters('customChefServerSSLCertificateKey')]"
+            },
+            "automate": {
+                "hostname": "[parameters('customAutomateServerHostname')]",
+                "certificate": "[parameters('customAutomateServerSSLCertificate')]",
+                "certificateKey": "[parameters('customAutomateServerSSLCertificateKey')]"
             }
         }
     },
@@ -1101,7 +1139,7 @@
                         "value": "[reference(concat(variables('name').nic.customer.chef, '-Deployment')).outputs.ref.value]"
                     },
                     "fqdn": {
-                        "value": "[chefSoftware.getFQDN(variables('isManagedApp'), variables('custom').domain, variables('custom').hostname.chef, variables('name').computer.chef, reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value)]"
+                        "value": "[chefSoftware.getFQDN(variables('isManagedApp'), variables('custom').domain, variables('custom').chef.hostname, variables('name').computer.chef, reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value)]"
                     },
                     "tags": {
                         "value": {
@@ -1153,7 +1191,7 @@
                         "value": "[reference(concat(variables('name').nic.customer.automate, '-Deployment')).outputs.ref.value]"
                     },
                     "fqdn": {
-                        "value": "[chefSoftware.getFQDN(variables('isManagedApp'), variables('custom').domain, variables('custom').hostname.automate, variables('name').computer.automate, reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value)]"
+                        "value": "[chefSoftware.getFQDN(variables('isManagedApp'), variables('custom').domain, variables('custom').automate.hostname, variables('name').computer.automate, reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value)]"
                     },
                     "tags": {
                         "value": {
@@ -1304,7 +1342,9 @@
                             "CHEF_SERVER_FQDN": "[concat(reference(concat(variables('name').vm.chef, '-Deployment')).outputs.fqdn.value)]",
                             "PIP_CHEF_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value]",
                             "PIP_AUTOMATE_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value]",
-                            "MANAGED_APP": "[variables('isManagedApp')]"
+                            "MANAGED_APP": "[variables('isManagedApp')]",
+                            "SSL_CERTIFICATE": "[base64ToString(variables('custom').automate.certificate)]",
+                            "SSL_CERTIFICATE_KEY": "[base64ToString(variables('custom').automate.certificateKey)]"
                         }
                     },
                     "extensionName": {
@@ -1373,7 +1413,9 @@
                             "STATSD_BACKEND_SCRIPT_URL": "[variables('urls').statsd.azureStorage]",
                             "PIP_CHEF_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.chef, '-Deployment')).outputs.fqdn.value]",
                             "MANAGED_APP": "[variables('isManagedApp')]",
-                            "CUSTOM_DOMAIN_NAME": "[variables('custom').domain]"
+                            "CUSTOM_DOMAIN_NAME": "[variables('custom').domain]",
+                            "SSL_CERTIFICATE": "[base64ToString(variables('custom').chef.certificate)]",
+                            "SSL_CERTIFICATE_KEY": "[base64ToString(variables('custom').chef.certificateKey)]"
                         }
                     },
                     "extensionName": {

@@ -25,6 +25,10 @@ CHEF_SERVER_FQDN=""
 # Initialise variables to handle custom DNS Domain name and server FQDN names
 CUSTOM_DOMAIN_NAME=""
 
+# Set variables for the custom domain certificates
+SSL_CERTIFICATE=""
+SSL_CERTIFICATE_KEY=""
+
 # In order to configure the DNS for the ManagedApp the script needs to know the
 # Public FQDN of the public IP address to create the alias from
 PIP_CHEF_SERVER_FQDN=""
@@ -59,6 +63,8 @@ MANAGED_APP=false
 OIFS=$IFS
 IFS=","
 DRY_RUN=0
+MANAGED_APP_CONFIG_DIR="/etc/managedapp"
+MANAGED_APP_LOG_DIR="/var/log/managedapp"
 
 # FUNCTIONS ------------------------------------
 
@@ -266,6 +272,14 @@ do
 
     --managedapp)
       MANAGED_APP=$2
+    ;;
+
+    --sslcert)
+      SSL_CERTIFICATE="$2"
+    ;;
+
+    --sslcertkey)
+      SSL_CERTIFICATE_KEY="$2"
     ;;    
   esac
 
@@ -294,6 +308,21 @@ if [ "X$rmate" == "X" ]
 then
   log "installing" 3
   cmd="wget -O /usr/local/bin/rmate https://raw.github.com/aurora/rmate/master/rmate && chmod a+x /usr/local/bin/rmate"
+  executeCmd "$cmd"
+fi
+
+# Ensure the configuration directory exists
+log "Checking Managed App Directories"
+if [ ! -d $MANAGED_APP_CONFIG_DIR ]
+then
+  log "creating config dir" 1
+  cmd=$(printf "mkdir -p %s" $MANAGED_APP_CONFIG_DIR)
+  executeCmd "$cmd"
+fi
+if [ ! -d $MANAGED_APP_LOG_DIR ]
+then
+  log "creating log dir" 1
+  cmd=$(printf "mkdir -p %s" $MANAGED_APP_LOG_DIR)
   executeCmd "$cmd"
 fi
 
@@ -481,18 +510,13 @@ do
 
       log "Configuring Backup"
 
-      # Ensure that the directories are 
-      log "Creating necessary directories" 1
-      cmd="mkdir -p /etc/managed_app /var/log/managed_app"
-      executeCmd "$cmd"
-
       # Download the script to the correct location
       log "Downloading backup script" 1
       cmd="curl -o ${BACKUP_SCRIPT_PATH} \"${BACKUP_SCRIPT_URL}\" && chmod +x ${BACKUP_SCRIPT_PATH}"
       executeCmd "$cmd"
 
       # Write out the configuration file
-      cat << EOF > /etc/managed_app/backup_config
+      cat << EOF > $MANAGED_APP_CONFIG_DIR/backup_config
 STORAGE_ACCOUNT="${SA_NAME}"
 CONTAINER_NAME="${SA_CONTAINER_NAME}"
 ACCESS_KEY="${SA_KEY}"
@@ -654,6 +678,30 @@ EOF
           executeCmd "$cmd"
         fi
       fi
+
+      # If using a Custom Domain, write out the certificate and key to a file
+      if [ "X$CUSTOM_DOMAIN" != "X" ] && [ "$MANAGED_APP" == false ]
+      then
+
+        log "Setting custom domain certs" 1
+
+        # Set the paths for the files
+        SSL_CERT_PATH=$(printf "%s/ssl/certs/chef.cert" $MANAGED_APP_CONFIG_DIR)
+        SSL_KEY_PATH=$(printf "%s/ssl/keys/chef.key" $MANAGED_APP_CONFIG_DIR)
+
+        # Create a directory for the ssl certs and keys
+        cmd=$(printf "mkdir -p %s %s" `dirname $SSL_CERT_PATH` `dirname $SSL_KEY_PATH`)
+        executeCmd "$cmd"
+
+        # Write out the certificate to a file
+        cmd=$(printf "echo '%s' > %s" $SSL_CERTIFICATE $SSL_CERT_PATH)
+        executeCmd "$cmd"
+
+        # Write out the key to a file
+        cmd=$(printf "echo '%s' > %s" $SSL_CERTIFICATE_KEY $SSL_KEY_PATH)
+        executeCmd "$cmd"        
+
+      fi      
 
       # Add the necessary updates to the Chef server configuation file
       cmd=$(printf "echo 'nginx[\"ssl_certificate\"] = \"%s\"' >> /etc/opscode/chef-server.rb" $SSL_CERT_PATH)
