@@ -680,7 +680,7 @@ EOF
       fi
 
       # If using a Custom Domain, write out the certificate and key to a file
-      if [ "X$CUSTOM_DOMAIN" != "X" ] && [ "$MANAGED_APP" == false ]
+      if [ "X$CUSTOM_DOMAIN_NAME" != "X" ] && [ "$MANAGED_APP" == false ]
       then
 
         log "Setting custom domain certs" 1
