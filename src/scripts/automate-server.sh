@@ -40,6 +40,9 @@ AUTOMATELOG_FUNCTION_NAME="AutomateLog"
 BACKUP_SCRIPT_URL=""
 BACKUP_CRON="0 1 * * *"
 
+# Certificate renew cron
+CERT_RENEW_CRON="30 0 * * *"
+
 SA_NAME=""
 SA_CONTAINER_NAME=""
 SA_KEY=""
@@ -52,6 +55,7 @@ ARG_FILE=""
 # Define where the script called by the cronjob should be saved
 SCRIPT_LOCATION="/usr/local/bin/azurefunctionlog.sh"
 VERIFY_SCRIPT_LOCATION="/usr/local/bin/verify.sh"
+CERT_RENEW_SCRIPT_LOCATION="/usr/local/bin/certrenew.sh"
 
 # Set the subscription id which will be used for verification for centralLogging
 SUBSCRIPTION_ID=""
@@ -263,6 +267,10 @@ do
 
     --backupcron)
       BACKUP_CRON="$2"
+    ;;
+
+    --certrenewcron)
+      CERT_RENEW_CRON="$2"
     ;;
 
     # Get the storage account settings
@@ -798,7 +806,28 @@ EOF
           log "Starting Automate"
           cmd="chef-automate start"
           executeCmd "$cmd"
-        fi        
+        fi
+
+        # Create a cronjob to renew the LetsEncrypt certificate
+        log "Configuring CronJob for Lets Encrypt renew"
+
+        log "Creating script: $CERT_RENEW_SCRIPT_LOCATION" 1
+        # Create the script that will be called by the cronjob
+        cat << EOF > $CERT_RENEW_SCRIPT_LOCATION
+#!/usr/bin/env bash
+
+certbot renew --pre-hook "chef-automate stop" --post-hook "chef-automate start"
+EOF
+
+        # Ensure that the script is executable
+        cmd=$(printf "chmod +x %s" $CERT_RENEW_SCRIPT_LOCATION)
+        executeCmd "$cmd"
+
+        log "Adding cron entry" 1
+
+        # Add the script to cron
+        cmd=$(printf '(crontab -l; echo "%s %s") | crontab -' $CERT_RENEW_CRON $CERT_RENEW_SCRIPT_LOCATION)
+        executeCmd "$cmd"        
       fi
 
       # If using a Custom Domain, write out the certificate and key to a file
