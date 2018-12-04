@@ -231,7 +231,7 @@ function patch(options, buildConfig) {
     }
 
     // Patch the createUIDefinition.json file with the API key for the verifyurl
-    let uiDefinitionFile = pathJoin(buildConfig[dirsKey][workingKey][productionKey], "createUIDefinition.json");
+    let uiDefinitionFile = pathJoin(buildConfig[dirsKey][workingKey][productionKey], "createUiDefinition.json");
     if (existsSync(uiDefinitionFile) && process.env.VERIFY_URL_API_KEY) {
         console.log("Patching createUIDefinition.json with API key");
         let uiDefinition = JSON.parse(readFileSync(uiDefinitionFile, "utf8"));
