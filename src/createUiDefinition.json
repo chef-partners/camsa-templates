@@ -751,7 +751,6 @@
             "backupHour": "[steps('backupStep').hour]",
             "backupMinute": "[steps('backupStep').minute]",
             "location": "[location()]",
-            "managedApp": true,
             "verifyURLApiKey": "",
             "sslRenewalHour": "[steps('customDNSStep').sslRenewalHour]",
             "sslRenewalMinute": "[steps('customDNSStep').sslRenewalMinute]"
