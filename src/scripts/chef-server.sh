@@ -22,6 +22,17 @@ CHEF_ORG_DESCRIPTION=""
 AUTOMATE_SERVER_FQDN=""
 CHEF_SERVER_FQDN=""
 
+# Initialise variables to handle custom DNS Domain name and server FQDN names
+CUSTOM_DOMAIN_NAME=""
+
+# Set variables for the custom domain certificates
+SSL_CERTIFICATE=""
+SSL_CERTIFICATE_KEY=""
+
+# In order to configure the DNS for the ManagedApp the script needs to know the
+# Public FQDN of the public IP address to create the alias from
+PIP_CHEF_SERVER_FQDN=""
+
 FUNCTION_BASE_URL=""
 OPS_FUNCTION_APIKEY=""
 OPS_FUNCTION_NAME="config"
@@ -31,6 +42,11 @@ MONITOR_EMAIL="monitor@chef.io"
 
 BACKUP_SCRIPT_URL=""
 BACKUP_CRON="0 1 * * *"
+
+# Certificate renew cron
+CERT_RENEW_CRON="30 0 * * *"
+
+CERT_RENEW_SCRIPT_LOCATION="/usr/local/bin/certrenew.sh"
 
 SA_NAME=""
 SA_CONTAINER_NAME=""
@@ -43,12 +59,17 @@ STATSD_BACKEND_SCRIPT_URL=""
 ENCODED_ARGS=""
 ARG_FILE=""
 
+# State if this is a Managed App or not
+MANAGED_APP=false
+
 #
 # Do not modify variables below here
 #
 OIFS=$IFS
 IFS=","
 DRY_RUN=0
+MANAGED_APP_CONFIG_DIR="/etc/managedapp"
+MANAGED_APP_LOG_DIR="/var/log/managedapp"
 
 # FUNCTIONS ------------------------------------
 
@@ -229,6 +250,10 @@ do
       BACKUP_CRON="$2"
     ;;
 
+    --certrenewcron)
+      CERT_RENEW_CRON="$2"
+    ;;    
+
     # Get the storage account settings
     --saname)
       SA_NAME="$2"
@@ -245,6 +270,26 @@ do
     --backend-script-url)
       STATSD_BACKEND_SCRIPT_URL="$2"  
     ;;
+
+    --pipchef)
+      PIP_CHEF_SERVER_FQDN="$2"
+    ;;
+
+    --customdomainname)
+      CUSTOM_DOMAIN_NAME="$2"
+    ;;
+
+    --managedapp)
+      MANAGED_APP=$2
+    ;;
+
+    --sslcert)
+      SSL_CERTIFICATE="$2"
+    ;;
+
+    --sslcertkey)
+      SSL_CERTIFICATE_KEY="$2"
+    ;;    
   esac
 
   # move onto the next argument
@@ -272,6 +317,21 @@ if [ "X$rmate" == "X" ]
 then
   log "installing" 3
   cmd="wget -O /usr/local/bin/rmate https://raw.github.com/aurora/rmate/master/rmate && chmod a+x /usr/local/bin/rmate"
+  executeCmd "$cmd"
+fi
+
+# Ensure the configuration directory exists
+log "Checking Managed App Directories"
+if [ ! -d $MANAGED_APP_CONFIG_DIR ]
+then
+  log "creating config dir" 1
+  cmd=$(printf "mkdir -p %s" $MANAGED_APP_CONFIG_DIR)
+  executeCmd "$cmd"
+fi
+if [ ! -d $MANAGED_APP_LOG_DIR ]
+then
+  log "creating log dir" 1
+  cmd=$(printf "mkdir -p %s" $MANAGED_APP_LOG_DIR)
   executeCmd "$cmd"
 fi
 
@@ -409,6 +469,9 @@ do
       cmd=$(printf "curl -XPOST %s -d '{\"chefserver_fqdn\": \"%s\"}'" $AF_URL $CHEF_SERVER_FQDN)
       executeCmd "$cmd"
 
+      cmd=$(printf "curl -XPOST %s -d '{\"pip_chefserver_fqdn\": \"%s\"}'" $AF_URL $PIP_CHEF_SERVER_FQDN)
+      executeCmd "$cmd"      
+
       cmd=$(printf "curl -XPOST %s -d '{\"monitor_user\": \"%s\"}'" $AF_URL $MONITOR_USER)
       executeCmd "$cmd"
 
@@ -456,18 +519,13 @@ do
 
       log "Configuring Backup"
 
-      # Ensure that the directories are 
-      log "Creating necessary directories" 1
-      cmd="mkdir -p /etc/managed_app /var/log/managed_app"
-      executeCmd "$cmd"
-
       # Download the script to the correct location
       log "Downloading backup script" 1
       cmd="curl -o ${BACKUP_SCRIPT_PATH} \"${BACKUP_SCRIPT_URL}\" && chmod +x ${BACKUP_SCRIPT_PATH}"
       executeCmd "$cmd"
 
       # Write out the configuration file
-      cat << EOF > /etc/managed_app/backup_config
+      cat << EOF > $MANAGED_APP_CONFIG_DIR/backup_config
 STORAGE_ACCOUNT="${SA_NAME}"
 CONTAINER_NAME="${SA_CONTAINER_NAME}"
 ACCESS_KEY="${SA_KEY}"
@@ -582,6 +640,111 @@ estatsd["protocol"] = "statsd"
 estatsd["port"] = "8125"
 
 EOF
+    ;;
+
+        # Configure SSL for the server
+    # If this is for the ManagedApp and a Custom Domain Name has not been set then a
+    # Lets Encrypt certificate will be used, otherwise use the certificate and key
+    # that have been supplied to the script
+    certificate)
+
+      if [ "X$CUSTOM_DOMAIN_NAME" == "X" ] && [ "$MANAGED_APP" = true ]
+      then
+
+        # Use Let's Encrypt to get certificate
+        # Install the necessary software, if not already installed
+        certbot=`which certbot`
+        if [ "X$certbot" == "X" ]
+        then
+          log "Installing CertBot for Let's Encrypt Certificates"
+          cmd="apt-get update && apt-get install software-properties-common && add-apt-repository ppa:certbot/certbot -y && apt-get update && apt-get install certbot -y"
+          executeCmd "$cmd"
+        fi
+
+        # Use the standalone webserver for certbot validation
+        # In order to do this, the service has to be stopped
+        chef_server_cmd=`which chef-server-ctl`
+        if [ "X$chef_server_cmd" != "X" ]
+        then
+          log "Stopping Chef Server - Nginx"
+          cmd="chef-server-ctl stop nginx"
+          executeCmd "$cmd"
+        fi
+
+        # Call the certbot command to create a certificate for this node
+        cmd=$(printf "certbot certonly --standalone -d %s -m %s --agree-tos -n" $CHEF_SERVER_FQDN $CHEF_USER_EMAILADDRESS)
+        executeCmd "$cmd"
+
+        # Set the path to the CERT and KEY files
+        SSL_CERT_PATH=$(printf "/etc/letsencrypt/live/%s/fullchain.pem" $CHEF_SERVER_FQDN)
+        SSL_KEY_PATH=$(printf "/etc/letsencrypt/live/%s/privkey.pem" $CHEF_SERVER_FQDN)
+
+        # Start Nginx again
+        if [ "X$chef_server_cmd" != "X" ]
+        then
+          log "Starting Chef Server - Nginx"
+          cmd="chef-server-ctl start nginx"
+          executeCmd "$cmd"
+        fi
+
+        # Create a cronjob to renew the LetsEncrypt certificate
+        log "Configuring CronJob for Lets Encrypt renew"
+
+        log "Creating script: $CERT_RENEW_SCRIPT_LOCATION" 1
+        # Create the script that will be called by the cronjob
+        cat << EOF > $CERT_RENEW_SCRIPT_LOCATION
+#!/usr/bin/env bash
+
+certbot renew --pre-hook "chef-server-ctl stop nginx" --post-hook "chef-server-ctl start nginx"
+EOF
+
+        # Ensure that the script is executable
+        cmd=$(printf "chmod +x %s" $CERT_RENEW_SCRIPT_LOCATION)
+        executeCmd "$cmd"
+
+        log "Adding cron entry" 1
+
+        # Add the script to cron
+        cmd=$(printf '(crontab -l; echo "%s %s") | crontab -' $CERT_RENEW_CRON $CERT_RENEW_SCRIPT_LOCATION)
+        executeCmd "$cmd"          
+      fi
+
+      # If using a Custom Domain, write out the certificate and key to a file
+      if [ "X$CUSTOM_DOMAIN_NAME" != "X" ] && [ "$MANAGED_APP" == false ]
+      then
+
+        log "Setting custom domain certs" 1
+
+        # Set the paths for the files
+        SSL_CERT_PATH=$(printf "%s/ssl/certs/chef.cert" $MANAGED_APP_CONFIG_DIR)
+        SSL_KEY_PATH=$(printf "%s/ssl/keys/chef.key" $MANAGED_APP_CONFIG_DIR)
+
+        # Create a directory for the ssl certs and keys
+        cmd=$(printf "mkdir -p %s %s" `dirname $SSL_CERT_PATH` `dirname $SSL_KEY_PATH`)
+        executeCmd "$cmd"
+
+        # Write out the certificate to a file
+        cmd=$(printf "echo '%s' > %s" $SSL_CERTIFICATE $SSL_CERT_PATH)
+        executeCmd "$cmd"
+
+        # Write out the key to a file
+        cmd=$(printf "echo '%s' > %s" $SSL_CERTIFICATE_KEY $SSL_KEY_PATH)
+        executeCmd "$cmd"        
+
+      fi      
+
+      # Add the necessary updates to the Chef server configuation file
+      cmd=$(printf "echo 'nginx[\"ssl_certificate\"] = \"%s\"' >> /etc/opscode/chef-server.rb" $SSL_CERT_PATH)
+      executeCmd "$cmd"
+
+      cmd=$(printf "echo 'nginx[\"ssl_certificate_key\"] = \"%s\"' >> /etc/opscode/chef-server.rb" $SSL_KEY_PATH)
+      executeCmd "$cmd"
+
+      # Reconfigure the server
+      cmd="chef-server-ctl reconfigure"
+      executeCmd "$cmd"
+
+
     ;;
 
   esac

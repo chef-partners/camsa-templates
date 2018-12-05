@@ -10,13 +10,6 @@
         }
       },
   
-      "computerName": {
-        "type": "string",
-        "metadata": {
-          "description": "Hostname of the machine"
-        }
-      },
-  
       "vmSize": {
         "type": "string",
         "metadata": {
@@ -84,12 +77,12 @@
   
       "name": {
         "vm": "[parameters('vmName')]",
-        "computer": "[parameters('computerName')]",
+        "computer": "[first(split(parameters('fqdn'), '.'))]",
         "sa": {
           "name": "[parameters('storageAccountName')]"
         },
         "disk": {
-          "os": "[concat(parameters('computerName'), '-OSDisk')]"
+          "os": "[concat(first(split(parameters('fqdn'), '.')), '-OSDisk')]"
         }
       },
   
@@ -183,6 +176,9 @@
       }
     ],
     "outputs": {
-  
+      "fqdn": {
+        "type": "string",
+        "value": "[parameters('fqdn')]"
+      }
     }
   }
