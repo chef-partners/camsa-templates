@@ -335,7 +335,7 @@
 
         "sslRenewalMinute": {
             "type": "int",
-            "defaultValue": 0,
+            "defaultValue": 30,
             "metadata": {
                 "description": "Minute of the specified hour that the SSL renewal script will run. Only applicable if running as a Managed app"
             }
