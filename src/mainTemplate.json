@@ -323,7 +323,23 @@
                 "description": "If using a custom domain, the Base64 encoded associated key for the Automate Server certificate"
             },
             "defaultValue": ""
-        }        
+        },
+        
+        "sslRenewalHour": {
+            "type": "int",
+            "defaultValue": 0,
+            "metadata": {
+                "description": "UTC Hour at which the SSL renewal script will run. Only applicable if running as a Managed App"
+            }
+        },
+
+        "sslRenewalMinute": {
+            "type": "int",
+            "defaultValue": 0,
+            "metadata": {
+                "description": "Minute of the specified hour that the SSL renewal script will run. Only applicable if running as a Managed app"
+            }
+        }
     },
     "variables": {
 
@@ -400,6 +416,10 @@
         "backup": {
             "retention": "[mul(parameters('backupRetention'), -1)]",
             "cron": "[concat(parameters('backupMinute'), ' ', parameters('backupHour'), ' * * *')]"
+        },
+
+        "sslRenewal": {
+            "cron": "[concat(parameters('sslRenewalMinute'), ' ', parameters('sslRenewalHour'), ' * * *')]"
         },
 
         "vmSize": {
@@ -1344,7 +1364,8 @@
                             "PIP_AUTOMATE_SERVER_FQDN": "[reference(concat(variables('name').publicIPAddress.automate, '-Deployment')).outputs.fqdn.value]",
                             "MANAGED_APP": "[variables('isManagedApp')]",
                             "SSL_CERTIFICATE": "[base64ToString(variables('custom').automate.certificate)]",
-                            "SSL_CERTIFICATE_KEY": "[base64ToString(variables('custom').automate.certificateKey)]"
+                            "SSL_CERTIFICATE_KEY": "[base64ToString(variables('custom').automate.certificateKey)]",
+                            "CERT_RENEW_CRON": "[variables('sslRenewal').cron]"
                         }
                     },
                     "extensionName": {
@@ -1415,7 +1436,8 @@
                             "MANAGED_APP": "[variables('isManagedApp')]",
                             "CUSTOM_DOMAIN_NAME": "[variables('custom').domain]",
                             "SSL_CERTIFICATE": "[base64ToString(variables('custom').chef.certificate)]",
-                            "SSL_CERTIFICATE_KEY": "[base64ToString(variables('custom').chef.certificateKey)]"
+                            "SSL_CERTIFICATE_KEY": "[base64ToString(variables('custom').chef.certificateKey)]",
+                            "CERT_RENEW_CRON": "[variables('sslRenewal').cron]"
                         }
                     },
                     "extensionName": {
