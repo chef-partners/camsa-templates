@@ -29,7 +29,7 @@ BACKUP_TYPE=""
 CHUNK_SIZE="256MB"
 
 # Sepcify the log file
-LOG_FILE="/var/log/managed_app/backup"
+LOG_FILE="/var/log/managedapp/backup"
 
 # Declare the working directory to use
 WORKING_DIR="/tmp/backup"
@@ -200,8 +200,8 @@ then
   log "Determine configuration file location"
 
   locations=()
-  locations+=("$HOME/.managed_app/backup_config")
-  locations+=("/etc/managed_app/backup_config")
+  locations+=("$HOME/.managedapp/backup_config")
+  locations+=("/etc/managedapp/backup_config")
 
   # Iterate around the locations to find a file
   for location in ${locations[@]}

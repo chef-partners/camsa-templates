@@ -40,6 +40,9 @@ AUTOMATELOG_FUNCTION_NAME="AutomateLog"
 BACKUP_SCRIPT_URL=""
 BACKUP_CRON="0 1 * * *"
 
+# Certificate renew cron
+CERT_RENEW_CRON="30 0 * * *"
+
 SA_NAME=""
 SA_CONTAINER_NAME=""
 SA_KEY=""
@@ -52,10 +55,28 @@ ARG_FILE=""
 # Define where the script called by the cronjob should be saved
 SCRIPT_LOCATION="/usr/local/bin/azurefunctionlog.sh"
 VERIFY_SCRIPT_LOCATION="/usr/local/bin/verify.sh"
+CERT_RENEW_SCRIPT_LOCATION="/usr/local/bin/certrenew.sh"
 
 # Set the subscription id which will be used for verification for centralLogging
 SUBSCRIPTION_ID=""
 VERIFY_URL=""
+VERIFY_API_KEY=""
+
+# Initialise variables to handle custom DNS Domain name and server FQDN names
+CUSTOM_DOMAIN_NAME=""
+CHEF_SERVER_FQDN=""
+
+# Set variables for the custom domain certificates
+SSL_CERTIFICATE=""
+SSL_CERTIFICATE_KEY=""
+
+# In order to configure the DNS for the ManagedApp the script needs to know the
+# Public FQDN of the public IP address to create the alias from
+PIP_CHEF_SERVER_FQDN=""
+PIP_AUTOMATE_SERVER_FQDN=""
+
+# State if this is a Managed App or not
+MANAGED_APP=false
 
 #
 # Do not modify variables below here
@@ -64,6 +85,8 @@ OIFS=$IFS
 IFS=","
 DRY_RUN=0
 CONFIG_FILE="config.toml"
+MANAGED_APP_CONFIG_DIR="/etc/managedapp"
+MANAGED_APP_LOG_DIR="/var/log/managedapp"
 
 # FUNCTIONS ------------------------------------
 
@@ -246,6 +269,10 @@ do
       BACKUP_CRON="$2"
     ;;
 
+    --certrenewcron)
+      CERT_RENEW_CRON="$2"
+    ;;
+
     # Get the storage account settings
     --saname)
       SA_NAME="$2"
@@ -266,6 +293,39 @@ do
     --verifyurl)
       VERIFY_URL="$2"
     ;;
+
+    --verifyurlapikey)
+      VERIFY_API_KEY="$2"
+    ;;
+
+    --customdomainname)
+      CUSTOM_DOMAIN_NAME="$2"
+    ;;
+
+    -C|--chefserverfqdn)
+      CHEF_SERVER_FQDN="$2"
+    ;;
+
+    --pipautomate)
+      PIP_AUTOMATE_SERVER_FQDN="$2"
+    ;;
+
+    --pipchef)
+      PIP_CHEF_SERVER_FQDN="$2"
+    ;;
+
+    --managedapp)
+      MANAGED_APP=$2
+    ;;
+
+    --sslcert)
+      SSL_CERTIFICATE="$2"
+    ;;
+
+    --sslcertkey)
+      SSL_CERTIFICATE_KEY="$2"
+    ;;    
+
   esac
 
   # move onto the next argument
@@ -293,6 +353,21 @@ if [ "X$rmate" == "X" ]
 then
   log "installing" 3
   cmd="wget -O /usr/local/bin/rmate https://raw.github.com/aurora/rmate/master/rmate && chmod a+x /usr/local/bin/rmate"
+  executeCmd "$cmd"
+fi
+
+# Ensure the configuration directory exists
+log "Checking Managed App Directories"
+if [ ! -d $MANAGED_APP_CONFIG_DIR ]
+then
+  log "creating config dir" 1
+  cmd=$(printf "mkdir -p %s" $MANAGED_APP_CONFIG_DIR)
+  executeCmd "$cmd"
+fi
+if [ ! -d $MANAGED_APP_LOG_DIR ]
+then
+  log "creating log dir" 1
+  cmd=$(printf "mkdir -p %s" $MANAGED_APP_LOG_DIR)
   executeCmd "$cmd"
 fi
 
@@ -468,6 +543,9 @@ do
       cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_fqdn\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $AUTOMATE_SERVER_FQDN)
       executeCmd "$cmd"
 
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"pip_automate_fqdn\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $PIP_AUTOMATE_SERVER_FQDN)
+      executeCmd "$cmd"      
+
       # Create the user using the Automate Server API
       cmd=$(printf "curl -H 'api-token: %s' -H 'Content-Type: application/json' -d '{\"name\": \"%s\", \"username\": \"%s\", \"password\": \"%s\"}' --insecure https://localhost/api/v0/auth/users" $automate_api_token $FULLNAME $USERNAME $PASSWORD)
       executeCmd "$cmd"
@@ -528,12 +606,13 @@ EOF
 #
 
 VERIFY_URL="{{VERIFY_URL}}"
+VERIFY_API_KEY="{{VERIFY_API_KEY}}"
 SUBSCRIPTION_ID="{{SUBSCRIPTION_ID}}"
 AUTOMATE_LICENSE="{{AUTOMATE_LICENSE}}"
 CONFIG_STORE_URL="{{FUNCTION_BASE_URL}}/config?code={{OPS_FUNCTION_APIKEY}}"
 
 # Build up the curl command to call the remote function
-cmd=$(printf "curl -XPOST %s -d '{\"subscription_id\": \"%s\", \"automate_license\": \"%s\"}'" $VERIFY_URL $SUBSCRIPTION_ID $AUTOMATE_LICENSE)
+cmd=$(printf "curl -XPOST %s?code=%s -d '{\"subscription_id\": \"%s\", \"automate_license\": \"%s\"}'" $VERIFY_URL $VERIFY_API_KEY $SUBSCRIPTION_ID $AUTOMATE_LICENSE)
 response=`eval "$cmd"`
 
 # if the response is not null, turn the response into variables
@@ -549,7 +628,7 @@ then
   done
 
   # if the error is false add the workspaceid and key to the config store
-  if [ $error == "false" ]
+  if [ "$error" == "false" ]
   then
     # Perform CURL operations to add the data to the config store
     # Going to use a PUT here so that the item is either created or updated, this is so that it will be updated
@@ -574,6 +653,7 @@ EOF
         log "Patching script" 1
 
         sed -i.bak "s|{{VERIFY_URL}}|$VERIFY_URL|" $VERIFY_SCRIPT_LOCATION
+        sed -i.bak "s|{{VERIFY_API_KEY}}|$VERIFY_API_KEY|" $VERIFY_SCRIPT_LOCATION
         sed -i.bak "s|{{SUBSCRIPTION_ID}}|$SUBSCRIPTION_ID|" $VERIFY_SCRIPT_LOCATION
         sed -i.bak "s|{{AUTOMATE_LICENSE}}|$AUTOMATE_LICENSE|" $VERIFY_SCRIPT_LOCATION
         sed -i.bak "s|{{FUNCTION_BASE_URL}}|$FUNCTION_BASE_URL|" $VERIFY_SCRIPT_LOCATION
@@ -604,11 +684,6 @@ EOF
 
       log "Configuring Backup"
 
-      # Ensure that the directories are 
-      log "Creating necessary directories" 1
-      cmd="mkdir -p /etc/managed_app /var/log/managed_app"
-      executeCmd "$cmd"
-
       # Download the script to the correct location
       log "Downloading backup script" 1
       cmd="curl -o ${BACKUP_SCRIPT_PATH} \"${BACKUP_SCRIPT_URL}\" && chmod +x ${BACKUP_SCRIPT_PATH}"
@@ -619,7 +694,7 @@ EOF
       executeCmd "$cmd"
 
       # Write out the configuration file
-      cat << EOF > /etc/managed_app/backup_config
+      cat << EOF > $MANAGED_APP_CONFIG_DIR/backup_config
 STORAGE_ACCOUNT="${SA_NAME}"
 CONTAINER_NAME="${SA_CONTAINER_NAME}"
 ACCESS_KEY="${SA_KEY}"
@@ -643,6 +718,166 @@ EOF
       # set the address in the config store
       cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_internal_ip\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $internal_ip)
       executeCmd "$cmd" 
+    ;;
+
+    # Set the DNS entries for the servers, as long as the custom domain name has not been set
+    dns)
+
+      if [ "X$CUSTOM_DOMAIN_NAME" == "X" ] && [ "$MANAGED_APP" = true ]
+      then
+
+        # Call the service to add the DNS Entries for the Chef and Automate servers
+        # Determine the hostnames of the Automate and Chef servers
+        AUTOMATE_SERVER_HOSTNAME=`echo $AUTOMATE_SERVER_FQDN | awk -F '.' '{print $1}'`
+        CHEF_SERVER_HOSTNAME=`echo $CHEF_SERVER_FQDN | awk -F '.' '{print $1}'`
+
+        # Build up the JSON payload that needs to be sent
+        cat << EOF > dns_entries.json
+{
+  "name": "${FULLNAME}",
+  "automate_licence": "${AUTOMATE_LICENSE}",
+  "entries": [
+    {
+      "name": "${CHEF_SERVER_HOSTNAME}",
+      "target": "${PIP_CHEF_SERVER_FQDN}",
+      "type": "cname"
+    },
+    {
+      "name": "${AUTOMATE_SERVER_HOSTNAME}",
+      "target": "${PIP_AUTOMATE_SERVER_FQDN}",
+      "type": "cname"
+    }    
+  ]
+}
+EOF
+
+        # Build up the CURL command
+        cmd=$(printf "curl -XPOST %s/dns?code=%s -d @dns_entries.json" $VERIFY_URL $VERIFY_API_KEY)
+        executeCmd "$cmd"
+
+      else
+        log "Configuring DNS entries for custom domains is not supported" 0 err
+      fi
+
+    ;;
+
+    # Configure SSL for the server
+    # If this is for the ManagedApp and a Custom Domain Name has not been set then a
+    # Lets Encrypt certificate will be used, otherwise use the certificate and key
+    # that have been supplied to the script
+    certificate)
+
+      log "Configuring certificates"
+
+      if [ "X$CUSTOM_DOMAIN_NAME" == "X" ] && [ "$MANAGED_APP" = true ]
+      then
+
+        # Use Let's Encrypt to get certificate
+        # Install the necessary software, if not already installed
+        certbot=`which certbot`
+        if [ "X$certbot" == "X" ]
+        then
+          log "Installing CertBot for Let's Encrypt Certificates"
+          cmd="apt-get update && apt-get install software-properties-common && add-apt-repository ppa:certbot/certbot -y && apt-get update && apt-get install certbot -y"
+          executeCmd "$cmd"
+        fi
+
+        # Use the standalone webserver for certbot validation
+        # In order to do this, the service has to be stopped
+        automate_cmd=`which chef-automate`
+        if [ "X$automate_cmd" != "X" ]
+        then
+          log "Stopping Automate"
+          cmd="chef-automate stop"
+          executeCmd "$cmd"
+        fi
+
+        # Call the certbot command to create a certificate for this node
+        cmd=$(printf "certbot certonly --standalone -d %s -m %s --agree-tos -n" $AUTOMATE_SERVER_FQDN $EMAILADDRESS)
+        executeCmd "$cmd"
+
+        # Set the path to the CERT and KEY files
+        SSL_CERT_PATH=$(printf "/etc/letsencrypt/live/%s/fullchain.pem" $AUTOMATE_SERVER_FQDN)
+        SSL_KEY_PATH=$(printf "/etc/letsencrypt/live/%s/privkey.pem" $AUTOMATE_SERVER_FQDN)
+
+        # Start Automate again
+        if [ "X$automate_cmd" != "X" ]
+        then
+          log "Starting Automate"
+          cmd="chef-automate start"
+          executeCmd "$cmd"
+        fi
+
+        # Create a cronjob to renew the LetsEncrypt certificate
+        log "Configuring CronJob for Lets Encrypt renew"
+
+        log "Creating script: $CERT_RENEW_SCRIPT_LOCATION" 1
+        # Create the script that will be called by the cronjob
+        cat << EOF > $CERT_RENEW_SCRIPT_LOCATION
+#!/usr/bin/env bash
+
+certbot renew --pre-hook "chef-automate stop" --post-hook "chef-automate start"
+EOF
+
+        # Ensure that the script is executable
+        cmd=$(printf "chmod +x %s" $CERT_RENEW_SCRIPT_LOCATION)
+        executeCmd "$cmd"
+
+        log "Adding cron entry" 1
+
+        # Add the script to cron
+        cmd=$(printf '(crontab -l; echo "%s %s") | crontab -' $CERT_RENEW_CRON $CERT_RENEW_SCRIPT_LOCATION)
+        executeCmd "$cmd"        
+      fi
+
+      # If using a Custom Domain, write out the certificate and key to a file
+      if [ "X$CUSTOM_DOMAIN_NAME" != "X" ] && [ "$MANAGED_APP" == false ]
+      then
+
+        log "Setting custom domain certs" 1
+
+        # Set the paths for the files
+        SSL_CERT_PATH=$(printf "%s/ssl/certs/automate.cert" $MANAGED_APP_CONFIG_DIR)
+        SSL_KEY_PATH=$(printf "%s/ssl/keys/automate.key" $MANAGED_APP_CONFIG_DIR)
+
+        # Create a directory for the ssl certs and keys
+        cmd=$(printf "mkdir -p %s %s" `dirname $SSL_CERT_PATH` `dirname $SSL_KEY_PATH`)
+        executeCmd "$cmd"
+
+        # Write out the certificate to a file
+        cmd=$(printf "echo '%s' > %s" $SSL_CERTIFICATE $SSL_CERT_PATH)
+        executeCmd "$cmd"
+
+        # Write out the key to a file
+        cmd=$(printf "echo '%s' > %s" $SSL_CERTIFICATE_KEY $SSL_KEY_PATH)
+        executeCmd "$cmd"        
+
+      fi
+
+      # Create a toml file with the necessary contents that can be applied to Automate
+      # https://automate.chef.io/docs/configuration/#load-balancer-certificate-and-private-key
+
+      # Read the certificate and the provate key
+      ssl_certificate=`cat $SSL_CERT_PATH`
+      ssl_key=`cat $SSL_KEY_PATH`
+
+      cat << EOF > ssl_cert.toml
+[[load_balancer.v1.sys.frontend_tls]]
+# The TLS certificate for the load balancer frontend
+cert = """
+${ssl_certificate}
+"""
+
+# The TLS RSA key for the load balancer frontend
+key = """
+${ssl_key}
+"""
+EOF
+
+      # Run command to patch the automate deployment
+      cmd="chef-automate config patch ssl_cert.toml"
+      executeCmd "$cmd"
+
     ;;
   
   esac
