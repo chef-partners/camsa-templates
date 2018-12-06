@@ -367,7 +367,7 @@
                     {
                         "name": "sslRenewalMinute",
                         "type": "Microsoft.Common.DropDown",
-                        "label": "Backup Minute",
+                        "label": "Rewnwal Minute",
                         "defaultValue": "30",
                         "toolTip": "Select the minute at which the SSL renewal check should run.",
                         "constraints": {
