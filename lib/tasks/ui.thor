@@ -1,4 +1,4 @@
-require 'pastebin'
+
 require 'net/http'
 require 'uri'
 require 'gist'
