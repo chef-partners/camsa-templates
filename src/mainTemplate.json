@@ -365,6 +365,7 @@
             "appService": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-AppService')]",
             "sa": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-SA')]",
             "la": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-LogAnalytics')]",
+            "savedSearch": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-LogAnalyticsSavedSearch')]",
             "vm": {
                 "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-VM')]",
                 "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-VM')]"
@@ -468,6 +469,7 @@
             "appServicePlan": "[concat(variables('baseUrl'), 'templates/app-service-plan.json', variables('templateUrlQueryString'))]",
             "appService": "[concat(variables('baseUrl'), 'templates/app-service.json', variables('templateUrlQueryString'))]",
             "logAnalytics": "[concat(variables('baseUrl'), 'templates/log-analytics.json', variables('templateUrlQueryString'))]",
+            "logAnalyticsSavedSearch": "[concat(variables('baseUrl'), 'templates/log-analytics-saved-search.json', variables('templateUrlQueryString'))]",
             "logAnalyticsExtension": "[concat(variables('baseUrl'), 'templates/log-analytics-extension.json', variables('templateUrlQueryString'))]",
             "apiConnection": "[concat(variables('baseUrl'), 'templates/apiConnection/azureblob.json', variables('templateUrlQueryString'))]",
             "logicApps": {
@@ -866,6 +868,56 @@
                             "provider": "[variables('tags').provider]"
                         }
                     }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').savedSearch, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]"
+            ],
+            "condition": "[variables('enabled').logAnalytics]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').logAnalyticsSavedSearch]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "workspaceName": {
+                        "value": "[variables('name').la]"
+                    },
+                    "queries": {
+                        "value": [
+                            {
+                                "name": "elc-x-disk-space-crit-query",
+                                "query": "Perf | where ObjectName == \"Logical Disk\" and CounterName == \"% Used Space\" and InstanceName != \"_Total\" | summarize AggregatedValue = avg(CounterValue) by bin(TimeGenerated, 240m), Computer, InstanceName"
+                            },
+                            {
+                                "name": "elc-x-disk-space-warn-query",
+                                "query": "Perf | where ObjectName == \"Logical Disk\" and CounterName == \"% Used Space\" and InstanceName != \"_Total\" | summarize AggregatedValue = avg(CounterValue) by bin(TimeGenerated, 90m), Computer, InstanceName"
+                            },
+                            {
+                                "name": "elc-x-high-cpu-crit-query",
+                                "query": "Perf | where ObjectName == \"Processor\" and CounterName == \"% Processor Time\" | summarize AggregatedValue = avg(CounterValue) by bin(TimeGenerated, 240m), Computer"
+                            },
+                            {
+                                "name": "elc-x-high-cpu-warn-query",
+                                "query": "Perf | where ObjectName == \"Processor\" and CounterName == \"% Processor Time\" | summarize AggregatedValue = avg(CounterValue) by bin(TimeGenerated, 90m), Computer"
+                            },
+                            {
+                                "name": "elc-x-low-memory-crit-query",
+                                "query": "Perf | where ObjectName == \"Memory\" and CounterName == \"% Used Memory\" | summarize AggregatedValue = avg(CounterValue) by bin(TimeGenerated, 240m), Computer"
+                            },
+                            {
+                                "name": "elc-x-low-memory-warn-query",
+                                "query": "Perf | where ObjectName == \"Memory\" and CounterName == \"% Used Memory\" | summarize AggregatedValue = avg(CounterValue) by bin(TimeGenerated, 90m), Computer"
+                            }
+                        ]
+                    }                
                 }
             }
         },

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workspaceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the workspace that the saved search should be put into"
+      }
+    },
+
+    "queries": {
+      "type": "array"
+    },
+
+    "category": {
+      "type": "string",
+      "metadata": {
+        "description": "Set the category for the queries. The category can be overridden in a query if required"
+      },
+      "defaultValue": "ManagedApp"
+    }
+  },
+  "variables": {
+    "search": {
+      "workspace": "[parameters('workspaceName')]",
+      "category": "[parameters('category')]"
+    },
+
+    "apiVersions": {
+      "savedSearch": "2017-03-15-preview"
+    }
+  },
+  "resources": [
+    {
+      "name": "[concat(variables('search').workspace, '/', parameters('queries')[copyIndex()].name)]",
+      "type": "Microsoft.OperationalInsights/workspaces/savedSearches",
+      "apiVersion": "[variables('apiVersions').savedSearch]",
+      "copy": {
+          "name": "savedSearchCopy",
+          "count": "[length(parameters('queries'))]"
+      },
+      "properties": {
+        "query": "parameters('queries')[copyIndex()].query]",
+        "displayName": "[parameters('queries')[copyIndex()].name]",
+        "category": "[if(contains(parameters('queries')[copyIndex()], 'category'), parameters('queries')[copyIndex()].category, variables('search').category)]"
+      }
+    }
+  ],
+  "outputs": {
+
+  }
+}
