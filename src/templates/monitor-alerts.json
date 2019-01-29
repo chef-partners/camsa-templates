@@ -1,0 +1,152 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+
+    "workspaceRef": {
+      "type": "string"
+    },
+
+    "actionGroup": {
+      "type": "string",
+      "metadata": {
+        "description": "List of action groups for alert actions separated by a semicolon"
+      }
+    },
+
+    "location": {
+      "type": "string"
+    }
+  },
+
+  "variables": {
+    "workspace": {
+      "ref": "[parameters('workspaceRef')]"
+    },
+
+    "location": "[parameters('location')]",
+
+    "groupIds": [
+      "[parameters('actionGroup')]"
+    ],
+
+    "alerts": [
+      {
+          "name": "linux-vm-critical-cpu",
+          "description": "Critical CPU Alert on Linux",
+          "query": "Perf | where TimeGenerated > now(-240m) | where ObjectName == 'Processor' and CounterName == '% Processor Time' and Computer in ((Heartbeat | where OSType has 'Linux' | distinct Computer)) | where (Computer !startswith 'hn' and Computer !contains '-') or (Computer !startswith 'wn' and Computer contains '-') or (Computer !startswith 'zk' and Computer contains '-')  | where (Computer !has 'k8s' and Computer !has 'aks') | summarize AggregatedValue=avg(CounterValue) by Computer, bin(TimeGenerated, 240m) | where AggregatedValue between(98 .. 100)",
+          "timeWindow": 240,
+          "frequency": 5,
+          "severity": "4",
+          "threshold": {
+            "operator": "GreaterThan",
+            "value": 0
+          }
+      },
+      {
+          "name": "linux-vm-critical-mem",
+          "description": "Critical Memory Alert on Linux",
+          "query": "Perf | where TimeGenerated > now(-240m) | where ObjectName has 'Memory' and CounterName has '% Used Memory' | where (Computer !startswith 'hn' and Computer !contains '-') or (Computer !startswith 'wn' and Computer contains '-') or (Computer !startswith 'zk' and Computer contains '-')  | where (Computer !has 'k8s' and Computer !has 'aks') | summarize AggregatedValue=avg(CounterValue) by Computer, bin(TimeGenerated, 240m) | where AggregatedValue between(95 .. 100)",
+          "timeWindow": 240,
+          "frequency": 5,
+          "severity": "4",
+          "threshold": {
+            "operator": "GreaterThan",
+            "value": 0
+          }
+      },
+      {
+          "name": "linux-vm-critical-disk",
+          "description": "Critical Disk Alert on Linux",
+          "query": "Perf | where TimeGenerated > now(-240m) | where ObjectName has 'Logical Disk' and CounterName has '% Used Space' and InstanceName !has '_Total' | where (Computer !startswith 'hn' and Computer !contains '-') or (Computer !startswith 'wn' and Computer contains '-') or (Computer !startswith 'zk' and Computer contains '-')  | where (Computer !has 'k8s' and Computer !has 'aks') | summarize AggregatedValue=avg(CounterValue) by Computer, InstanceName, bin(TimeGenerated, 240m) | where AggregatedValue between(95 .. 100)",
+          "timeWindow": 240,
+          "frequency": 5,
+          "severity": "4",
+          "threshold": {
+            "operator": "GreaterThan",
+            "value": 0
+          }
+      },
+      {
+          "name": "linux-vm-warn-cpu",
+          "description": "Warning CPU Alert on Linux",
+          "query": "Perf | where TimeGenerated > now(-90) | where ObjectName == 'Processor' and CounterName == '% Processor Time' and Computer in ((Heartbeat | where OSType has 'Linux' | distinct Computer)) | where (Computer !startswith 'hn' and Computer !contains '-') or (Computer !startswith 'wn' and Computer contains '-') or (Computer !startswith 'zk' and Computer contains '-')  | where (Computer !has 'k8s' and Computer !has 'aks') | summarize AggregatedValue=avg(CounterValue) by Computer, bin(TimeGenerated, 90) | where AggregatedValue between(98 .. 100)",
+          "timeWindow": 90,
+          "frequency": 5,
+          "severity": "3",
+          "threshold": {
+            "operator": "GreaterThan",
+            "value": 0
+          }
+      },
+      {
+          "name": "linux-vm-warn-mem",
+          "description": "Warning Memory Alert on Linux",
+          "query": "Perf | where TimeGenerated > now(-90) | where ObjectName has 'Memory' and CounterName has '% Used Memory' | where (Computer !startswith 'hn' and Computer !contains '-') or (Computer !startswith 'wn' and Computer contains '-') or (Computer !startswith 'zk' and Computer contains '-')  | where (Computer !has 'k8s' and Computer !has 'aks') | summarize AggregatedValue=avg(CounterValue) by Computer, bin(TimeGenerated, 90) | where AggregatedValue between(95 .. 100)",
+          "timeWindow": 90,
+          "frequency": 5,
+          "severity": "3",
+          "threshold": {
+            "operator": "GreaterThan",
+            "value": 0
+          }
+      },
+      {
+          "name": "linux-vm-warn-disk",
+          "description": "Warning Disk Alert on Linux",
+          "query": "Perf | where TimeGenerated > now(-90) | where ObjectName has 'Logical Disk' and CounterName has '% Used Space' and InstanceName !has '_Total' | where (Computer !startswith 'hn' and Computer !contains '-') or (Computer !startswith 'wn' and Computer contains '-') or (Computer !startswith 'zk' and Computer contains '-')  | where (Computer !has 'k8s' and Computer !has 'aks') | summarize AggregatedValue=avg(CounterValue) by Computer, InstanceName, bin(TimeGenerated, 90) | where AggregatedValue between(95 .. 100)",
+          "timeWindow": 90,
+          "frequency": 5,
+          "severity": "3",
+          "threshold": {
+            "operator": "GreaterThan",
+            "value": 0
+          }
+      }
+    ],
+
+    "apiVersions": {
+      "scheduledQueryRules": "2018-04-16"
+    }
+  },
+  "resources": [
+
+    {
+      "name": "[variables('alerts')[copyIndex()].name]",
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "[variables('apiVersions').scheduledQueryRules]",
+      "location": "[variables('location')]",
+      "copy": {
+        "name": "savedSearchCopy",
+        "count": "[length(variables('alerts'))]"
+      },      
+      "properties": {
+        "description": "[variables('alerts')[copyIndex()].description]",
+        "enabled": "true",
+        "source": {
+          "query": "[variables('alerts')[copyIndex()].query]",
+          "dataSourceId": "[variables('workspace').ref]",
+          "queryType": "ResultCount"
+        },
+        "schedule": {
+          "frequencyInMinutes": "[variables('alerts')[copyIndex()].frequency]",
+          "timeWindowInMinutes": "[variables('alerts')[copyIndex()].timeWindow]"
+        },
+        "action": {
+          "odata.type": "Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights.Nexus.DataContracts.Resources.ScheduledQueryRules.AlertingAction",
+          "severity": "[variables('alerts')[copyIndex()].severity]",
+          "aznsAction": {
+            "actionGroup": "[variables('groupIds')]"
+          },
+          "trigger": {
+            "thresholdOperator": "[variables('alerts')[copyIndex()].threshold.operator]",
+            "threshold": "[variables('alerts')[copyIndex()].threshold.value]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+
+  }
+}

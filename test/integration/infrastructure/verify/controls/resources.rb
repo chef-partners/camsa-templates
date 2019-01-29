@@ -32,10 +32,11 @@ control 'Azure-Managed-Automate-Resources' do
     its('Microsoft.Web/serverFarms') { should eq 1 }
     its('Microsoft.Web/sites') { should eq 1 }
 
-    its('Microsoft.OperationalInsights/workspaces') { should eq 1 }
+    # Log Anlytics Checks
+    # its('Microsoft.Insights/scheduledQueryRules') { should eq 6 }
 
     # There should be resources for the logic app
-    its('Microsoft.Web/connections') { should eq 1 } 
+    its('Microsoft.Web/connections') { should eq 1 }
     its('Microsoft.Logic/workflows') { should eq 1 }
   end
 end

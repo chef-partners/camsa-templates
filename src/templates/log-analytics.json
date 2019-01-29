@@ -56,6 +56,10 @@
         }
     ],
     "outputs": {
+        "ref": {
+            "type": "string",
+            "value": "[if(variables('enabled').logAnalytics, resourceId('Microsoft.OperationalInsights/workspaces', variables('name').workspace), '')]"
+        },
         "workspaceId": {
             "type": "String",
             "value": "[if(variables('enabled').logAnalytics, reference(concat('Microsoft.OperationalInsights/workspaces/', variables('name').workspace)).customerId, '')]"
