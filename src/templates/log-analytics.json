@@ -32,7 +32,8 @@
             "retention": "[if(equals(toLower(parameters('sku')), 'free'), 7, 30)]"
         },
         "apiVersions": {
-            "workspace": "2015-03-20"
+            "workspace": "2015-03-20",
+            "dataSources": "2015-11-01-preview"
         },
         "tags": "[parameters('tags')]",
         "enabled": {
@@ -52,7 +53,179 @@
                     "name": "[variables('la').sku]"
                 },
                 "retentionInDays": "[variables('la').retention]"
-            }
+            },
+            "resources": [
+                {
+                    "name": "LinuxLogicalDisk",
+                    "type": "dataSources",
+                    "apiVersion": "[variables('apiVersions').dataSources]",
+                    "kind": "LinuxPerformanceObject",
+                    "dependsOn": [
+                        "[concat('Microsoft.OperationalInsights/workspaces/', variables('name').workspace)]"
+                    ],
+                    "properties": {
+                        "performanceCounters": [
+                            {
+                                "counterName": "% Used Inodes"
+                            },
+                            {
+                                "counterName": "Free Megabytes"
+                            },
+                            {
+                                "counterName": "% Used Space"
+                            },
+                            {
+                                "counterName": "Disk Transfers/sec"
+                            },
+                            {
+                                "counterName": "Disk Reads/sec"
+                            },
+                            {
+                                "counterName": "Disk Writes/sec"
+                            }
+                        ],
+                        "objectName": "Logical Disk",
+                        "instanceName": "*",
+                        "intervalSeconds": 60
+                    }
+                },
+                {
+                    "name": "LinuxMemory",
+                    "type": "dataSources",
+                    "apiVersion": "[variables('apiVersions').dataSources]",
+                    "kind": "LinuxPerformanceObject",
+                    "dependsOn": [
+                        "[concat('Microsoft.OperationalInsights/workspaces/', variables('name').workspace)]"
+                    ],
+                    "properties": {
+                        "performanceCounters": [
+                            {
+                                "counterName": "% Available Memory"
+                            },
+                            {
+                                "counterName": "% Used Memory"
+                            },
+                            {
+                                "counterName": "% Used Swap Space"
+                            },
+                            {
+                                "counterName": "% Available Swap Space"
+                            }
+                        ],
+                        "objectName": "Memory",
+                        "instanceName": "*",
+                        "intervalSeconds": 60
+                    }
+                },
+                {
+                    "name": "LinuxNetwork",
+                    "type": "dataSources",
+                    "apiVersion": "[variables('apiVersions').dataSources]",
+                    "kind": "LinuxPerformanceObject",
+                    "dependsOn": [
+                        "[concat('Microsoft.OperationalInsights/workspaces/', variables('name').workspace)]"
+                    ],
+                    "properties": {
+                        "performanceCounters": [
+                            {
+                                "counterName": "Total Rx Errors"
+                            },
+                            {
+                                "counterName": "Total Tx Errors"
+                            },
+                            {
+                                "counterName": "Total Bytes"
+                            },
+                            {
+                                "counterName": "Total Bytes Transmitted"
+                            },
+                            {
+                                "counterName": "Total Bytes Received"
+                            }
+                        ],
+                        "objectName": "Network",
+                        "instanceName": "*",
+                        "intervalSeconds": 60
+                    }
+                },
+                {
+                    "name": "LinuxPhysicalDisk",
+                    "type": "dataSources",
+                    "apiVersion": "[variables('apiVersions').dataSources]",
+                    "kind": "LinuxPerformanceObject",
+                    "dependsOn": [
+                        "[concat('Microsoft.OperationalInsights/workspaces/', variables('name').workspace)]"
+                    ],
+                    "properties": {
+                        "performanceCounters": [
+                            {
+                                "counterName": "Avg. Disk sec/Transfer"
+                            },
+                            {
+                                "counterName": "Avg. Disk sec/Read"
+                            },
+                            {
+                                "counterName": "Avg. Disk sec/Write"
+                            }
+                        ],
+                        "objectName": "Physical Disk",
+                        "instanceName": "*",
+                        "intervalSeconds": 60
+                    }
+                },
+                {
+                    "name": "LinuxProcessor",
+                    "type": "dataSources",
+                    "apiVersion": "[variables('apiVersions').dataSources]",
+                    "kind": "LinuxPerformanceObject",
+                    "dependsOn": [
+                        "[concat('Microsoft.OperationalInsights/workspaces/', variables('name').workspace)]"
+                    ],
+                    "properties": {
+                        "performanceCounters": [
+                            {
+                                "counterName": "% Processor Time"
+                            },
+                            {
+                                "counterName": "% Idle Time"
+                            },
+                            {
+                                "counterName": "% User Time"
+                            },
+                            {
+                                "counterName": "% Nice Time"
+                            },
+                            {
+                                "counterName": "% Privileged Time"
+                            },
+                            {
+                                "counterName": "% IO Wait Time"
+                            },
+                            {
+                                "counterName": "Interrupt Time"
+                            },
+                            {
+                                "counterName": "% DPC Time"
+                            }
+                        ],
+                        "objectName": "Processor",
+                        "instanceName": "*",
+                        "intervalSeconds": 60
+                    }
+                },
+                {
+                    "name": "LinuxPerfCollection",
+                    "apiVersion": "[variables('apiVersions').dataSources]",
+                    "type": "dataSources",
+                    "dependsOn": [
+                        "[concat('Microsoft.OperationalInsights/workspaces/', variables('name').workspace)]"
+                    ],
+                    "kind": "LinuxPerformanceCollection",
+                    "properties": {
+                        "state": "Enabled"
+                    }
+                }
+            ]
         }
     ],
     "outputs": {
