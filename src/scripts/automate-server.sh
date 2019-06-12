@@ -55,7 +55,9 @@ ARG_FILE=""
 # Define where the script called by the cronjob should be saved
 SCRIPT_LOCATION="/usr/local/bin/azurefunctionlog.sh"
 VERIFY_SCRIPT_LOCATION="/usr/local/bin/verify.sh"
+CERT_CRON_SCRIPT_LOCATION="/usr/local/bin/certrenew_cron.sh"
 CERT_RENEW_SCRIPT_LOCATION="/usr/local/bin/certrenew.sh"
+
 
 # Set the subscription id which will be used for verification for centralLogging
 SUBSCRIPTION_ID=""
@@ -811,22 +813,31 @@ EOF
         # Create a cronjob to renew the LetsEncrypt certificate
         log "Configuring CronJob for Lets Encrypt renew"
 
-        log "Creating script: $CERT_RENEW_SCRIPT_LOCATION" 1
-        # Create the script that will be called by the cronjob
-        cat << EOF > $CERT_RENEW_SCRIPT_LOCATION
-#!/usr/bin/env bash
-
-certbot renew --pre-hook "chef-automate stop" --post-hook "chef-automate start"
-EOF
+        log "Creating script: $CERT_RENEW_SCRIPT_LOCATION"
+        renew_script="IyEvdXNyL2Jpbi9lbnYgYmFzaAoKIyBUaGlzIHNjcmlwdCBpcyB0byBiZSB1c2VkIGluIGNvbmp1bmN0aW9uIHdpdGggdGhlIHBvc3QtaG9vayBvZiB0aGUgY2VydGJvdAojIGNvbW1hbmQuCiMgSWYgYSBjZXJ0aWZpY2F0ZSBoYXMgYmVlbiByZW5ld2VkIHRoaXMgc2NyaXB0IHdpbGwgYmUgZXhlY3V0ZWQuCiMgSXQgd2lsbCByZXN0YXJ0IEF1dG9tYXRlIGFuZCB0aGVuIHBhdGNoIGl0IHdpdGggdGhlIHJlbGV2YW50IGZpbGVzIHRoYXQgaGF2ZSBiZWVuIGdlbmVyYXRlZAoKIyBGVU5DVElPTlMgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgojIEZ1bmN0aW9uIHRvIG91dHB1dCBpbmZvcm1hdGlvbgojIFRoaXMgd2lsbCBiZSB0byB0aGUgc2NyZWVuIGFuZCB0byBzeXNsb2cKZnVuY3Rpb24gbG9nKCkgewogIG1lc3NhZ2U9JDEKICB0YWJzPSQyCiAgbGV2ZWw9JDMKICAKICBpZiBbICJYJGxldmVsIiA9PSAiWCIgXQogIHRoZW4KICAgIGxldmVsPSJub3RpY2UiIAogIGZpCgogIGlmIFsgIlgkdGFicyIgIT0gIlgiIF0KICB0aGVuCiAgICB0YWJzPSQocHJpbnRmICdcdCUuMHMnIHswLi4kdGFic30pCiAgZmkKCiAgZWNobyAtZSAiJHt0YWJzfSR7bWVzc2FnZX0iCgogIGxvZ2dlciAtdCAiQVVUT01BVEVfU0VUVVAiIC1wICJ1c2VyLiR7bGV2ZWx9IiAkbWVzc2FnZQp9CgojIEV4ZWN1dGUgY29tbWFuZHMgYW5kIGtlZXAgYSBsb2cgb2YgdGhlIGNvbW1hbmRzIHRoYXQgd2VyZSBleGVjdXRlZApmdW5jdGlvbiBleGVjdXRlQ21kKCkKewogIGxvY2FsY21kPSQxCgogICAgIyBPdXRwdXQgdGhlIGNvbW1hbmQgdG8gU1RET1VUIGFzIHdlbGwgc28gdGhhdCBpdCBpcyBsb2dnZWQgaW5saW5lIHdpdGggdGhlIGVycm9yIHRoYXQgYXJlIGJlaW5nIHNlZW4KICAgICMgZWNobyAkbG9jYWxjbWQKCiAgICAjIGlmIGEgY29tbWFuZCBsb2cgZG9lcyBub3QgZXhpc3QgY3JlYXRlIG9uZQogICAgaWYgWyAhIC1mIGNvbW1hbmRzLmxvZyBdCiAgICB0aGVuCiAgICAgICAgdG91Y2ggY29tbWFuZHMubG9nCiAgICBmaQoKICAgICMgT3V0cHV0IHRoZSBjb21tYW5kcyB0byB0aGUgbG9nIGZpbGUKICAgIGVjaG8gIiRsb2NhbGNtZCIgPj4gY29tbWFuZHMubG9nCgogICAgZXZhbCAiJGxvY2FsY21kIgp9CgojIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgojIEdldCB0aGUgRlFETiBvZiB0aGUgc2VydmVyIGZyb20gdGhlIGNvbW1hbmQgbGluZSBhcmd1bWVudHMKZnFkbj0kMQoKIyBTdGFydCBDaGVmIEF1dG9tYXRlCmV4ZWN1dGVDbWQgImNoZWYtYXV0b21hdGUgc3RhcnQiCgojIFNldCB0aGUgcGF0aHMgdG8gdGhlIGNlcnRpZmljYXRlIGZpbGUgYW5kIHRoZSBwcml2YXRlIGtleQpTU0xfQ0VSVF9QQVRIPSQocHJpbnRmICIvZXRjL2xldHNlbmNyeXB0L2xpdmUvJXMvZnVsbGNoYWluLnBlbSIgJGZxZG4pClNTTF9LRVlfUEFUSD0kKHByaW50ZiAiL2V0Yy9sZXRzZW5jcnlwdC9saXZlLyVzL3ByaXZrZXkucGVtIiAkZnFkbikKCiMgT25seSBwcm9jZWVkIGlmIGJvdGggb2YgdGhlIGZpbGVzIGV4aXN0CmlmIFsgISAtZiAkU1NMX0NFUlRfUEFUSCBdIHx8IFsgISAtZiAkU1NMX0tFWV9QQVRIIF0KdGhlbgogICAgbG9nICJVbmFibGUgdG8gZmluZCBlaXRoZXIgY2VydGZpZmljYXRlIGZpbGUgb3IgcHJpdmF0ZSBrZXkiICIiICJlcnJvciIKICAgIGV4aXQgMQpmaQoKcHVzaGQgL3Zhci9saWIvd2FhZ2VudC9jdXN0b20tc2NyaXB0L2Rvd25sb2FkLzAvCgpsb2cgIlJlYWRpbmcgQ2VydGlmaWNhdGUgYW5kIEtleSBmaWxlcyIKCiMgR2V0IHRoZSBjb250ZW50cyBvZiB0aGUgZmlsZXMKc3NsX2NlcnRpZmljYXRlPWBjYXQgJFNTTF9DRVJUX1BBVEhgCnNzbF9rZXk9YGNhdCAkU1NMX0tFWV9QQVRIYAoKIyBXcml0ZSBvdXQgdGhlIHRvbWwgZmlsZSBmb3IgQXV0b21hdGUKY2F0IDw8IEVPRiA+IHNzbF9jZXJ0LnRvbWwKW1tnbG9iYWwudjEuZnJvbnRlbmRfdGxzXV0KIyBUaGUgVExTIGNlcnRpZmljYXRlIGZvciB0aGUgbG9hZCBiYWxhbmNlciBmcm9udGVuZApjZXJ0ID0gIiIiCiR7c3NsX2NlcnRpZmljYXRlfQoiIiIKCiMgVGhlIFRMUyBSU0Ega2V5IGZvciB0aGUgbG9hZCBiYWxhbmNlciBmcm9udGVuZAprZXkgPSAiIiIKJHtzc2xfa2V5fQoiIiIKRU9GCgojIFBhdGNoIGF1dG9tYXRlCmxvZyAiUGF0Y2hpbmcgQXV0b21hdGUgd2l0aCB0aGUgbmV3IGNlcnRpZmljYXRlcyIKZXhlY3V0ZUNtZCAiY2hlZi1hdXRvbWF0ZSBjb25maWcgcGF0Y2ggc3NsX2NlcnQudG9tbCIKCiMgTm93IHJlc3RhcnQgdGhlIEF1dG9tYXRlIHNlcnZpY2VzCmxvZyAiUmVzdGFydGluZyBTZXJ2aWNlcyIKZXhlY3V0ZUNtZCAiY2hlZi1hdXRvbWF0ZSByZXN0YXJ0LXNlcnZpY2VzIgoKcG9wZA=="
+        cmd=$(printf "echo \"$renew_script\" | base64 -d > $CERT_RENEW_SCRIPT_LOCATION")
+        executeCmd "$cmd"
 
         # Ensure that the script is executable
         cmd=$(printf "chmod +x %s" $CERT_RENEW_SCRIPT_LOCATION)
+        executeCmd "$cmd"        
+
+        log "Creating script: $CERT_CRON_SCRIPT_LOCATION" 1
+        # Create the script that will be called by the cronjob
+        cat << EOF > $CERT_CRON_SCRIPT_LOCATION
+#!/usr/bin/env bash
+
+certbot renew --pre-hook "chef-automate stop" --post-hook "$CERT_RENEW_SCRIPT_LOCATION $AUTOMATE_SERVER_FQDN"
+EOF
+
+        # Ensure that the script is executable
+        cmd=$(printf "chmod +x %s" $CERT_CRON_SCRIPT_LOCATION)
         executeCmd "$cmd"
 
         log "Adding cron entry" 1
 
         # Add the script to cron
-        cmd=$(printf '(crontab -l; echo "%s %s") | crontab -' $CERT_RENEW_CRON $CERT_RENEW_SCRIPT_LOCATION)
+        cmd=$(printf '(crontab -l; echo "%s %s") | crontab -' $CERT_RENEW_CRON $CERT_CRON_SCRIPT_LOCATION)
         executeCmd "$cmd"        
       fi
 
@@ -857,26 +868,8 @@ EOF
       # Create a toml file with the necessary contents that can be applied to Automate
       # https://automate.chef.io/docs/configuration/#load-balancer-certificate-and-private-key
 
-      # Read the certificate and the provate key
-      ssl_certificate=`cat $SSL_CERT_PATH`
-      ssl_key=`cat $SSL_KEY_PATH`
-
-      cat << EOF > ssl_cert.toml
-[[load_balancer.v1.sys.frontend_tls]]
-# The TLS certificate for the load balancer frontend
-cert = """
-${ssl_certificate}
-"""
-
-# The TLS RSA key for the load balancer frontend
-key = """
-${ssl_key}
-"""
-EOF
-
-      # Run command to patch the automate deployment
-      cmd="chef-automate config patch ssl_cert.toml"
-      executeCmd "$cmd"
+      # Call script to read in the certificate file and key
+      executeCmd "$CERT_RENEW_SCRIPT_LOCATION $AUTOMATE_SERVER_FQDN"
 
     ;;
   
