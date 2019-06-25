@@ -8,9 +8,16 @@
     },
 
     "actionGroup": {
-      "type": "string",
+      "type": "array",
       "metadata": {
         "description": "List of action groups for alert actions separated by a semicolon"
+      }
+    },
+
+    "deployCode": {
+      "type": "string",
+      "metadata": {
+        "description": "4 digit code used to identify a deployment of the managed app in Azure"
       }
     },
 
@@ -26,83 +33,99 @@
 
     "location": "[parameters('location')]",
 
-    "groupIds": [
-      "[parameters('actionGroup')]"
-    ],
+    "actionGroupIds": "[parameters('actionGroup')]",
+
+    "deployCode": "[parameters('deployCode')]",
 
     "alerts": [
       {
-          "name": "linux-vm-critical-cpu",
-          "description": "Critical CPU Alert on Linux",
-          "query": "Perf | where TimeGenerated > now(-240m) | where ObjectName == 'Processor' and CounterName == '% Processor Time' and Computer in ((Heartbeat | where OSType has 'Linux' | distinct Computer)) | where (Computer !startswith 'hn' and Computer !contains '-') or (Computer !startswith 'wn' and Computer contains '-') or (Computer !startswith 'zk' and Computer contains '-') | summarize AggregatedValue=avg(CounterValue) by Computer, bin(TimeGenerated, 240m) | where AggregatedValue between(98 .. 100)",
-          "timeWindow": 240,
-          "frequency": 5,
-          "severity": "4",
-          "threshold": {
-            "operator": "GreaterThan",
-            "value": 0
-          }
+        "alertName": "linux-vm-critical-cpu",
+        "alertDescription": "Critical CPU Alert on Linux",
+        "query": "Perf | where TimeGenerated > now(-240m) | where ObjectName == 'Processor' and CounterName == '% Processor Time' and InstanceName == '_Total' and Computer in ((Heartbeat | where OSType has 'Linux' | distinct Computer)) | where Computer !startswith 'hn'and Computer !startswith 'wn' and Computer !startswith 'zk' and Computer !startswith 'k8s' and Computer !startswith 'aks' | summarize averagePercentCPU = avg(CounterValue) by Computer | where averagePercentCPU > 98",
+        "frequencyInMinutes": 240,
+        "timeWindowInMinutes": 240,
+        "emailSubject": "[concat(variables('deployCode'),'-Critical-CPU-Linux')]",
+        "thresholdOperator": "GreaterThan",
+        "threshold": 0,
+        "severity": 0
       },
       {
-          "name": "linux-vm-critical-mem",
-          "description": "Critical Memory Alert on Linux",
-          "query": "Perf | where TimeGenerated > now(-240m) | where ObjectName has 'Memory' and CounterName has '% Used Memory' | where (Computer !startswith 'hn' and Computer !contains '-') or (Computer !startswith 'wn' and Computer contains '-') or (Computer !startswith 'zk' and Computer contains '-') | summarize AggregatedValue=avg(CounterValue) by Computer, bin(TimeGenerated, 240m) | where AggregatedValue between(95 .. 100)",
-          "timeWindow": 240,
-          "frequency": 5,
-          "severity": "4",
-          "threshold": {
-            "operator": "GreaterThan",
-            "value": 0
-          }
+        "alertName": "linux-vm-critical-mem",
+        "alertDescription": "Critical Memory Alert on Linux",
+        "query": "Perf | where TimeGenerated > now(-240m) | where ObjectName has 'Memory' and CounterName has '% Used Memory' | where Computer !startswith 'hn'and Computer !startswith 'wn' and Computer !startswith 'zk' and Computer !startswith 'k8s' and Computer !startswith 'aks' | summarize averagePercentMemory = avg(CounterValue) by Computer | where averagePercentMemory > 95",
+        "frequencyInMinutes": 240,
+        "timeWindowInMinutes": 240,
+        "emailSubject": "[concat(variables('deployCode'),'-Critical-Memory-Linux')]",
+        "thresholdOperator": "GreaterThan",
+        "threshold": 0,
+        "severity": 0
       },
       {
-          "name": "linux-vm-critical-disk",
-          "description": "Critical Disk Alert on Linux",
-          "query": "Perf | where TimeGenerated > now(-240m) | where ObjectName has 'Logical Disk' and CounterName has '% Used Space' and InstanceName !has '_Total' | where (Computer !startswith 'hn' and Computer !contains '-') or (Computer !startswith 'wn' and Computer contains '-') or (Computer !startswith 'zk' and Computer contains '-') | summarize AggregatedValue=avg(CounterValue) by Computer, InstanceName, bin(TimeGenerated, 240m) | where AggregatedValue between(95 .. 100)",
-          "timeWindow": 240,
-          "frequency": 5,
-          "severity": "4",
-          "threshold": {
-            "operator": "GreaterThan",
-            "value": 0
-          }
+        "alertName": "linux-vm-critical-disk",
+        "alertDescription": "Critical Disk Alert on Linux",
+        "query": "Perf | where TimeGenerated > now(-240m) | where ObjectName has 'Logical Disk' and CounterName has '% Used Space' and InstanceName !has '_Total' and InstanceName !has '/mnt/resource' | where Computer !startswith 'hn'and Computer !startswith 'wn' and Computer !startswith 'zk' and Computer !startswith 'k8s' and Computer !startswith 'aks' | summarize averagePercentDiskUsed = avg(CounterValue) by Computer, InstanceName | where averagePercentDiskUsed > 95",
+        "frequencyInMinutes": 240,
+        "timeWindowInMinutes": 240,
+        "emailSubject": "[concat(variables('deployCode'),'-Critical-Disk-Linux')]",
+        "thresholdOperator": "GreaterThan",
+        "threshold": 0,
+        "severity": 0
       },
       {
-          "name": "linux-vm-warn-cpu",
-          "description": "Warning CPU Alert on Linux",
-          "query": "Perf | where TimeGenerated > now(-90m) | where ObjectName == 'Processor' and CounterName == '% Processor Time' and Computer in ((Heartbeat | where OSType has 'Linux' | distinct Computer)) | where (Computer !startswith 'hn' and Computer !contains '-') or (Computer !startswith 'wn' and Computer contains '-') or (Computer !startswith 'zk' and Computer contains '-') | summarize AggregatedValue=avg(CounterValue) by Computer, bin(TimeGenerated, 90m) | where AggregatedValue between(98 .. 100)",
-          "timeWindow": 90,
-          "frequency": 5,
-          "severity": "3",
-          "threshold": {
-            "operator": "GreaterThan",
-            "value": 0
-          }
+        "alertName": "linux-vm-warning-cpu",
+        "alertDescription": "Warning CPU Alert on Linux",
+        "query": "Perf | where TimeGenerated > now(-90m) | where ObjectName == 'Processor' and CounterName == '% Processor Time' and InstanceName == '_Total' and Computer in ((Heartbeat | where OSType has 'Linux' | distinct Computer)) | where Computer !startswith 'hn'and Computer !startswith 'wn' and Computer !startswith 'zk' and Computer !startswith 'k8s' and Computer !startswith 'aks' | where (Computer !has 'k8s' and Computer !has 'aks') | summarize averagePercentCPU = avg(CounterValue) by Computer | where averagePercentCPU between (95 .. 98)",
+        "frequencyInMinutes": 90,
+        "timeWindowInMinutes": 90,
+        "emailSubject": "[concat(variables('deployCode'),'-Warning-CPU-Linux')]",
+        "thresholdOperator": "GreaterThan",
+        "threshold": 0,
+        "severity": 1
       },
       {
-          "name": "linux-vm-warn-mem",
-          "description": "Warning Memory Alert on Linux",
-          "query": "Perf | where TimeGenerated > now(-90m) | where ObjectName has 'Memory' and CounterName has '% Used Memory' | where (Computer !startswith 'hn' and Computer !contains '-') or (Computer !startswith 'wn' and Computer contains '-') or (Computer !startswith 'zk' and Computer contains '-') | summarize AggregatedValue=avg(CounterValue) by Computer, bin(TimeGenerated, 90m) | where AggregatedValue between(95 .. 100)",
-          "timeWindow": 90,
-          "frequency": 5,
-          "severity": "3",
-          "threshold": {
-            "operator": "GreaterThan",
-            "value": 0
-          }
+        "alertName": "linux-vm-warning-mem",
+        "alertDescription": "Warning Memory Alert on Linux",
+        "query": "Perf | where TimeGenerated > now(-90m) | where ObjectName has 'Memory' and CounterName has '% Used Memory' | where Computer !startswith 'hn'and Computer !startswith 'wn' and Computer !startswith 'zk' and Computer !startswith 'k8s' and Computer !startswith 'aks' | where (Computer !has 'k8s' and Computer !has 'aks') | summarize averagePercentMemory = avg(CounterValue) by Computer | where averagePercentMemory between (85 .. 95)",
+        "frequencyInMinutes": 90,
+        "timeWindowInMinutes": 90,
+        "emailSubject": "[concat(variables('deployCode'),'-Warning-Memory-Linux')]",
+        "thresholdOperator": "GreaterThan",
+        "threshold": 0,
+        "severity": 1
       },
       {
-          "name": "linux-vm-warn-disk",
-          "description": "Warning Disk Alert on Linux",
-          "query": "Perf | where TimeGenerated > now(-90m) | where ObjectName has 'Logical Disk' and CounterName has '% Used Space' and InstanceName !has '_Total' | where (Computer !startswith 'hn' and Computer !contains '-') or (Computer !startswith 'wn' and Computer contains '-') or (Computer !startswith 'zk' and Computer contains '-') | summarize AggregatedValue=avg(CounterValue) by Computer, InstanceName, bin(TimeGenerated, 90m) | where AggregatedValue between(95 .. 100)",
-          "timeWindow": 90,
-          "frequency": 5,
-          "severity": "3",
-          "threshold": {
-            "operator": "GreaterThan",
-            "value": 0
-          }
-      }
+        "alertName": "linux-vm-warning-disk",
+        "alertDescription": "Warning Disk Alert on Linux",
+        "query": "Perf | where TimeGenerated > now(-90m) | where ObjectName has 'Logical Disk' and CounterName has '% Used Space' and InstanceName !has '_Total' and InstanceName !has '/mnt/resource' | where Computer !startswith 'hn'and Computer !startswith 'wn' and Computer !startswith 'zk' and Computer !startswith 'k8s' and Computer !startswith 'aks' | where (Computer !has 'k8s' and Computer !has 'aks') | summarize averagePercentDiskUsed = avg(CounterValue) by Computer, InstanceName | where averagePercentDiskUsed between (85 .. 95)",
+        "frequencyInMinutes": 90,
+        "timeWindowInMinutes": 90,
+        "emailSubject": "[concat(variables('deployCode'),'-Warning-Disk-Linux')]",
+        "thresholdOperator": "GreaterThan",
+        "threshold": 0,
+        "severity": 1
+      },
+      {
+        "alertName": "agent-heartbeat-alert-critical",
+        "alertDescription": "Critical Agent Heartbeat",
+        "query": "Heartbeat | summarize Last_Heartbeat = max(TimeGenerated) by Computer | where Last_Heartbeat < now(-72h)",
+        "frequencyInMinutes": 1440,
+        "timeWindowInMinutes": 1440,
+        "emailSubject": "[concat(variables('deployCode'),'-Critical-Agent-Heartbeat')]",
+        "thresholdOperator": "GreaterThan",
+        "threshold": 0,
+        "severity": 0
+      },
+      {
+        "alertName": "agent-heartbeat-alert-warning",
+        "alertDescription": "Warning Agent Heartbeat",
+        "query": "Heartbeat | summarize Last_Heartbeat = max(TimeGenerated) by Computer | where Last_Heartbeat < now(-24h)",
+        "frequencyInMinutes": 1440,
+        "timeWindowInMinutes": 1440,
+        "emailSubject": "[concat(variables('deployCode'),'-Warning-Agent-Heartbeat')]",
+        "thresholdOperator": "GreaterThan",
+        "threshold": 0,
+        "severity": 1
+    }      
     ],
 
     "apiVersions": {
@@ -112,7 +135,7 @@
   "resources": [
 
     {
-      "name": "[variables('alerts')[copyIndex()].name]",
+      "name": "[variables('alerts')[copyIndex()].alertName]",
       "type": "Microsoft.Insights/scheduledQueryRules",
       "apiVersion": "[variables('apiVersions').scheduledQueryRules]",
       "location": "[variables('location')]",
@@ -124,7 +147,7 @@
         "[concat('hidden-link:', variables('workspace').ref)]": "Resource"
       },
       "properties": {
-        "description": "[variables('alerts')[copyIndex()].description]",
+        "description": "[variables('alerts')[copyIndex()].alertDescription]",
         "enabled": "true",
         "source": {
           "query": "[variables('alerts')[copyIndex()].query]",
@@ -132,18 +155,18 @@
           "queryType": "ResultCount"
         },
         "schedule": {
-          "frequencyInMinutes": "[variables('alerts')[copyIndex()].frequency]",
-          "timeWindowInMinutes": "[variables('alerts')[copyIndex()].timeWindow]"
+          "frequencyInMinutes": "[variables('alerts')[copyIndex()].frequencyInMinutes]",
+          "timeWindowInMinutes": "[variables('alerts')[copyIndex()].timeWindowInMinutes]"
         },
         "action": {
           "odata.type": "Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights.Nexus.DataContracts.Resources.ScheduledQueryRules.AlertingAction",
           "severity": "[variables('alerts')[copyIndex()].severity]",
           "aznsAction": {
-            "actionGroup": "[variables('groupIds')]"
+            "actionGroup": "[variables('actionGroupIds')]"
           },
           "trigger": {
-            "thresholdOperator": "[variables('alerts')[copyIndex()].threshold.operator]",
-            "threshold": "[variables('alerts')[copyIndex()].threshold.value]"
+            "thresholdOperator": "[variables('alerts')[copyIndex()].thresholdOperator]",
+            "threshold": "[variables('alerts')[copyIndex()].threshold]"
           }
         }
       }

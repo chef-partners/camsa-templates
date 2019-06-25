@@ -363,6 +363,14 @@
             "metadata": {
                 "description": "Minute of the specified hour that the SSL renewal script will run. Only applicable if running as a Managed app"
             }
+        },
+
+        "alertActionGroups": {
+            "type": "array",
+            "defaultValue": [],
+            "metadata": {
+                "description": "Array of actions group IDs that should be set for alert notifications"
+            }
         }
     },
     "variables": {
@@ -517,7 +525,8 @@
         },
 
         "alerting": {
-            "emailAddress": "[if(empty(parameters('alertEmailAddress')), parameters('chefUserEmailaddress'), parameters('alertEmailAddress'))]"
+            "emailAddress": "[if(empty(parameters('alertEmailAddress')), parameters('chefUserEmailaddress'), parameters('alertEmailAddress'))]",
+            "actionGroupIds": "[parameters('alertActionGroups')]"
          },
 
         "apiVersions": {
@@ -921,6 +930,9 @@
                     },
                     "emailAddress": {
                         "value": "[variables('alerting').emailAddress]"
+                    },
+                    "actionGroupIds": {
+                        "value": "[variables('alerting').actionGroupIds]"
                     }
                 }
             }
@@ -950,6 +962,9 @@
                     },
                     "location": {
                         "value": "[variables('location')]"
+                    },
+                    "deployCode": {
+                        "value": "[variables('uniqueShort')]"
                     }
                 }
             }

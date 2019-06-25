@@ -11,6 +11,9 @@
     },
     "emailAddress": {
       "type": "string"
+    },
+    "actionGroupIds": {
+      "type": "array"
     }
   },
   "variables": {
@@ -20,8 +23,10 @@
     },
 
     "actionGroup": {
-      "emailAddress": "[parameters('emailAddress')]"
+      "emailAddress": "[parameters('emailAddress')]",
+      "ids": "[parameters('actionGroupIds')]"
     },
+
     "apiVersions": {
       "logicApp": "2017-07-01",
       "actionGroup": "2018-03-01"
@@ -49,8 +54,8 @@
   ],
   "outputs": {
     "id": {
-      "type": "string",
-      "value": "[resourceId('Microsoft.Insights/actionGroups', variables('name').actionGroup)]"
+      "type": "array",
+      "value": "[array(concat(split(resourceId('Microsoft.Insights/actionGroups', variables('name').actionGroup), ','), variables('actionGroup').ids))]"
     }
   }
 }
