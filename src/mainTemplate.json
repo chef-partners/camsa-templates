@@ -1445,7 +1445,7 @@
                     },
                     "arguments": {
                         "value": {
-                            "MODE": "[concat('install,kernel,config,deploy,license,token,cron', if(variables('isManagedApp'), ',dns', ''), ',certificate', if(variables('enabled').backup, ',backup', ''), if(variables('enabled').logAnalytics, ',centrallogging', ''), ',internalip')]",
+                            "MODE": "[concat('datadisks,install,kernel,config,deploy,license,token,cron', if(variables('isManagedApp'), ',dns', ''), ',certificate', if(variables('enabled').backup, ',backup', ''), if(variables('enabled').logAnalytics, ',centrallogging', ''), ',internalip')]",
                             "USERNAME": "[variables('chef').username]",
                             "PASSWORD": "[variables('chef').password]",
                             "EMAILADDRESS": "[variables('chef').email]",
@@ -1470,7 +1470,8 @@
                             "MANAGED_APP": "[variables('isManagedApp')]",
                             "SSL_CERTIFICATE": "[base64ToString(variables('custom').automate.certificate)]",
                             "SSL_CERTIFICATE_KEY": "[base64ToString(variables('custom').automate.certificateKey)]",
-                            "CERT_RENEW_CRON": "[variables('sslRenewal').cron]"
+                            "CERT_RENEW_CRON": "[variables('sslRenewal').cron]",
+                            "DATA_DISK_COUNT": "[concat(reference(concat(variables('name').vm.automate, '-Deployment')).outputs.dataDiskCount.value)]"
                         }
                     },
                     "extensionName": {
@@ -1519,7 +1520,7 @@
                     },
                     "arguments":{
                         "value": {
-                            "MODE": "[concat('install,config,storekeys,integrate,', if(variables('enabled').logAnalytics, 'metrics,', ''), 'reconfigure,internalip', if(variables('enabled').backup, ',backup', ''), ',certificate')]",
+                            "MODE": "[concat('datadisks,install,config,storekeys,integrate,', if(variables('enabled').logAnalytics, 'metrics,', ''), 'reconfigure,internalip', if(variables('enabled').backup, ',backup', ''), ',certificate')]",
                             "CHEF_SERVER_VERSION": "[variables('chef').version]",
                             "CHEF_USER_NAME": "[variables('chef').username]",
                             "CHEF_USER_FULLNAME": "[variables('chef').fullname]",
@@ -1543,7 +1544,8 @@
                             "CUSTOM_DOMAIN_NAME": "[variables('custom').domain]",
                             "SSL_CERTIFICATE": "[base64ToString(variables('custom').chef.certificate)]",
                             "SSL_CERTIFICATE_KEY": "[base64ToString(variables('custom').chef.certificateKey)]",
-                            "CERT_RENEW_CRON": "[variables('sslRenewal').cron]"
+                            "CERT_RENEW_CRON": "[variables('sslRenewal').cron]",
+                            "DATA_DISK_COUNT": "[concat(reference(concat(variables('name').vm.chef, '-Deployment')).outputs.dataDiskCount.value)]"
                         }
                     },
                     "extensionName": {

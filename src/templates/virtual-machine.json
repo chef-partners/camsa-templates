@@ -56,7 +56,7 @@
               "description": "Reference to the NIC that is connected to the Customer network"
           }
       },
-  
+
       "fqdn": {
         "type": "string",
         "metadata": {
@@ -109,7 +109,12 @@
         }
       },
   
-      
+      "dataDisks": [
+        {
+          "name": "[concat(first(split(parameters('fqdn'), '.')), '-DataDisk')]",
+          "size": "100"
+        }
+      ],
   
       "ref": {
         "customerNic": "[parameters('customerNicRef')]"
@@ -154,7 +159,19 @@
               "name": "[variables('name').disk.os]",
               "caching": "ReadOnly",
               "createOption": "FromImage"
-            }
+            },
+            "copy": [
+              {
+                "name": "dataDisks",
+                "count": "[length(variables('dataDisks'))]",
+                "input": {
+                  "diskSizeGB": "[variables('dataDisks')[copyIndex('dataDisks')].size]",
+                  "lun": "[copyIndex('dataDisks')]",
+                  "createOption": "Empty",
+                  "name": "[concat(variables('dataDisks')[copyIndex('dataDisks')].name, '-', copyIndex('dataDisks', 1))]"
+                }
+              }
+            ]
           },
           "networkProfile": {
             "networkInterfaces": [
@@ -179,6 +196,10 @@
       "fqdn": {
         "type": "string",
         "value": "[parameters('fqdn')]"
+      },
+      "dataDiskCount": {
+        "type": "int",
+        "value": "[length(variables('dataDisks'))]"
       }
     }
   }

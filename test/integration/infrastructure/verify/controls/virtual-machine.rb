@@ -26,7 +26,7 @@ title 'Check AMA Chef and Automate virtual machines'
       its('sku') { should cmp '16.04-LTS' }
 
       # There should be no data disk attached to the machine
-      its('data_disk_count') { should eq 0 }
+      its('data_disk_count') { should eq 1 }
 
       # The template sets authentication using an SSK key so password authentication should 
       # be disabled
