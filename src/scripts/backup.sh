@@ -393,3 +393,7 @@ curl -X "PUT" \
 # Finally remove the working directory
 log "Removing temporary working directory"
 rm -rf $WORKING_DIR
+
+# Remove the backup file to prevent the disk from filling up
+log "Removing local copy of backup archive file"
+rm -rf $BACKUP_PATH
