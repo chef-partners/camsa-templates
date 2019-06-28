@@ -1,0 +1,61 @@
+{  
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "name": {
+      "type": "string"
+    },
+    "shortName": {
+      "type": "string",
+      "defaultValue": "CAMSA-AG"
+    },
+    "emailAddress": {
+      "type": "string"
+    },
+    "actionGroupIds": {
+      "type": "array"
+    }
+  },
+  "variables": {
+    "name": {
+      "actionGroup": "[parameters('name')]",
+      "actionGroupShortName": "[if(empty(parameters('shortName')), parameters('name'), parameters('shortName'))]"
+    },
+
+    "actionGroup": {
+      "emailAddress": "[parameters('emailAddress')]",
+      "ids": "[parameters('actionGroupIds')]"
+    },
+
+    "apiVersions": {
+      "logicApp": "2017-07-01",
+      "actionGroup": "2018-03-01"
+    },
+    "location": "Global"
+  },
+  "resources": [
+    {
+      "comments": "Action group stating what should be notified when an alert is fired",
+      "type": "Microsoft.Insights/actionGroups",
+      "name": "[variables('name').actionGroup]",
+      "apiVersion": "[variables('apiVersions').actionGroup]",
+      "location": "[variables('location')]",
+      "properties": {
+          "groupShortName": "[toLower(variables('name').actionGroupShortName)]",
+          "enabled": true,
+          "emailReceivers": [
+              {
+                  "name": "EmailNotify",
+                  "emailAddress": "[variables('actionGroup').emailAddress]"
+              }
+          ]
+      }
+  }
+  ],
+  "outputs": {
+    "id": {
+      "type": "array",
+      "value": "[array(concat(split(resourceId('Microsoft.Insights/actionGroups', variables('name').actionGroup), ','), variables('actionGroup').ids))]"
+    }
+  }
+}

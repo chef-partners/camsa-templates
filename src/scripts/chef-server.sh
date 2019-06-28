@@ -62,6 +62,10 @@ ARG_FILE=""
 # State if this is a Managed App or not
 MANAGED_APP=false
 
+# Specify the number of data disks on the machine
+# This will come from the arm template as is dictated from the Virtual Machine output
+DATA_DISK_COUNT=0
+
 #
 # Do not modify variables below here
 #
@@ -114,9 +118,9 @@ function executeCmd()
     fi
 
     # Output the commands to the log file
-    echo $localcmd >> commands.log
+    echo "$localcmd" >> commands.log
 
-    eval $localcmd
+    eval "$localcmd"
 
   fi
 }
@@ -290,6 +294,10 @@ do
     --sslcertkey)
       SSL_CERTIFICATE_KEY="$2"
     ;;    
+
+    --datadiskcount)
+      DATA_DISK_COUNT="$2"
+    ;;    
   esac
 
   # move onto the next argument
@@ -377,6 +385,65 @@ do
 
   # Run the necssary steps as per the operation
   case $operation in
+
+   # Format and mount the data disk
+    datadisks)
+
+      # Only process of the number of data disks is greater that 0
+      if [ $DATA_DISK_COUNT > 0 ]
+      then
+
+        # Depending on the number of disks, create an array of the device names
+        if [ $DATA_DISK_COUNT == 1 ]
+        then
+          disking=(sdc)
+        elif [ $DATA_DISK_COUNT == 2 ]
+        then
+          disking=(sdc sdd)
+        elif [ $DATA_DISK_COUNT == 3 ]
+        then
+          disking=(sdc sdd sde)
+        fi
+
+        # Iterate around the disking array and format the partition accordingly
+        for index in "${!disking[@]}"
+        do
+
+          disk=${disking[$index]}
+
+          cmd="echo ';' | sfdisk /dev/$disk"
+          executeCmd "${cmd}"
+
+          # Format the partition
+          cmd="mkfs -t ext4 /dev/${disk}1" 
+          executeCmd "${cmd}"
+
+          # As this is the first disk, mount on /hab so that Automate gets installed there
+          if [ $index == 0 ]
+          then
+            mountpoint="/opt/opscode"
+          else
+            mountpoint="/datadisks/disk${index}"
+          fi
+
+          # Create the mountpoint if it does not exist
+          if [ ! -f $mountpoint ]
+          then
+            cmd="mkdir -p $mountpoint"
+            executeCmd "${cmd}"
+          fi
+
+          # Update the fstab
+          cmd="echo \"/dev/${disk}1 $mountpoint ext4 defaults,nofail 0 2\" >> /etc/fstab"
+          executeCmd "${cmd}"
+
+          # Mount the disk
+          cmd="mount /dev/${disk}1"
+          executeCmd "${cmd}"
+        done
+
+      fi
+    ;;
 
     # Download and install Chef server
     install)
