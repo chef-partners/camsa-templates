@@ -457,8 +457,8 @@
         },
 
         "vmSize": {
-            "chef": "Standard_DS2_V2",
-            "automate": "Standard_DS2_V2"
+            "chef": "Standard_DS3_V2",
+            "automate": "Standard_DS3_V2"
         },
 
         "admin_username": "azureama",
