@@ -24,3 +24,4 @@ control 'AMA Log Analytics Workspace' do
     its('description_tag') { should include 'Log Analytics workspace to capture information about the health of the Chef Automate Managed App' }
   end
 end
+
