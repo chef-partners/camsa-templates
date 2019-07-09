@@ -754,7 +754,7 @@
             "verifyURLApiKey": "",
             "sslRenewalHour": "[steps('customDNSStep').sslRenewalHour]",
             "sslRenewalMinute": "[steps('customDNSStep').sslRenewalMinute]",
-            "alertActionGroups": []
+            "alertActionGroups": ""
         }
     }
 }

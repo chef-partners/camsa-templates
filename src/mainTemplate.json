@@ -366,10 +366,10 @@
         },
 
         "alertActionGroups": {
-            "type": "array",
-            "defaultValue": [],
+            "type": "string",
+            "defaultValue": "",
             "metadata": {
-                "description": "Array of actions group IDs that should be set for alert notifications"
+                "description": "String of actions group IDs that should be set for alert notifications, separated by commas"
             }
         }
     },
@@ -526,7 +526,7 @@
 
         "alerting": {
             "emailAddress": "[if(empty(parameters('alertEmailAddress')), parameters('chefUserEmailaddress'), parameters('alertEmailAddress'))]",
-            "actionGroupIds": "[parameters('alertActionGroups')]"
+            "actionGroupIds": "[split(parameters('alertActionGroups'), ',')]"
          },
 
         "apiVersions": {

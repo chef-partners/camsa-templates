@@ -249,7 +249,7 @@ function patch(options, buildConfig) {
         if (process.env.ALERT_ACTION_GROUPS) {
             console.log("   Monitor alert action groups");
 
-            uiDefinition[parametersKey][outputKey][alertActionGroupsKey] = process.env.ALERT_ACTION_GROUPS.split(",");
+            uiDefinition[parametersKey][outputsKey][alertActionGroupsKey] = process.env.ALERT_ACTION_GROUPS.split(",");
         }
 
         writeFileSync(uiDefinitionFile, JSON.stringify(uiDefinition, null, 4), "utf8");
