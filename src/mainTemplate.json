@@ -526,7 +526,7 @@
 
         "alerting": {
             "emailAddress": "[if(empty(parameters('alertEmailAddress')), parameters('chefUserEmailaddress'), parameters('alertEmailAddress'))]",
-            "actionGroupIds": "[split(parameters('alertActionGroups'), ',')]"
+            "actionGroupIds": "[if(empty(parameters('alertActionGroups')), '[]', split(parameters('alertActionGroups'), ','))]"
          },
 
         "apiVersions": {
