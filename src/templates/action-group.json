@@ -13,7 +13,7 @@
       "type": "string"
     },
     "actionGroupIds": {
-      "type": "array"
+      "type": "string"
     }
   },
   "variables": {
@@ -24,7 +24,7 @@
 
     "actionGroup": {
       "emailAddress": "[parameters('emailAddress')]",
-      "ids": "[parameters('actionGroupIds')]"
+      "ids": "[split(parameters('actionGroupIds'), ',')]"
     },
 
     "apiVersions": {
@@ -55,7 +55,7 @@
   "outputs": {
     "id": {
       "type": "array",
-      "value": "[array(concat(split(resourceId('Microsoft.Insights/actionGroups', variables('name').actionGroup), ','), variables('actionGroup').ids))]"
+      "value": "[if(and(equals(length(variables('actionGroup').ids), 1), empty(variables('actionGroup').ids[0])), split(resourceId('Microsoft.Insights/actionGroups', variables('name').actionGroup), ','), array(concat(split(resourceId('Microsoft.Insights/actionGroups', variables('name').actionGroup), ','), variables('actionGroup').ids)))]"
     }
   }
 }
