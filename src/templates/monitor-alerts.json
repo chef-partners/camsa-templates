@@ -8,9 +8,9 @@
     },
 
     "actionGroup": {
-      "type": "array",
+      "type": "string",
       "metadata": {
-        "description": "List of action groups for alert actions separated by a semicolon"
+        "description": "Action group for alerts"
       }
     },
 
@@ -33,7 +33,7 @@
 
     "location": "[parameters('location')]",
 
-    "actionGroupIds": "[parameters('actionGroup')]",
+    "actionGroupIds": "[array(parameters('actionGroup'))]",
 
     "deployCode": "[parameters('deployCode')]",
 

@@ -12,7 +12,7 @@
     "emailAddress": {
       "type": "string"
     },
-    "actionGroupIds": {
+    "agEmails": {
       "type": "string"
     }
   },
@@ -22,10 +22,18 @@
       "actionGroupShortName": "[if(empty(parameters('shortName')), parameters('name'), parameters('shortName'))]"
     },
 
-    "actionGroup": {
-      "emailAddress": "[parameters('emailAddress')]",
-      "ids": "[split(parameters('actionGroupIds'), ',')]"
-    },
+    "allEmailAddresses": "[if(empty(parameters('agEmails')), array(parameters('emailAddress')), concat(split(parameters('agEmails'), ','), array(parameters('emailAddress'))))]",
+
+    "copy": [
+      {
+        "name": "emailReceivers",
+        "count": "[length(variables('allEmailAddresses'))]",
+        "input": {
+          "name": "[concat('EmailNotify-', variables('allEmailAddresses')[copyIndex('emailReceivers')])]",
+          "emailAddress": "[variables('allEmailAddresses')[copyIndex('emailReceivers')]]"
+        }
+      }
+    ],
 
     "apiVersions": {
       "logicApp": "2017-07-01",
@@ -43,19 +51,14 @@
       "properties": {
           "groupShortName": "[toLower(variables('name').actionGroupShortName)]",
           "enabled": true,
-          "emailReceivers": [
-              {
-                  "name": "EmailNotify",
-                  "emailAddress": "[variables('actionGroup').emailAddress]"
-              }
-          ]
+          "emailReceivers": "[variables('emailReceivers')]"
       }
   }
   ],
   "outputs": {
     "id": {
-      "type": "array",
-      "value": "[if(and(equals(length(variables('actionGroup').ids), 1), empty(variables('actionGroup').ids[0])), split(resourceId('Microsoft.Insights/actionGroups', variables('name').actionGroup), ','), array(concat(split(resourceId('Microsoft.Insights/actionGroups', variables('name').actionGroup), ','), variables('actionGroup').ids)))]"
+      "type": "string",
+      "value": "[resourceId('Microsoft.Insights/actionGroups', variables('name').actionGroup)]"
     }
   }
 }

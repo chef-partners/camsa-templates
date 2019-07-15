@@ -37,7 +37,7 @@ const outputsKey = "outputs";
 const verifyURLApiKeyKey = "verifyURLApiKey";
 const packageKey = "package";
 const nameKey = "name";
-const alertActionGroupsKey = "alertActionGroups";
+const alertActionGroupsKey = "alertAGEmails";
 
 // Functions --------------------------------------------------------------
 
@@ -246,10 +246,10 @@ function patch(options, buildConfig) {
         }
 
         // Update the action groups that need to be assigned for the monitoring alerts
-        if (process.env.ALERT_ACTION_GROUPS) {
-            console.log("   Monitor alert action groups");
+        if (process.env.AG_EMAILS) {
+            console.log("   Monitor alert email addresses");
 
-            uiDefinition[parametersKey][outputsKey][alertActionGroupsKey] = process.env.ALERT_ACTION_GROUPS;
+            uiDefinition[parametersKey][outputsKey][alertActionGroupsKey] = process.env.AG_EMAILS;
         }
 
         writeFileSync(uiDefinitionFile, JSON.stringify(uiDefinition, null, 4), "utf8");

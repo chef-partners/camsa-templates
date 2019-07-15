@@ -365,11 +365,11 @@
             }
         },
 
-        "alertActionGroups": {
+        "alertAGEmails": {
             "type": "string",
             "defaultValue": "",
             "metadata": {
-                "description": "String of actions group IDs that should be set for alert notifications, separated by commas"
+                "description": "String of email addresses that need to be alerted for monitoring, separated by commas"
             }
         }
     },
@@ -526,7 +526,7 @@
 
         "alerting": {
             "emailAddress": "[if(empty(parameters('alertEmailAddress')), parameters('chefUserEmailaddress'), parameters('alertEmailAddress'))]",
-            "actionGroupIds": "[parameters('alertActionGroups')]"
+            "agEmails": "[parameters('alertAGEmails')]"
          },
 
         "apiVersions": {
@@ -931,8 +931,8 @@
                     "emailAddress": {
                         "value": "[variables('alerting').emailAddress]"
                     },
-                    "actionGroupIds": {
-                        "value": "[variables('alerting').actionGroupIds]"
+                    "agEmails": {
+                        "value": "[variables('alerting').agEmails]"
                     }
                 }
             }
