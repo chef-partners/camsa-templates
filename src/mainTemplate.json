@@ -117,10 +117,34 @@
             }
         },
 
+        "chefEnabled": {
+            "type": "bool",
+            "metadata": {
+                "description": "State if the Chef Server should be deployed or not"
+            },
+            "defaultValue": true
+        },
+
+        "alertEmailAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "If log anlaytics are enabled this is the email address that alerts should be sent to. If blank the chefUserEmailaddress will be used."
+            },
+            "defaultValue": ""
+        },
+
         "automateLicense": {
             "type": "securestring",
             "defaultValue": ""
         },
+
+        "automateEnabled": {
+            "type": "bool",
+            "metadata": {
+                "description": "State if the Automate Server should be deployed or not"
+            },
+            "defaultValue": true
+        },        
 
         "customerName": {
             "type": "string",
@@ -339,6 +363,14 @@
             "metadata": {
                 "description": "Minute of the specified hour that the SSL renewal script will run. Only applicable if running as a Managed app"
             }
+        },
+
+        "alertAGEmails": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "String of email addresses that need to be alerted for monitoring, separated by commas"
+            }
         }
     },
     "variables": {
@@ -365,6 +397,8 @@
             "appService": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-AppService')]",
             "sa": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-SA')]",
             "la": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-LogAnalytics')]",
+            "alerting": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-Alerts')]",
+            "actionGroup": "[concat(parameters('prefix'), '-', variables('uniqueShort'), '-ActionGroup')]",
             "vm": {
                 "chef": "[concat(parameters('prefix'), '-chef-', variables('uniqueShort'), '-VM')]",
                 "automate": "[concat(parameters('prefix'), '-automate-', variables('uniqueShort'), '-VM')]"
@@ -423,8 +457,8 @@
         },
 
         "vmSize": {
-            "chef": "Standard_DS2_V2",
-            "automate": "Standard_DS2_V2"
+            "chef": "Standard_DS3_V2",
+            "automate": "Standard_DS3_V2"
         },
 
         "admin_username": "azureama",
@@ -468,7 +502,9 @@
             "appServicePlan": "[concat(variables('baseUrl'), 'templates/app-service-plan.json', variables('templateUrlQueryString'))]",
             "appService": "[concat(variables('baseUrl'), 'templates/app-service.json', variables('templateUrlQueryString'))]",
             "logAnalytics": "[concat(variables('baseUrl'), 'templates/log-analytics.json', variables('templateUrlQueryString'))]",
+            "monitorAlerts": "[concat(variables('baseUrl'), 'templates/monitor-alerts.json', variables('templateUrlQueryString'))]",
             "logAnalyticsExtension": "[concat(variables('baseUrl'), 'templates/log-analytics-extension.json', variables('templateUrlQueryString'))]",
+            "actionGroup": "[concat(variables('baseUrl'), 'templates/action-group.json', variables('templateUrlQueryString'))]",
             "apiConnection": "[concat(variables('baseUrl'), 'templates/apiConnection/azureblob.json', variables('templateUrlQueryString'))]",
             "logicApps": {
                 "housekeeping": "[concat(variables('baseUrl'), 'templates/logicApps/housekeeping.json', variables('templateUrlQueryString'))]"
@@ -488,12 +524,18 @@
             }
         },
 
+        "alerting": {
+            "emailAddress": "[if(empty(parameters('alertEmailAddress')), parameters('chefUserEmailaddress'), parameters('alertEmailAddress'))]",
+            "agEmails": "[parameters('alertAGEmails')]"
+         },
+
         "apiVersions": {
             "deployments": "2017-05-10",
             "config": "2016-08-01"
         },
 
         "chef": {
+            "enabled": "[parameters('chefEnabled')]",
             "version": "[parameters('chefServerVersion')]",
             "username": "[parameters('chefUsername')]",
             "email": "[parameters('chefUserEmailaddress')]",
@@ -505,6 +547,7 @@
         },
 
         "automate": {
+            "enabled": "[parameters('automateEnabled')]",
             "license": "[parameters('automateLicense')]"
         },
 
@@ -871,6 +914,63 @@
         },
 
         {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').actionGroup, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "condition": "[variables('enabled').logAnalytics]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').actionGroup]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "name": {
+                        "value": "[variables('name').actionGroup]"
+                    },
+                    "emailAddress": {
+                        "value": "[variables('alerting').emailAddress]"
+                    },
+                    "agEmails": {
+                        "value": "[variables('alerting').agEmails]"
+                    }
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(variables('name').alerting, '-Deployment')]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]",
+                "[concat('Microsoft.Resources/deployments/', variables('name').actionGroup, '-Deployment')]"
+            ],
+            "condition": "[variables('enabled').logAnalytics]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('urls').monitorAlerts]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "workspaceRef": {
+                        "value": "[reference(concat(variables('name').la, '-Deployment')).outputs.ref.value]"
+                    },
+                    "actionGroup": {
+                        "value": "[reference(concat(variables('name').actionGroup, '-Deployment')).outputs.id.value]"
+                    },
+                    "location": {
+                        "value": "[variables('location')]"
+                    },
+                    "deployCode": {
+                        "value": "[variables('uniqueShort')]"
+                    }
+                }
+            }
+        },
+
+        {
             "comments": "Virtual Network resource to either create a network or return the details of an existing on",
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').network.vnet, '-Deployment')]",
@@ -917,6 +1017,7 @@
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').nsg.chef, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
+            "condition": "[variables('chef').enabled]",
             "properties": {
                 "mode":"Incremental",
                 "templateLink": {
@@ -977,6 +1078,7 @@
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').publicIPAddress.chef, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
+            "condition": "[variables('chef').enabled]",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -1043,6 +1145,7 @@
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').nic.customer.chef, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
+            "condition": "[variables('chef').enabled]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', variables('name').publicIPAddress.chef, '-Deployment')]",
                 "[concat('Microsoft.Resources/deployments/', variables('name').nsg.chef, '-Deployment')]"
@@ -1123,6 +1226,7 @@
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').vm.chef, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
+            "condition": "[variables('chef').enabled]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', variables('name').nic.customer.chef, '-Deployment')]",
                 "[concat('Microsoft.Resources/deployments/', variables('name').sa, '-Deployment')]"
@@ -1270,6 +1374,7 @@
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').laExtension.chef, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
+            "condition": "[variables('chef').enabled]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', variables('name').vm.chef, '-Deployment')]",
                 "[concat('Microsoft.Resources/deployments/', variables('name').la, '-Deployment')]"
@@ -1340,7 +1445,7 @@
                     },
                     "arguments": {
                         "value": {
-                            "MODE": "[concat('install,kernel,config,deploy,license,token,cron', if(variables('isManagedApp'), ',dns', ''), ',certificate', if(variables('enabled').backup, ',backup', ''), if(variables('enabled').logAnalytics, ',centrallogging', ''), ',internalip')]",
+                            "MODE": "[concat('datadisks,install,kernel,config,deploy,license,token,cron', if(variables('isManagedApp'), ',dns', ''), ',certificate', if(variables('enabled').backup, ',backup', ''), if(variables('enabled').logAnalytics, ',centrallogging', ''), ',internalip')]",
                             "USERNAME": "[variables('chef').username]",
                             "PASSWORD": "[variables('chef').password]",
                             "EMAILADDRESS": "[variables('chef').email]",
@@ -1365,7 +1470,8 @@
                             "MANAGED_APP": "[variables('isManagedApp')]",
                             "SSL_CERTIFICATE": "[base64ToString(variables('custom').automate.certificate)]",
                             "SSL_CERTIFICATE_KEY": "[base64ToString(variables('custom').automate.certificateKey)]",
-                            "CERT_RENEW_CRON": "[variables('sslRenewal').cron]"
+                            "CERT_RENEW_CRON": "[variables('sslRenewal').cron]",
+                            "DATA_DISK_COUNT": "[concat(reference(concat(variables('name').vm.automate, '-Deployment')).outputs.dataDiskCount.value)]"
                         }
                     },
                     "extensionName": {
@@ -1385,6 +1491,7 @@
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(variables('name').extension.chef, '-Deployment')]",
             "apiVersion": "[variables('apiVersions').deployments]",
+            "condition": "[variables('chef').enabled]",
             "dependsOn": [
                 "[concat('Microsoft.Resources/deployments/', variables('name').vm.chef, '-Deployment')]",
                 "[concat('Microsoft.Resources/deployments/', variables('name').extension.automate, '-Deployment')]",
@@ -1413,7 +1520,7 @@
                     },
                     "arguments":{
                         "value": {
-                            "MODE": "[concat('install,config,storekeys,integrate,', if(variables('enabled').logAnalytics, 'metrics,', ''), 'reconfigure,internalip', if(variables('enabled').backup, ',backup', ''), ',certificate')]",
+                            "MODE": "[concat('datadisks,install,config,storekeys,integrate,', if(variables('enabled').logAnalytics, 'metrics,', ''), 'reconfigure,internalip', if(variables('enabled').backup, ',backup', ''), ',certificate')]",
                             "CHEF_SERVER_VERSION": "[variables('chef').version]",
                             "CHEF_USER_NAME": "[variables('chef').username]",
                             "CHEF_USER_FULLNAME": "[variables('chef').fullname]",
@@ -1437,7 +1544,8 @@
                             "CUSTOM_DOMAIN_NAME": "[variables('custom').domain]",
                             "SSL_CERTIFICATE": "[base64ToString(variables('custom').chef.certificate)]",
                             "SSL_CERTIFICATE_KEY": "[base64ToString(variables('custom').chef.certificateKey)]",
-                            "CERT_RENEW_CRON": "[variables('sslRenewal').cron]"
+                            "CERT_RENEW_CRON": "[variables('sslRenewal').cron]",
+                            "DATA_DISK_COUNT": "[concat(reference(concat(variables('name').vm.chef, '-Deployment')).outputs.dataDiskCount.value)]"
                         }
                     },
                     "extensionName": {
@@ -1460,7 +1568,7 @@
         },
         "chefServerFQDN": {
             "type": "string",
-            "value": "[concat(reference(concat(variables('name').vm.chef, '-Deployment')).outputs.fqdn.value)]"
+            "value": "[if(variables('chef').enabled, concat(reference(concat(variables('name').vm.chef, '-Deployment')).outputs.fqdn.value), '')]"
         },
         "starterKitDownloadUrl": {
             "type": "string",

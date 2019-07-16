@@ -37,6 +37,7 @@ const outputsKey = "outputs";
 const verifyURLApiKeyKey = "verifyURLApiKey";
 const packageKey = "package";
 const nameKey = "name";
+const alertActionGroupsKey = "alertAGEmails";
 
 // Functions --------------------------------------------------------------
 
@@ -232,12 +233,25 @@ function patch(options, buildConfig) {
 
     // Patch the createUIDefinition.json file with the API key for the verifyurl
     let uiDefinitionFile = pathJoin(buildConfig[dirsKey][workingKey][productionKey], "createUiDefinition.json");
-    if (existsSync(uiDefinitionFile) && process.env.VERIFY_URL_API_KEY) {
-        console.log("Patching createUIDefinition.json with API key");
+    if (existsSync(uiDefinitionFile)) {
+
+        console.log("Patching createUIDefinition.json");
         let uiDefinition = JSON.parse(readFileSync(uiDefinitionFile, "utf8"));
 
-        // patch the parameter value
-        uiDefinition[parametersKey][outputsKey][verifyURLApiKeyKey] = process.env.VERIFY_URL_API_KEY;
+        if (process.env.VERIFY_URL_API_KEY) {
+            console.log("   API key");
+
+            // patch the parameter value
+            uiDefinition[parametersKey][outputsKey][verifyURLApiKeyKey] = process.env.VERIFY_URL_API_KEY;
+        }
+
+        // Update the action groups that need to be assigned for the monitoring alerts
+        if (process.env.AG_EMAILS) {
+            console.log("   Monitor alert email addresses");
+
+            uiDefinition[parametersKey][outputsKey][alertActionGroupsKey] = process.env.AG_EMAILS;
+        }
+
         writeFileSync(uiDefinitionFile, JSON.stringify(uiDefinition, null, 4), "utf8");
     }
 }
