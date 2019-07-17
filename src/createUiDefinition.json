@@ -78,8 +78,8 @@
                         "toolTip": "Username for the Chef and Automate servers",
                         "constraints": {
                             "required": true,
-                            "regex": "^[a-z0-9]+$",
-                            "validationMessage": "Only lower case alphanumeric characters are allowed."
+                            "regex": "^(?!admin)(^[a-z0-9]+)$",
+                            "validationMessage": "Only lower case alphanumeric characters are allowed. Username cannot be or start with 'admin'."
                         },
                         "visible": true
                     },
