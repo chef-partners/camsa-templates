@@ -216,6 +216,7 @@ function patch(options, buildConfig) {
     }
 
     // Patch the mainTemplate so that it has the correct BaseURl if it has been specified in options
+    /*
     let mainTemplateFile = pathJoin(buildConfig[dirsKey][workingKey][productionKey], "mainTemplate.json");
     if (existsSync(mainTemplateFile)) {
         if (options.baseurl !== "") {
@@ -230,6 +231,7 @@ function patch(options, buildConfig) {
     } else {
         console.log("##vso[task.issue type=error]Unable to find main template: %s", mainTemplateFile);
     }
+    */
 
     // Patch the createUIDefinition.json file with the API key for the verifyurl
     let uiDefinitionFile = pathJoin(buildConfig[dirsKey][workingKey][productionKey], "createUiDefinition.json");
@@ -263,6 +265,7 @@ function createStaging(options, buildConfig) {
     copySync(buildConfig[dirsKey][workingKey][productionKey], buildConfig[dirsKey][workingKey][stagingKey]);
 
     // patch the mainTemplate with the staging URL
+    /*
     let mainTemplateFile = pathJoin(buildConfig[dirsKey][workingKey][stagingKey], "mainTemplate.json");
     if (existsSync(mainTemplateFile)) {
         if (options.url !== "") {
@@ -277,6 +280,7 @@ function createStaging(options, buildConfig) {
     } else {
         console.log("##vso[task.issue type=error]Unable to find main template: %s", mainTemplateFile);
     }
+    */
 }
 
 function packageFiles(options, buildConfig) {
