@@ -11,7 +11,7 @@
                 "toolTip": "A prefix that should be applied to all resources that are created",
                 "constraints": {
                     "required": true,
-                    "regex": "^[a-z][a-z0-9]{1,4}$",
+                    "regex": "^[a-z0-9]{1,5}$",
                     "validationMessage": "This must be a lowercase aplhanumeric string and no more than 5 characters"
                 }
             }
