@@ -215,22 +215,6 @@ function patch(options, buildConfig) {
         }
     }
 
-    // Patch the mainTemplate so that it has the correct BaseURl if it has been specified in options
-    let mainTemplateFile = pathJoin(buildConfig[dirsKey][workingKey][productionKey], "mainTemplate.json");
-    if (existsSync(mainTemplateFile)) {
-        if (options.baseurl !== "") {
-            console.log("Patching main template: %s", mainTemplateFile);
-
-            let mainTemplate = JSON.parse(readFileSync(mainTemplateFile, "utf8"));
-
-            // patch the default value for the parameter
-            mainTemplate[parametersKey][baseUrlKey][defaultValueKey] = options.baseurl;
-            writeFileSync(mainTemplateFile, JSON.stringify(mainTemplate, null, 4), "utf8");
-        }
-    } else {
-        console.log("##vso[task.issue type=error]Unable to find main template: %s", mainTemplateFile);
-    }
-
     // Patch the createUIDefinition.json file with the API key for the verifyurl
     let uiDefinitionFile = pathJoin(buildConfig[dirsKey][workingKey][productionKey], "createUiDefinition.json");
     if (existsSync(uiDefinitionFile)) {
@@ -261,22 +245,6 @@ function createStaging(options, buildConfig) {
 
     // copy the contents of the production directory to staging
     copySync(buildConfig[dirsKey][workingKey][productionKey], buildConfig[dirsKey][workingKey][stagingKey]);
-
-    // patch the mainTemplate with the staging URL
-    let mainTemplateFile = pathJoin(buildConfig[dirsKey][workingKey][stagingKey], "mainTemplate.json");
-    if (existsSync(mainTemplateFile)) {
-        if (options.url !== "") {
-            console.log("Patching main template: %s", mainTemplateFile);
-
-            let mainTemplate = JSON.parse(readFileSync(mainTemplateFile, "utf8"));
-
-            // patch the default value for the parameter
-            mainTemplate[parametersKey][baseUrlKey][defaultValueKey] = options.url;
-            writeFileSync(mainTemplateFile, JSON.stringify(mainTemplate, null, 4), "utf8");
-        }
-    } else {
-        console.log("##vso[task.issue type=error]Unable to find main template: %s", mainTemplateFile);
-    }
 }
 
 function packageFiles(options, buildConfig) {

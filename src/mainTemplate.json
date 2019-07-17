@@ -222,7 +222,11 @@
 
         "baseUrl": {
             "type": "string",
-            "defaultValue": "https://chefarmstorage.blob.core.windows.net/ama"
+            "defaultValue": "https://chefarmstorage.blob.core.windows.net/ama",
+            "metadata": {
+                "description": "URL from which nested templates can be found",
+                "artifactsBaseUrl": ""
+            }
         },
 
         "azureStorageSASToken": {
