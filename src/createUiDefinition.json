@@ -11,8 +11,8 @@
                 "toolTip": "A prefix that should be applied to all resources that are created",
                 "constraints": {
                     "required": true,
-                    "regex": "^[a-z0-9]{1,5}$",
-                    "validationMessage": "This must be a lowercase aplhanumeric string and no more than 5 characters"
+                    "regex": "^[a-z][a-z0-9]{1,4}$",
+                    "validationMessage": "The prefix must start with a letter, be alphanumeric and can be up to 5 characters long"
                 }
             }
         ],
