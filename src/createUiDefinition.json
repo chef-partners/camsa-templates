@@ -12,7 +12,7 @@
                 "constraints": {
                     "required": true,
                     "regex": "^[a-z][a-z0-9]{1,4}$",
-                    "validationMessage": "This must be a lowercase aplhanumeric string and no more than 5 characters"
+                    "validationMessage": "The prefix must start with a letter, be alphanumeric and can be up to 5 characters long"
                 }
             }
         ],
@@ -78,8 +78,8 @@
                         "toolTip": "Username for the Chef and Automate servers",
                         "constraints": {
                             "required": true,
-                            "regex": "^[a-z0-9]+$",
-                            "validationMessage": "Only lower case alphanumeric characters are allowed."
+                            "regex": "^(?!admin)(^[a-z0-9]+)$",
+                            "validationMessage": "Only lower case alphanumeric characters are allowed. Username cannot be or start with 'admin'."
                         },
                         "visible": true
                     },
@@ -178,14 +178,11 @@
                 },
                 "elements": [
                     {
-                        "name": "customerName",
-                        "type": "Microsoft.Common.TextBox",
-                        "label": "Customer Name",
-                        "toolTip": "Your name or company name. This should be the same as the name registered for the Automate License",
-                        "constraints": {
-                            "required": true,
-                            "regex": "^[a-zA-Z0-9 ]+$",
-                            "validationMessage": "A company name or your name must be specified"
+                        "name": "information",
+                        "type": "Microsoft.Common.InfoBox",
+                        "options": {
+                            "icon": "Info",
+                            "text": "If you already have an automate license select 'Yes' and then provide your license and the name it was registered with.<p />If you do not have an Automate License a trial one will be provided on deployment."
                         },
                         "visible": true
                     },
@@ -210,6 +207,18 @@
                       },
                       "visible": true
                     },
+                    {
+                        "name": "customerName",
+                        "type": "Microsoft.Common.TextBox",
+                        "label": "Customer Name",
+                        "toolTip": "Your name or company name. This should be the same as the name registered for the Automate License",
+                        "constraints": {
+                            "required": "[steps('automateLicenseStep').hasLicense]",
+                            "regex": "^[a-zA-Z0-9 ]+$",
+                            "validationMessage": "A company name or your name must be specified"
+                        },
+                        "visible": "[steps('automateLicenseStep').hasLicense]"
+                    },                    
                     {
                       "name": "license",
                       "type": "Microsoft.Common.TextBox",
