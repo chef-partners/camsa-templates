@@ -36,6 +36,8 @@ WORKING_DIR="/tmp/backup"
 
 DRY_RUN=0
 
+removeBackupCmd=""
+
 # FUNCTIONS -------------------------------------------------------------------
 function urlencode() {
 	local LANG=C i c e=''
@@ -287,7 +289,15 @@ then
 
         # Read in the IDs and build up the removeBackupCmd
         ids=`cat backups.json | jq -r '[.result.backups[] | .id] | join(" ")'`
-        removeBackupCmd="chef-automate backup delete --yes ${ids} && rm backups.json"
+
+        # Only attempt to delete backups if there are some IDs
+        # If not then just remove the backups json file
+        if [ "X$ids" == "X" ]
+        then
+          removeBackupCmd="rm backups.json"
+        else
+          removeBackupCmd="chef-automate backup delete --yes ${ids} && rm backups.json"
+        fi
 
       ;;
 
