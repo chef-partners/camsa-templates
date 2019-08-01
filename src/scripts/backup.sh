@@ -36,6 +36,8 @@ WORKING_DIR="/tmp/backup"
 
 DRY_RUN=0
 
+removeBackupCmd=""
+
 # FUNCTIONS -------------------------------------------------------------------
 function urlencode() {
 	local LANG=C i c e=''
@@ -279,6 +281,24 @@ then
         # Determine the filename to be used as the blob name
         blob_name="automate_`basename $BACKUP_PATH`"
 
+        # Get a list of the backup IDs to remove
+        # and then build up the command that needs to be run at the end
+        # Get list of the backup ids into a json file
+        cmd="chef-automate backup list --result-json backups.json"
+        executeCmd "$cmd"
+
+        # Read in the IDs and build up the removeBackupCmd
+        ids=`cat backups.json | jq -r '[.result.backups[] | .id] | join(" ")'`
+
+        # Only attempt to delete backups if there are some IDs
+        # If not then just remove the backups json file
+        if [ "X$ids" == "X" ]
+        then
+          removeBackupCmd="rm backups.json"
+        else
+          removeBackupCmd="chef-automate backup delete --yes ${ids} && rm backups.json"
+        fi
+
       ;;
 
     chef)
@@ -294,6 +314,9 @@ then
 
         # Determine the filename to be used as the blob name
         blob_name="`basename $BACKUP_PATH`"
+
+        # Determine the command to remove the backup from disk
+        removeBackupCmd="rm -rf $BACKUP_PATH"
 
       ;;
 
@@ -390,10 +413,16 @@ curl -X "PUT" \
    -d "$body" \
    "https://${STORAGE_ACCOUNT}.blob.core.windows.net/${CONTAINER_NAME}/${blob_name}?comp=blocklist"
 
-# Finally remove the working directory
+# Remove the working directory
 log "Removing temporary working directory"
 rm -rf $WORKING_DIR
 
 # Remove the backup file to prevent the disk from filling up
-log "Removing local copy of backup archive file"
-rm -rf $BACKUP_PATH
+# This command is specific to the type of server that has been deployed
+# Automate has a built in command to delete backups which handles the ES snapshots too
+# For this reason the correct command is determined by the backup type
+if [ "X$removeBackupCmd" != "X" ]
+then
+  log "Removing local copy of backup archive file"
+  executeCmd "$removeBackupCmd"
+fi
