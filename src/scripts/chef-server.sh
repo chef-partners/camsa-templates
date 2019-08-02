@@ -393,54 +393,48 @@ do
       if [ $DATA_DISK_COUNT > 0 ]
       then
 
-        # Depending on the number of disks, create an array of the device names
-        if [ $DATA_DISK_COUNT == 1 ]
+        disk="sdc"
+
+        # Write out the layout for the disk
+        echo -e "
+/dev/sdc1 : start=        2048, size=    20971520, type=83
+/dev/sdc2 : start=    20973568, size=   188741632, type=83
+" > ${disk}_layout.txt
+
+        cmd="sfdisk /dev/$disk < ${disk}_layout.txt"
+        executeCmd "${cmd}"
+
+        # Format the two partitions
+        cmd="mkfs -t ext4 /dev/${disk}1" 
+        executeCmd "${cmd}"
+
+        cmd="mkfs -t ext4 /dev/${disk}2" 
+        executeCmd "${cmd}"
+
+        # Create the necessary mountpoints for paritions
+        if [ ! -d "/opt/opscode" ]
         then
-          disking=(sdc)
-        elif [ $DATA_DISK_COUNT == 2 ]
-        then
-          disking=(sdc sdd)
-        elif [ $DATA_DISK_COUNT == 3 ]
-        then
-          disking=(sdc sdd sde)
+          executeCmd "mkdir -p /opt/opscode"
         fi
 
-        # Iterate around the disking array and format the partition accordingly
-        for index in "${!disking[@]}"
-        do
+        if [ ! -d "/var/opt/opscode" ]
+        then
+          executeCmd "mkdir -p /var/opt/opscode"
+        fi
 
-          disk=${disking[$index]}
+        # Update the fstab
+        cmd="echo \"/dev/${disk}1 /opt/opscode ext4 defaults,nofail 0 2\" >> /etc/fstab"
+        executeCmd "${cmd}"
 
-          cmd="echo ';' | sfdisk /dev/$disk"
-          executeCmd "${cmd}"
+        cmd="echo \"/dev/${disk}2 /var/opt/opscode ext4 defaults,nofail 0 2\" >> /etc/fstab"
+        executeCmd "${cmd}"        
 
-          # Format the partition
-          cmd="mkfs -t ext4 /dev/${disk}1" 
-          executeCmd "${cmd}"
+        # Mount the disk
+        cmd="mount /opt/opscode"
+        executeCmd "${cmd}"
 
-          # As this is the first disk, mount on /hab so that Automate gets installed there
-          if [ $index == 0 ]
-          then
-            mountpoint="/opt/opscode"
-          else
-            mountpoint="/datadisks/disk${index}"
-          fi
-
-          # Create the mountpoint if it does not exist
-          if [ ! -f $mountpoint ]
-          then
-            cmd="mkdir -p $mountpoint"
-            executeCmd "${cmd}"
-          fi
-
-          # Update the fstab
-          cmd="echo \"/dev/${disk}1 $mountpoint ext4 defaults,nofail 0 2\" >> /etc/fstab"
-          executeCmd "${cmd}"
-
-          # Mount the disk
-          cmd="mount /dev/${disk}1"
-          executeCmd "${cmd}"
-        done
+        cmd="mount /var/opt/opscode"
+        executeCmd "${cmd}"
 
       fi
     ;;
