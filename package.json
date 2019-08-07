@@ -39,7 +39,8 @@
         "should": "^13.1.2",
         "sprintf-js": "^1.1.1",
         "typescript": "^2.8.3",
-        "zip-folder": "^1.0.0"
+        "zip-folder": "^1.0.0",
+        "arm-template-deploy": "file:../../turtlesystems/nodejs/arm-template-deploy"
     },
     "devDependencies": {
         "@types/fs-extra": "^5.0.2",

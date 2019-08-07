@@ -1,0 +1,69 @@
+{
+  "dirs": {
+  },
+  "build": {
+      "dual": true,
+      "files": [
+          {
+              "source": "src/templates",
+              "target": "templates"
+          },
+          {
+              "source": "src/scripts",
+              "target": "scripts"
+          },
+          {
+              "source": "src/mainTemplate.json",
+              "target": ""
+          },
+          {
+              "source": "src/createUiDefinition.json",
+              "target": ""
+          },
+          {
+              "source": "src/viewDefinition.json",
+              "target": ""
+          }            
+      ],
+      "functions": [
+      ],
+      "package": {
+          "name": "chef-automate-ama"
+      },
+      "patch": [
+          {
+              "fileName": "createUIDefinition.json",
+              "items": [
+                  {
+                      "path": "parameters.outputs.verifyURLApiKey",
+                      "value": "ENV.verifyURLApiKey"
+                  }
+              ],
+              "remove": true
+          }
+      ],
+      "detect": [
+          {
+              "type": "nightlyBuild",
+              "name": "BUILD_REASON",
+              "value": "schedule"
+          },
+          {
+              "type": "sourceBranch",
+              "name": "BUILD_SOURCEBRANCHNAME"
+          }
+      ]
+  },
+  "deploy": {
+    "templateFile": "mainTemplate.json",
+    "resourceGroup": {
+      "name": "rjs-ama",
+      "location": "eastus"
+    },
+    "storageAccount": {
+      "name": "chefarmstorage",
+      "containerName": "rjsscratch",
+      "groupName": "Azure-Managed-App-Storage"
+    }
+  }
+}

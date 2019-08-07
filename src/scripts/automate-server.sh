@@ -84,6 +84,10 @@ MANAGED_APP=false
 # This will come from the arm template as is dictated from the Virtual Machine output
 DATA_DISK_COUNT=0
 
+CUSTOMER_NAME=""
+WORKSPACE_ID=""
+WORKSPACE_KEY=""
+
 #
 # Do not modify variables below here
 #
@@ -791,6 +795,22 @@ EOF
       cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"automate_internal_ip\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $internal_ip)
       executeCmd "$cmd" 
     ;;
+
+    laworkspace)
+
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"workspace_id\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $WORKSPACE_ID)
+      executeCmd "$cmd"
+
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"workspace_key\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $WORKSPACE_KEY)
+      executeCmd "$cmd"
+
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"customer_name\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $CUSTOMER_NAME)
+      executeCmd "$cmd"
+
+      cmd=$(printf "curl -XPOST %s/%s?code=%s -d '{\"subscription_id\": \"%s\"}'" $FUNCTION_BASE_URL $OPS_FUNCTION_NAME $OPS_FUNCTION_APIKEY $SUBSCRIPTION_ID)
+      executeCmd "$cmd"
+
+      ;;
 
     # Set the DNS entries for the servers, as long as the custom domain name has not been set
     dns)
