@@ -391,26 +391,6 @@
                 "description": "Branch that the functions should be pulled from"
             },
             "defaultValue": "stable"
-        },
-
-        "functionsRepoToken": {
-            "type": "string",
-            "metadata": {
-              "description": "GitHub PAT allowing acess to the repo fro Source Control deployment"
-            },
-            "defaultValue": ""
-          },
-
-        "functionsRepoTokenType": {
-            "type": "string",
-            "metadata": {
-                "description": "Type of token that has been supplied. Oauth or PersonalAccessToken"
-            },
-            "defaultValue": "PersonalAccessToken",
-            "allowedValues": [
-                "Oauth",
-                "PersonalAccessToken"
-            ]
         }
     },
     "variables": {
@@ -616,9 +596,7 @@
 
         "repo": {
             "url": "[parameters('functionsRepoUrl')]",
-            "branch": "[parameters('functionsRepoBranch')]",
-            "token": "[parameters('functionsRepoToken')]",
-            "tokenType": "[parameters('functionsRepoTokenType')]"
+            "branch": "[parameters('functionsRepoBranch')]"
         }
     },
     "functions": [

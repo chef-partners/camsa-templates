@@ -23,7 +23,7 @@
         "randomGuid": {
             "type": "string",
             "metadata": {
-                "description": "This parameter is never intended to be passed to the template. It is here purley to randomly generate as a seed to create a unique string for the functions. The newGuid() function can only be called on a parameter"
+                "description": "This parameter is never intended to be passed to the template. It is here purely to randomly generate as a seed to create a unique string for the functions. The newGuid() function can only be called on a parameter"
             },
             "defaultValue": "[newGuid()]"
         }
