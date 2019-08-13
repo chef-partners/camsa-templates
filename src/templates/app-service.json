@@ -16,6 +16,16 @@
         },
         "storageAccountName": {
             "type": "string"
+        },
+        "instrumentationKey": {
+            "type": "string"
+        },
+        "randomGuid": {
+            "type": "string",
+            "metadata": {
+                "description": "This parameter is never intended to be passed to the template. It is here purely to randomly generate as a seed to create a unique string for the functions. The newGuid() function can only be called on a parameter"
+            },
+            "defaultValue": "[newGuid()]"
         }
     },
     "variables": {
@@ -29,8 +39,13 @@
         "servicePlan": {
             "id": "[parameters('servicePlanId')]"
         },
+        "keys": {
+            "applicationInsights": "[parameters('instrumentationKey')]",
+            "camsaFunction": "[replace(parameters('randomGuid'), '-', '')]"
+        },
         "apiVersions": {
-            "sites": "2016-08-01"
+            "sites": "2016-08-01",
+            "sourcecontrols": "2018-02-01"
         }
     },
     "resources": [
@@ -62,8 +77,16 @@
                             "value": "[variables('name').contentshare]"
                         },
                         {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[variables('keys').applicationInsights]"
+                        },
+                        {
                             "name": "FUNCTIONS_EXTENSION_VERSION",
-                            "value": "~1"
+                            "value": "~2"
+                        },
+                        {
+                            "name": "FUNCTIONS_API_KEY",
+                            "value": "[variables('keys').camsaFunction]"
                         }
                     ]
                 }
@@ -74,6 +97,10 @@
         "baseUrl": {
             "type": "string",
             "value": "[concat('https://', variables('name').site, '.azurewebsites.net/api')]"
-        }
+        },
+        "opsFunctionApiKey": {
+            "type": "string",
+            "value": "[variables('keys').camsaFunction]"
+          }
     }
 }

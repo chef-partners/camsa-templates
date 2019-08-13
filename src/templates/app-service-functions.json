@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "siteName": {
+      "type": "string"
+    },
+    "repo": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "name": {
+      "site": "[parameters('siteName')]",
+      "web": "[concat(parameters('siteName'), '/web')]"
+    },
+    "apiVersions": {
+      "site": "2016-08-01",
+      "sourcecontrols": "2018-11-01"
+    },
+    "repo": "[parameters('repo')]"
+  },
+  "resources": [
+    {
+      "name": "[variables('name').web]",
+      "type": "Microsoft.Web/sites/sourcecontrols",
+      "apiVersion": "[variables('apiVersions').sourcecontrols]",
+      "kind": "functionApp",
+      "properties": {
+        "repoUrl": "[variables('repo').url]",
+        "branch": "[variables('repo').branch]",
+        "isManualIntegration": true,
+        "sourceType": "GitHub"
+      }
+    }
+  ],
+  "outputs": {
+  }
+}

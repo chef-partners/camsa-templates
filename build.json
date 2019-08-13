@@ -28,55 +28,6 @@
         "name": "chef-automate-ama"
     },
     "functions": [
-        {
-            "template_file": "templates/functions/ops.json",
-            "code_files":
-                {
-                    "automate_log_csx": "src/function_files/ops/AutomateLog.csx",
-                    "automate_log_listener_csx": "src/function_files/ops/AutomateLogListener.csx",
-                    "automate_log_parser_csx": "src/function_files/ops/AutomateLogParser.csx",
-                    "automate_message_csx": "src/function_files/ops/AutomateMessage.csx",
-                    "base_message_csx": "src/function_files/ops/BaseMessage.csx",
-                    "chef_extension_json": "src/function_files/ops/chef-extension.json",
-                    "chef_metric_message_csx": "src/function_files/ops/ChefMetricMessage.csx",
-                    "config_csx": "src/function_files/ops/Config.csx",
-                    "constants_csx": "src/function_files/ops/Constants.csx",
-                    "credentials_txt": "src/function_files/ops/credentials.txt",
-                    "data_service_csx": "src/function_files/ops/DataService.csx",
-                    "entity_csx": "src/function_files/ops/Entity.csx",
-                    "ientity_csx": "src/function_files/ops/IEntity.csx",
-                    "imessage_csx": "src/function_files/ops/IMessage.csx",
-                    "knife_rb": "src/function_files/ops/knife.rb",
-                    "log_analytics_writer_csx": "src/function_files/ops/LogAnalyticsWriter.csx",
-                    "response_message_csx": "src/function_files/ops/ResponseMessage.csx",
-                    "run_csx": "src/function_files/ops/run.csx",
-                    "starter_kit_csx": "src/function_files/ops/StarterKit.csx"
-                    
-                },
-            "config": "src/function_files/ops/function.json"
-        },
               
-        {
-            "template_file": "templates/functions/chef-metrics.json",
-            "code_files":
-                {
-                    "run_csx": "src/function_files/chef_metrics/run.csx"
-                },
-            "config": "src/function_files/chef_metrics/function.json"
-        },
-
-        {
-            "template_file": "templates/functions/counts.json",
-            "code_files":
-                {
-                    "automate_counts_csx": "src/function_files/counts/AutomateCounts.csx",
-                    "base_count_csx": "src/function_files/counts/BaseCount.csx",
-                    "icount_csx": "src/function_files/counts/ICount.csx",
-                    "node_count_csx": "src/function_files/counts/NodeCount.csx",
-                    "run_csx": "src/function_files/counts/run.csx",
-                    "user_count_csx": "src/function_files/counts/UserCount.csx"
-                },
-            "config": "src/function_files/counts/function.json"
-        }        
     ]
 }

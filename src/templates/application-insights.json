@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "name": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "name": {
+      "applicationInsights": "[parameters('name')]"
+    },
+    "apiVersions": {
+      "applicationInsights": "2015-05-01"
+    },
+    "location": "[parameters('location')]"
+  },
+  "resources": [
+    {
+      "comments": "Application insights to monitor how the function is behaving",
+      "type": "Microsoft.Insights/components",
+      "name": "[variables('name').applicationInsights]",
+      "tags": "[parameters('tags')]",
+      "apiVersion": "[variables('apiVersions').applicationInsights]",
+      "kind": "web",
+      "location": "[variables('location')]",
+      "properties": {
+        "Application_Type": "web"
+      }
+    }
+  ],
+  "outputs": {
+    "resourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Insights/components', variables('name').applicationInsights)]"
+    },
+    "instrumentationKey": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Insights/components', variables('name').applicationInsights)).InstrumentationKey]"
+    }
+  }
+}
