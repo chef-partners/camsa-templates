@@ -342,7 +342,7 @@
                 "label": "Advanced Settings",
                 "bladeTitle": "Configure Advanced Settings",
                 "subLabel": {
-                    "preValidation": "Configure SSL renewal times, Backup time and update policy",
+                    "preValidation": "Configure SSL renewal times, Backup time and update strategy",
                     "postValidation": "Advanced settings configuration complete"
                 },
                 "elements": [
@@ -358,7 +358,7 @@
                     {
                         "name": "sslRenewalSection",
                         "type": "Microsoft.Common.Section",
-                        "label": "SSL rewnewal",
+                        "label": "SSL renewal",
                         "elements": [
                             {
                                 "name": "warning",
@@ -483,7 +483,7 @@
                             {
                                 "name": "sslRenewalMinute",
                                 "type": "Microsoft.Common.DropDown",
-                                "label": "Rewnwal Minute",
+                                "label": "Renewal Minute",
                                 "defaultValue": "30",
                                 "toolTip": "Select the minute at which the SSL renewal check should run.",
                                 "constraints": {
@@ -735,7 +735,7 @@
                     {
                         "name": "updateSection",
                         "type": "Microsoft.Common.Section",
-                        "label": "Update Policy",
+                        "label": "Update Strategy",
                         "elements": [
                             {
                                 "name": "strategyInfo",
