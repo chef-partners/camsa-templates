@@ -2,6 +2,7 @@ name: 0.2$(Rev:.r)
 
 variables:
   System.Debug: false
+  npm_config_folder: $(Build.SourcesDirectory)/src
 
 stages:
 - stage: Build
