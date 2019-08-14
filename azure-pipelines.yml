@@ -16,7 +16,7 @@ stages:
 
   # Craete a job that installs the NPM modules, performs the Linting tests and 
   # creates the package before testing on Azure
-  - job: Setup
+  - job: setup_and_build
     displayName: Setup the Build
     pool:
       vmImage: ubuntu-latest
@@ -81,7 +81,7 @@ stages:
         artifact: build
 
   # Deploy the templates into Azure and run InSpec tests
-  - job: Deploy & Test
+  - job: deploy_and_test
     displayName: Deploy & Test CAMSA ARM Templates
     condition: eq(variables['deploy_to_azure'], 'true')
     pool:
