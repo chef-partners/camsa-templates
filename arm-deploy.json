@@ -55,15 +55,6 @@
       ]
   },
   "deploy": {
-    "templateFile": "mainTemplate.json",
-    "resourceGroup": {
-      "name": "rjs-ama",
-      "location": "eastus"
-    },
-    "storageAccount": {
-      "name": "chefarmstorage",
-      "containerName": "rjsscratch",
-      "groupName": "Azure-Managed-App-Storage"
-    }
+    "templateFile": "mainTemplate.json"
   }
 }

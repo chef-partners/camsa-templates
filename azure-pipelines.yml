@@ -1,0 +1,56 @@
+name: 0.2$(Rev:.r)
+
+variables:
+  System.Debug: false
+
+stages:
+- stage: Build
+  displayName: Test & Package
+  jobs:
+
+  # Craete a job that installs the NPM modules, performs the Linting tests and 
+  # creates the package before testing on Azure
+  - job: Setup
+    displayName: Setup the Build
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+
+    # Install the NPM modules for the build
+    - task: Npm@1
+      displayName: Install NPM Modules
+      inputs:
+        verbose: $(System.Debug)
+
+    # Compile the helper scripts that assist the build
+    - task: Npm@1
+      displayName: Compile Helper Scripts
+      inputs:
+        command: custom
+        customCommand: run compile:helpers
+        verbose: $(System.Debug)
+
+    # Perform Linting tasks as required by Microsoft
+    - task: Npm@1
+      displayName: Microsoft Lint Tests
+      inputs:
+        command: custom
+        customCommand: run test:lint
+        verbose: $(System.Debug)
+
+    # Publish the lint tests
+    - task: PublishTestResults@2
+      displayName: Publish Lint Test Results
+      inputs:
+        testResultsFiles: lint_out.xml
+        searchFolder: $(Build.SourcesDirectory)/build/tests
+        testRunTitle: CAMSA Templates - Lint Test
+
+    # Perform the build of the templates to create the necessary archive files
+    - task: Npm@1
+      displayName: Build CAMSA Package
+      inputs:
+        command: custom
+        customCommand: run build -- -v $(Build.BuildNumber)
+        verbose: $(System.Debug)
+
