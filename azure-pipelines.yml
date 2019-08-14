@@ -11,7 +11,7 @@ variables:
 
 stages:
 - stage: Build
-  displayName: Test & Package
+  displayName: "Build:"
   jobs:
 
   # Craete a job that installs the NPM modules, performs the Linting tests and 
@@ -77,13 +77,14 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: Publish Templates and packages
       inputs:
-        targetPath: $(Build.ArtifactStagingDirectory))
+        targetPath: $(Build.ArtifactStagingDirectory)
         artifact: build
 
   # Deploy the templates into Azure and run InSpec tests
   - job: deploy_and_test
     displayName: Deploy & Test CAMSA ARM Templates
     condition: eq(variables['deploy_to_azure'], 'true')
+    dependsOn: setup_and_build
     pool:
       vmImage: ubuntu-latest
     steps:
