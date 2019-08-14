@@ -98,7 +98,7 @@ stages:
         targetPath: $(Pipeline.Workspace)/artifacts  
 
     # Upload the template files to the specified blob storage
-    - task: Turtlesystems.azure-storage-vsts-tasks-preview.vsts-chef-tasks-environment-cookbook-version-constraint.turtlesystems-azure-storage-preview@0
+    - task: turtlesystems-azure-storage-preview@1
       displayName: Upload Templates to Blob Storage
       inputs:
         azureSubscription: Partner Engineering
