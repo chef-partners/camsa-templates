@@ -3,6 +3,11 @@ name: 0.2$(Rev:.r)
 variables:
   System.Debug: false
   npm_config_folder: $(Build.SourcesDirectory)/src
+  sa_build_container_name: upload
+  sa_name: chefarmstorage
+  sa_resource_group_name: Azure-Managed-App-Storage
+  deploy_location: eastus
+  deploy_to_azure: true
 
 stages:
 - stage: Build
@@ -55,3 +60,49 @@ stages:
         customCommand: run build -- -v $(Build.BuildNumber)
         verbose: $(System.Debug)
 
+    # Create version file so that the templates package is versioned with the build number
+    - task: eliostruyf.build-task.custom-build-task.file-creator@1
+      displayName: 'Create version file'
+      inputs:
+        filepath: '$(Build.ArtifactStagingDirectory)/working/version'
+        filecontent: '$(Build.BuildNumber)'
+
+    # Upload the artifacts from the build to Azure DevOps
+    - task: CopyFiles@2
+      displayName: Copy build output files to artifact directory
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)/build
+        TargetFolder: $(Build.ArtifactStagingDirectory)
+
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Templates and packages
+      inputs:
+        targetPath: $(Build.ArtifactStagingDirectory))
+        artifact: build
+
+  # Deploy the templates into Azure and run InSpec tests
+  - job: Deploy & Test
+    displayName: Deploy & Test CAMSA ARM Templates
+    condition: eq(variables['deploy_to_azure'], 'true')
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+
+    # Download the artifacts so they can be used to deploy and test
+    - task: DownloadPipelineArtifact@2
+      displayName: Download built templates
+      inputs:
+        buildType: current
+        artifact: build
+        targetPath: $(Pipeline.Workspace)/artifacts  
+
+    # Upload the template files to the specified blob storage
+    - task: turtlesystems-azure-storage@1
+      displayName: Upload Templates to Blob Storage
+      inputs:
+        azureSubscription: Partner Engineering
+        resourceGroupName: $(sa_resource_group_name)
+        location: $(deploy_location)
+        storageAccountName: $(sa_name)
+        containerName: $(sa_build_container_name)
+        uploadDirectory: $(Pipeline.Workspace)/artifacts/staging
