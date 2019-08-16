@@ -119,7 +119,6 @@ stages:
         JsonWorkingDir: $(Build.SourcesDirectory)/test/integration/build
         JsonTargetFilters: parameters.json
         JsonPatchContent: |
-          = /parameters/prefix/value => "camsa"
           = /parameters/chefUsername/value => "inspec"
           = /parameters/chefUserFullname/value = "Inspec Operator"
           = /parameters/chefUserPassword/value = "Chef123!"
