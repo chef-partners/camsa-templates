@@ -110,6 +110,7 @@ stages:
           = /parameters/logAnalyticsTier/value => "Free"
           = /parameters/debug/value => true
           = /parameters/autoDiscoverSASToken/value => true
+          = /parameters/sshSourcesAddresses/value => ["10.1.1.0/24"]
         OutputPatchFile: true
         TreatErrors: ERROR      
 
