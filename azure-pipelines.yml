@@ -110,7 +110,6 @@ stages:
           = /parameters/logAnalyticsTier/value => "Free"
           = /parameters/debug/value => true
           = /parameters/autoDiscoverSASToken/value => true
-          + /parameters/baseUrl/value => ""
         OutputPatchFile: true
         TreatErrors: ERROR      
 

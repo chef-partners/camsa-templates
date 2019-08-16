@@ -40,6 +40,9 @@
       },
       "debug": {
         "value": false
+      },
+      "baseUrl": {
+        "value": ""
       }
     }
 }
