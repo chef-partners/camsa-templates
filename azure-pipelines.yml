@@ -108,3 +108,26 @@ stages:
         containerName: $(sa_build_container_name)
         uploadDirectory: $(Pipeline.Workspace)/artifacts/working/staging
         vstsSasTokenVariableName: AZDO_SAS_TOKEN
+
+    # Patch the parameters file with the correct values to perform a deployment
+    # This is so that all parameters can be set a template file and then updated with values
+    # pertaining to the build
+    - task: JsonPatch@3
+      displayName: Patch parameters files for deployment
+      inputs:
+        SyntaxType: slick
+        JsonWorkingDir: $(Build.SourcesDirectory)/test/integration/build
+        JsonTargetFilters: parameters.json
+        JsonPatchContent: |
+          = /parameters/prefix/value => "camsa"
+          = /parameters/chefUsername/value => "inspec"
+          = /parameters/chefUserFullname/value = "Inspec Operator"
+          = /parameters/chefUserPassword/value = "Chef123!"
+          = /parameters/chefUserEmailaddress/value = "inspec@example.com"
+          = /parameters/chefOrg/value = "camsa"
+          = /parameters/chefOrgDescription/value = "Chef Automate Managed Service Application"
+          = /parameters/logAnalyticsTier/value = "Free"
+          = /parameters/debug/value = true
+          = /parameters/autoDiscoverSASToken/value = true
+        OutputPatchFile: true
+        TreatErrors: ERROR
