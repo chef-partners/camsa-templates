@@ -6,7 +6,8 @@ variables:
   sa_build_container_name: upload
   sa_name: chefarmstorage
   sa_resource_group_name: Azure-Managed-App-Storage
-  deploy_location: eastus
+  sa_location: eastus
+  deploy_location: East US
   deploy_to_azure: true
 
 stages:
@@ -103,7 +104,7 @@ stages:
       inputs:
         azureSubscription: Partner Engineering
         resourceGroupName: $(sa_resource_group_name)
-        location: $(deploy_location)
+        location: $(sa_location)
         storageAccountName: $(sa_name)
         containerName: $(sa_build_container_name)
         uploadDirectory: $(Pipeline.Workspace)/artifacts/working/staging
@@ -131,3 +132,18 @@ stages:
           = /parameters/autoDiscoverSASToken/value => true
         OutputPatchFile: true
         TreatErrors: ERROR
+
+    # Deploy to Azure for testing
+    - task: AzureResourceGroupDeployment@2
+      displayName: Deploy CAMSA Templates
+      inputs:
+        azureSubscription: Partner Engineering
+        resourceGroupName: AzDo-CAMSA-$(Build.BuildNumber)
+        action: Create Or Update Resource Group
+        location: $(deploy_location)
+        templateLocation: URL of the File
+        csmFileLink: https://$(sa_name).blob.core.windows.net/$(sa_build_container_name)/mainTemplate.json?$(AZDO_SAS_TOKEN)
+        csmParametersFile: $(Build.SourcesDirectory)/test/integration/build/parameters.json
+        deploymentMode: Incremental
+        deploymentName: azdo-camsa-deoloy
+        deploymentOutputs: camsa.outputs
