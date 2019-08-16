@@ -90,31 +90,11 @@ stages:
       vmImage: ubuntu-latest
     steps:
 
-    # Download the artifacts so they can be used to deploy and test
-    - task: DownloadPipelineArtifact@2
-      displayName: Download built templates
-      inputs:
-        buildType: current
-        artifact: build
-        targetPath: $(Pipeline.Workspace)/artifacts  
-
-    # Upload the template files to the specified blob storage
-    - task: turtlesystems-azure-storage-preview@1
-      displayName: Upload Templates to Blob Storage
-      inputs:
-        azureSubscription: Partner Engineering
-        resourceGroupName: $(sa_resource_group_name)
-        location: $(sa_location)
-        storageAccountName: $(sa_name)
-        containerName: $(sa_build_container_name)
-        uploadDirectory: $(Pipeline.Workspace)/artifacts/working/staging
-        vstsSasTokenVariableName: AZDO_SAS_TOKEN
-
     # Patch the parameters file with the correct values to perform a deployment
     # This is so that all parameters can be set a template file and then updated with values
     # pertaining to the build
     - task: JsonPatch@3
-      displayName: Patch parameters files for deployment
+      displayName: Patch parameters file for deployment
       inputs:
         SyntaxType: slick
         JsonWorkingDir: $(Build.SourcesDirectory)/test/integration/build
@@ -131,7 +111,36 @@ stages:
           = /parameters/debug/value => true
           = /parameters/autoDiscoverSASToken/value => true
         OutputPatchFile: true
-        TreatErrors: ERROR
+        TreatErrors: ERROR      
+
+    # Download the artifacts so they can be used to deploy and test
+    - task: DownloadPipelineArtifact@2
+      displayName: Download built templates
+      inputs:
+        buildType: current
+        artifact: build
+        targetPath: $(Pipeline.Workspace)/artifacts  
+
+    # Copy the parameters file so it is uploaded to blob storage too
+    - task: CopyFiles@2
+      displayName: Copy parameters file
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)/test/integration/build
+        Contents: parameters.json
+        TargetFolder: $(Pipeline.Workspace)/artifacts/working/staging
+        OverWrite: true    
+
+    # Upload the template files to the specified blob storage
+    - task: turtlesystems-azure-storage-preview@1
+      displayName: Upload Templates to Blob Storage
+      inputs:
+        azureSubscription: Partner Engineering
+        resourceGroupName: $(sa_resource_group_name)
+        location: $(sa_location)
+        storageAccountName: $(sa_name)
+        containerName: $(sa_build_container_name)
+        uploadDirectory: $(Pipeline.Workspace)/artifacts/working/staging
+        vstsSasTokenVariableName: AZDO_SAS_TOKEN
 
     # Deploy to Azure for testing
     - task: AzureResourceGroupDeployment@2
@@ -143,7 +152,7 @@ stages:
         location: $(deploy_location)
         templateLocation: URL of the file
         csmFileLink: https://$(sa_name).blob.core.windows.net/$(sa_build_container_name)/mainTemplate.json?$(AZDO_SAS_TOKEN)
-        csmParametersFile: $(Build.SourcesDirectory)/test/integration/build/parameters.json
+        csmParametersFileLink: https://$(sa_name).blob.core.windows.net/$(sa_build_container_name)/parameters.json?$(AZDO_SAS_TOKEN)
         deploymentMode: Incremental
-        deploymentName: azdo-camsa-deoloy
+        deploymentName: azdo-camsa-deploy
         deploymentOutputs: camsa.outputs
