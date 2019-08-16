@@ -121,13 +121,13 @@ stages:
         JsonPatchContent: |
           = /parameters/prefix/value => "camsa"
           = /parameters/chefUsername/value => "inspec"
-          = /parameters/chefUserFullname/value = "Inspec Operator"
-          = /parameters/chefUserPassword/value = "Chef123!"
-          = /parameters/chefUserEmailaddress/value = "inspec@example.com"
-          = /parameters/chefOrg/value = "camsa"
-          = /parameters/chefOrgDescription/value = "Chef Automate Managed Service Application"
-          = /parameters/logAnalyticsTier/value = "Free"
-          = /parameters/debug/value = "true"
-          = /parameters/autoDiscoverSASToken/value = "true"
+          = /parameters/chefUserFullname/value => "Inspec Operator"
+          = /parameters/chefUserPassword/value => "Chef123!"
+          = /parameters/chefUserEmailaddress/value => "inspec@example.com"
+          = /parameters/chefOrg/value => "camsa"
+          = /parameters/chefOrgDescription/value => "Chef Automate Managed Service Application"
+          = /parameters/logAnalyticsTier/value => "Free"
+          = /parameters/debug/value => true
+          = /parameters/autoDiscoverSASToken/value => true
         OutputPatchFile: true
         TreatErrors: ERROR
