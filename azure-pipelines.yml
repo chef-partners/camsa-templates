@@ -106,4 +106,5 @@ stages:
         location: $(deploy_location)
         storageAccountName: $(sa_name)
         containerName: $(sa_build_container_name)
-        uploadDirectory: $(Pipeline.Workspace)/artifacts/staging
+        uploadDirectory: $(Pipeline.Workspace)/artifacts/working/staging
+        vstsSasTokenVariableName: AZDO_SAS_TOKEN
