@@ -141,7 +141,7 @@ stages:
         resourceGroupName: AzDo-CAMSA-$(Build.BuildNumber)
         action: Create Or Update Resource Group
         location: $(deploy_location)
-        templateLocation: URL of the File
+        templateLocation: URL of the file
         csmFileLink: https://$(sa_name).blob.core.windows.net/$(sa_build_container_name)/mainTemplate.json?$(AZDO_SAS_TOKEN)
         csmParametersFile: $(Build.SourcesDirectory)/test/integration/build/parameters.json
         deploymentMode: Incremental
