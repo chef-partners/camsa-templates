@@ -218,7 +218,7 @@ stages:
     - task: vsts-chef-task-exec-inspec@1
       displayName: Test Infrastructure
       inputs:
-        inspecProfilePath: $(Build.SourcesDirectory)/test/integration/infrastucture/verify
+        inspecProfilePath: $(Build.SourcesDirectory)/test/integration/infrastructure/verify
         inspecArguments: -t azure:// --input-file $(Build.SourcesDirectory)/test/integration/inspec_inputs.yml
         inspecResultsFile: $(Build.SourcesDirectory)/build/tests/inspec_infrastructure.out
 
