@@ -213,7 +213,6 @@ stages:
 
     - task: vsts-chef-task-install-inspec@1
       displayName: Install InSpec
-      inputs:
 
     # Perform the InSpec tests against the infrastructure and the Azure Functions
     - task: vsts-chef-task-exec-inspec@1
