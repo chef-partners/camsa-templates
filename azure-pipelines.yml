@@ -190,7 +190,7 @@ stages:
           + /unique_string => "$(ARM_UNIQUESHORT)"
           + /la_location => "$(azure_location_name)"
           + /ops_function_apikey => "$(ARM_CONFIGSTOREFUNCTIONAPIKEY)"
-          + /prefix => "camsa"4
+          + /prefix => "camsa"
         OutputPatchFile: true
         TreatErrors: ERROR
 
