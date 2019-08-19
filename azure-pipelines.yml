@@ -13,6 +13,7 @@ variables:
   azure_location_name: eastus
   azure_location_display: East US
   teardown: true
+  CHEF_LICENSE: accept-no-persist
 
 stages:
 - stage: Build
