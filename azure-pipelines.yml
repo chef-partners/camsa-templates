@@ -185,10 +185,12 @@ stages:
           = /location_name => "$(azure_location_display)"
           + /resource_group_name => "$(deploy_rg_name)"
           + /customer_resource_group_name => "$(deploy_rg_name)"
+          + /customer_virtual_network_name => "camsa-$(ARM_UNIQUESHORT)-Subnet"
+          + /customer_subnet_name => "camsa-$(ARM_UNIQUESHORT)-Subnet"
           + /unique_string => "$(ARM_UNIQUESHORT)"
           + /la_location => "$(azure_location_name)"
           + /ops_function_apikey => "$(ARM_CONFIGSTOREFUNCTIONAPIKEY)"
-          + /prefix => "camsa"
+          + /prefix => "camsa"4
         OutputPatchFile: true
         TreatErrors: ERROR
 
@@ -207,7 +209,11 @@ stages:
       displayName: Publish InSpec inputs
       inputs:
         targetPath: $(Build.ArtifactStagingDirectory)
-        artifact: inspec    
+        artifact: inspec
+
+    - task: vsts-chef-task-install-inspec@1
+      displayName: Install InSpec
+      inputs:
 
     # Perform the InSpec tests against the infrastructure and the Azure Functions
     - task: vsts-chef-task-exec-inspec@1
