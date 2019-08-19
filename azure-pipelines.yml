@@ -207,7 +207,7 @@ stages:
       displayName: Publish InSpec inputs
       inputs:
         targetPath: $(Build.ArtifactStagingDirectory)
-        artifact: build    
+        artifact: inspec    
 
     # Perform the InSpec tests against the infrastructure and the Azure Functions
     - task: vsts-chef-task-exec-inspec@1
