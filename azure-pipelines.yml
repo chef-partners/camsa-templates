@@ -1,7 +1,7 @@
 name: 0.2$(Rev:.r)
 
 variables:
-  System.Debug: false
+  System.Debug: true
   npm_config_folder: $(Build.SourcesDirectory)/src
   sa_build_container_name: upload
   sa_name: chefarmstorage
@@ -177,7 +177,7 @@ stages:
     - task: YamlPatch@3
       displayName: Patch InSpec Inputs
       inputs:
-        SyntaxType: Slick
+        SyntaxType: slick
         YamlWorkingDir: $(Build.SourcesDirectory)/test/integration
         YamlTargetFilters: inspec_inputs.yml
         YamlPatchContent: |
