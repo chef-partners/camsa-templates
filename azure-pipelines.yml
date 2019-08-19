@@ -9,6 +9,10 @@ variables:
   sa_location: eastus
   deploy_location: East US
   deploy_to_azure: true
+  deploy_rg_name: AzDo-CAMSA-$(Build.BuildNumber)
+  azure_location_name: eastus
+  azure_location_display: East US
+  teardown: true
 
 stages:
 - stage: Build
@@ -148,7 +152,7 @@ stages:
       displayName: Deploy CAMSA Templates
       inputs:
         azureSubscription: Partner Engineering
-        resourceGroupName: AzDo-CAMSA-$(Build.BuildNumber)
+        resourceGroupName: $(deploy_rg_name)
         action: Create Or Update Resource Group
         location: $(deploy_location)
         templateLocation: URL of the file
@@ -157,3 +161,85 @@ stages:
         deploymentMode: Incremental
         deploymentName: azdo-camsa-deploy
         deploymentOutputs: camsa.outputs
+
+    # Read the outputs from the deployment and make them available as environment variables
+    # that the next set of tasks can use
+    - task: ARM Outputs@5
+      displayName: Set deployment outputs as environment variables
+      inputs:
+        ConnectedServiceNameSelector: ConnectedServiceNameARM
+        ConnectedServiceNameARM: Partner Engineering
+        resourceGroupName: $(deploy_rg_name)
+        prefix: arm_
+        whenLastDeploymentIsFailed: fail
+
+    # Patch the InSpec inputs file so that the tests work with the current deployment
+    - task: YamlPatch@3
+      displayName: Patch InSpec Inputs
+      inputs:
+        SyntaxType: Slick
+        YamlWorkingDir: $(Build.SourcesDirectory)/test/integration
+        YamlTargetFilters: inspec_inputs.yml
+        YamlPatchContent: |
+          = /location => "$(azure_location_name)"
+          = /location_name => "$(azure_location_display)"
+          + /resource_group_name => "$(deploy_rg_name)"
+          + /customer_resource_group_name => "$(deploy_rg_name)"
+          + /unique_string => "$(ARM_UNIQUESHORT)"
+          + /la_location => "$(azure_location_name)"
+          + /ops_function_apikey => "$(ARM_CONFIGSTOREFUNCTIONAPIKEY)"
+          + /prefix => "camsa"
+        OutputPatchFile: true
+        TreatErrors: ERROR
+
+    # Copy the inspec inputs file to the artifacts so it can be uploaded for indepdent testing
+    - task: CopyFiles@2
+      displayName: Copy InSpec inputs file
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)/test/integration
+        Contents: inspec_inputs.yml
+        TargetFolder: $(Build.ArtifactStagingDirectory)/inspec
+
+    # Upload the inspec inputs file
+    # This is done before the tests are run so that if there are any errors the tests can 
+    # be run independently against the deployed infrastructure
+    - task: PublishPipelineArtifact@1
+      displayName: Publish InSpec inputs
+      inputs:
+        targetPath: $(Build.ArtifactStagingDirectory)
+        artifact: build    
+
+    # Perform the InSpec tests against the infrastructure and the Azure Functions
+    - task: vsts-chef-task-exec-inspec@1
+      displayName: Test Infrastructure
+      inputs:
+        inspecProfilePath: $(Build.SourcesDirectory)/test/integration/infrastucture/verify
+        inspecArguments: -t azure:// --input-file $(Build.SourcesDirectory)/test/integration/inspec_inputs.yml
+        inspecResultsFile: $(Build.SourcesDirectory)/build/tests/inspec_infrastructure.out
+
+    - task: vsts-chef-task-exec-inspec@1
+      displayName: Test CAMSA instance functions
+      inputs:
+        inspecProfilePath: $(Build.SourcesDirectory)/test/integration/services/verify
+        inspecArguments: --input-file $(Build.SourcesDirectory)/test/integration/inspec_inputs.yml
+        inspecResultsFile: $(Build.SourcesDirectory)/build/tests/inspec_services.out    
+
+    # Upload test results to Azure DevOps
+    - task: PublishTestResults@2
+      displayName: Publish InSpec test results
+      inputs:
+        searchFolder: $(Build.SourcesDirectory)/build/tests
+        testResultsFiles: |
+          inspec_infrastructure.out
+          inspec_services.out
+        testRunTitle: CAMSA - Infrastructure Tests
+
+    # Delete the deployment
+    - task: AzureResourceGroupDeployment@2
+      displayName: Delete Deployment
+      condition: and(succeeded(), eq(variables['teardown'], 'true'))
+      inputs:
+        azureSubscription: Partner Engineering
+        action: DeleteRG
+        resourceGroupName: $(deploy_rg_name)
+      

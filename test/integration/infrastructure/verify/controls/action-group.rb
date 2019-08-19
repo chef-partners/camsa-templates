@@ -1,13 +1,13 @@
-resource_group_name = attribute('resource_group_name', default: 'InSpec-AMA', description: 'Name of the resource group to interogate')
-unique_string = attribute('unique_string', default: '9j2f')
-prefix = attribute('prefix', default: 'inspec')
+resource_group_name = input('resource_group_name', value: 'InSpec-AMA', description: 'Name of the resource group to interogate')
+unique_string = input('unique_string', value: '9j2f')
+prefix = input('prefix', value: 'inspec')
 
 # Set the name of the ActionGroup to be used for testing
 action_group_name = format('%s-%s-ActionGroup', prefix, unique_string)
 
 title 'Ensure that the Action Group for alerts has been deployed properly'
 
-control 'AMA Action Group' do
+control 'CAMSA Action Group' do
   impact 1.0
   title 'Email notifications are configured'
 

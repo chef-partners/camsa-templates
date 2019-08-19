@@ -1,6 +1,6 @@
-unique_string = attribute('unique_string', default: '9j2f')
-location = attribute('location', default: 'westeurope')
-prefix = attribute('prefix', default: 'inspec')
+unique_string = input('unique_string', value: '9j2f')
+location = input('location', value: 'westeurope')
+prefix = input('prefix', value: 'inspec')
 
 control 'Test Chef Server Endpoint' do
   impact 1.0

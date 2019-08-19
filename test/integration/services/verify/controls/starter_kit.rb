@@ -1,6 +1,6 @@
-unique_string = attribute('unique_string', default: '9j2f')
-ops_function_apikey = attribute('ops_function_apikey', default: '')
-prefix = attribute('prefix', default: 'inspec')
+unique_string = input('unique_string', value: '9j2f')
+ops_function_apikey = input('ops_function_apikey', value: '')
+prefix = input('prefix', value: 'inspec')
 
 # set the fqdn of the webservice
 website_fqdn = format('%s-%s-appservice.azurewebsites.net', prefix, unique_string)

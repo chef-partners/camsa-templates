@@ -1,9 +1,9 @@
-resource_group_name = attribute('resource_group_name', default: 'InSpec-AMA', description: 'Name of the resource group to interogate')
-unique_string = attribute('unique_string', default: '9j2f')
-location = attribute('location', default: 'westeurope')
-ssh_source_addresses = attribute('ssh_source_addresses', default: ['10.1.1.0/24'])
-provider = attribute('provider', default: '2680257b-9f22-4261-b1ef-72412d367a68')
-prefix = attribute('prefix', default: 'inspec')
+resource_group_name = input('resource_group_name', value: 'InSpec-AMA', description: 'Name of the resource group to interogate')
+unique_string = input('unique_string', value: '9j2f')
+location = input('location', value: 'westeurope')
+ssh_source_addresses = input('ssh_source_addresses', value: ['10.1.1.0/24'])
+provider = input('provider', value: '2680257b-9f22-4261-b1ef-72412d367a68')
+prefix = input('prefix', value: 'inspec')
 
 # Define array that states where the traffic is coming from
 # Both denote access from the Internet

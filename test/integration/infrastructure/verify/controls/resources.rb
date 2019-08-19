@@ -1,10 +1,14 @@
-resource_group_name = attribute('resource_group_name', default: 'InSpec-AMA', description: 'Name of the resource group to interogate')
+resource_group_name = input('resource_group_name', value: 'InSpec-AMA', description: 'Name of the resource group to interogate')
+test_number_of_resources = input('test_number_of_resources', value: false)
+
 
 title 'Check all resources are present'
 
 control 'Azure-Managed-Automate-Resources' do
   impact 1.0
   title 'Determine that all resources for the Managed Application have been created'
+
+  only_if { test_number_of_resources }
 
   describe azure_generic_resource(group_name: resource_group_name) do
     # It should have two public IP addresses
@@ -38,5 +42,6 @@ control 'Azure-Managed-Automate-Resources' do
     # There should be resources for the logic app
     its('Microsoft.Web/connections') { should eq 1 }
     its('Microsoft.Logic/workflows') { should eq 1 }
+ 
   end
 end

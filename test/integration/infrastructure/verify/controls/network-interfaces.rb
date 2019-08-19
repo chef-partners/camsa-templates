@@ -1,13 +1,13 @@
-resource_group_name = attribute('resource_group_name', default: 'InSpec-AMA', description: 'Name of the resource group to interogate')
-unique_string = attribute('unique_string', default: '9j2f')
-location = attribute('location', default: 'westeurope')
-customer_subnet_name = attribute('customer_subnet_name', default: 'InSpec-Customer-Subnet')
-provider = attribute('provider', default: '2680257b-9f22-4261-b1ef-72412d367a68')
-prefix = attribute('prefix', default: 'inspec')
+resource_group_name = input('resource_group_name', value: 'InSpec-AMA', description: 'Name of the resource group to interogate')
+unique_string = input('unique_string', value: '9j2f')
+location = input('location', value: 'westeurope')
+customer_subnet_name = input('customer_subnet_name', value: 'InSpec-Customer-Subnet')
+provider = input('provider', value: '2680257b-9f22-4261-b1ef-72412d367a68')
+prefix = input('prefix', value: 'inspec')
 
 title 'Check that all Network Interface Cards are setup correctly'
 
-control 'AMA-Automate-Server-Customer-NIC' do
+control 'CAMSA-Automate-Server-Customer-NIC' do
   impact 1.0
   title 'Ensure that the NIC connected to the Customer VNet is configured correctly'
 
@@ -38,7 +38,7 @@ control 'AMA-Automate-Server-Customer-NIC' do
   end
 end
 
-control 'AMA-Chef-Server-Customer-NIC' do
+control 'CAMSA-Chef-Server-Customer-NIC' do
   impact 1.0
   title 'Ensure that the NIC connected to the Customer VNet is configured correctly'
 

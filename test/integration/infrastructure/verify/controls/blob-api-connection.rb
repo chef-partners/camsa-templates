@@ -1,15 +1,15 @@
-resource_group_name = attribute('resource_group_name', default: 'InSpec-AMA', description: 'Name of the resource group to interogate')
-unique_string = attribute('unique_string', default: '9j2f')
-location = attribute('location', default: 'westeurope')
-prefix = attribute('prefix', default: 'inspec')
-sa_name = attribute('sa_name', default: '12345678')
+resource_group_name = input('resource_group_name', value: 'InSpec-AMA', description: 'Name of the resource group to interogate')
+unique_string = input('unique_string', value: '9j2f')
+location = input('location', value: 'westeurope')
+prefix = input('prefix', value: 'inspec')
+sa_name = input('sa_name', value: '12345678')
 
 title 'Ensure that the API Connection is configured correctly'
 
 # Set the name of the API connection resource
 api_connection_name = format('%s-AzureBlob-APIConnection', prefix)
 
-control 'AMA Azure Blob API Connection' do
+control 'CAMSA Azure Blob API Connection' do
   impact 1.0
   title 'API Connection'
 
