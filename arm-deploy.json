@@ -32,7 +32,7 @@
       },
       "patch": [
           {
-              "fileName": "createUIDefinition.json",
+              "fileName": "createUiDefinition.json",
               "items": [
                   {
                       "path": "parameters.outputs.verifyURLApiKey",
