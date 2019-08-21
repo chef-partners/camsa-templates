@@ -36,7 +36,7 @@
               "items": [
                   {
                       "path": "parameters.outputs.verifyURLApiKey",
-                      "value": "ENV.verifyURLApiKey"
+                      "value": "ENV.VERIFY_URL_API_KEY"
                   }
               ],
               "remove": true
