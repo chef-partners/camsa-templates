@@ -36,7 +36,7 @@
               "items": [
                   {
                       "path": "parameters.outputs.verifyURLApiKey",
-                      "value": "ENV.VERIFY_URL_API_KEY"
+                      "value": "ENV.verifyURLApiKey"
                   }
               ],
               "remove": true
@@ -57,4 +57,5 @@
   "deploy": {
     "templateFile": "mainTemplate.json"
   }
+  
 }
