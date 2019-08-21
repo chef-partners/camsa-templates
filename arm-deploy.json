@@ -36,7 +36,11 @@
               "items": [
                   {
                       "path": "parameters.outputs.verifyURLApiKey",
-                      "value": "ENV.verifyURLApiKey"
+                      "value": "ENV.VERIFY_URL_APIKEY"
+                  },
+                  {
+                      "path": "parameters.outputs.alertAGEmails",
+                      "value": "ENV.ALERT_AG_EMAILS"
                   }
               ],
               "remove": true
