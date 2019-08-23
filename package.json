@@ -41,7 +41,7 @@
         "@types/node": "^8.10.11",
         "@types/rimraf": "^2.0.2",
         "@types/sprintf-js": "^1.1.0",
-        "arm-template-deploy": "https://github.com/chef/arm-template-deploy/releases/download/0.0.17/atd-0.0.17.tar.gz",
+        "arm-template-deploy": "https://github.com/chef/arm-template-deploy/releases/download/0.0.22/atd-0.0.22.tar.gz",
         "grunt": "^1.0.1",
         "grunt-file-exists": "^0.1.4",
         "grunt-jsonlint": "^1.1.0",
