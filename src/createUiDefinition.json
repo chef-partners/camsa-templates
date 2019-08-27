@@ -361,7 +361,7 @@
                         "label": "SSL renewal",
                         "elements": [
                             {
-                                "name": "warning",
+                                "name": "warning_ssl",
                                 "type": "Microsoft.Common.InfoBox",
                                 "options": {
                                     "icon": "Warning",
@@ -550,7 +550,7 @@
                         "label": "Backup",
                         "elements": [
                             {
-                                "name": "warning",
+                                "name": "warning_backup",
                                 "type": "Microsoft.Common.InfoBox",
                                 "options": {
                                     "icon": "Warning",
