@@ -1,6 +1,6 @@
-unique_string = attribute('unique_string', default: '9j2f')
-location = attribute('location', default: 'westeurope')
-prefix = attribute('prefix', default: 'inspec')
+unique_string = input('unique_string', value: '9j2f')
+location = input('location', value: 'westeurope')
+prefix = input('prefix', value: 'inspec')
 
 # Automate server test can be run as well, however the URL that is required
 # needs to have a session ID which you get from a redirect. The root page performs

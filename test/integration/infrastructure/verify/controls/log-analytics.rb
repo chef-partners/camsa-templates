@@ -1,12 +1,12 @@
-resource_group_name = attribute('resource_group_name', default: 'InSpec-AMA', description: 'Name of the resource group to interogate')
-unique_string = attribute('unique_string', default: '9j2f')
-la_location = attribute('la_location', default: 'westeurope')
-provider = attribute('provider', default: '2680257b-9f22-4261-b1ef-72412d367a68')
-prefix = attribute('prefix', default: 'inspec')
+resource_group_name = input('resource_group_name', value: 'InSpec-AMA', description: 'Name of the resource group to interogate')
+unique_string = input('unique_string', value: '9j2f')
+la_location = input('la_location', value: 'westeurope')
+provider = input('provider', value: '2680257b-9f22-4261-b1ef-72412d367a68')
+prefix = input('prefix', value: 'inspec')
 
 title 'Ensure that the Log Analytics workspace is configured correctly'
 
-control 'AMA Log Analytics Workspace' do
+control 'CAMSA Log Analytics Workspace' do
   impact 1.0
   title 'Log Analytics workspace'
 

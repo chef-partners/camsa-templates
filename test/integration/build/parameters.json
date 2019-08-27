@@ -5,14 +5,8 @@
       "prefix": {
         "value": ""
       },
-      "virtualNetworkName": {
-        "value": ""
-      },
-      "customerResourceGroupName": {
-        "value": ""
-      },
-      "subnetName": {
-        "value": ""
+      "existingVNet": {
+        "value": false
       },
       "sshSourceAddresses": {
         "value": []
@@ -41,5 +35,14 @@
       "logAnalyticsTier": {
         "value": ""
       },
+      "autoDiscoverSASToken": {
+        "value": false
+      },
+      "debug": {
+        "value": false
+      },
+      "baseUrl": {
+        "value": ""
+      }
     }
 }

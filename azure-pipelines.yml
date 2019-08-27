@@ -1,0 +1,251 @@
+name: 0.2$(Rev:.r)
+
+variables:
+  System.Debug: true
+  npm_config_folder: $(Build.SourcesDirectory)/src
+  sa_build_container_name: upload
+  sa_name: chefarmstorage
+  sa_resource_group_name: Azure-Managed-App-Storage
+  sa_location: eastus
+  deploy_location: East US
+  deploy_to_azure: true
+  deploy_rg_name: AzDo-CAMSA-$(Build.BuildNumber)
+  azure_location_name: eastus
+  azure_location_display: East US
+  teardown: true
+  CHEF_LICENSE: accept-no-persist
+
+stages:
+- stage: Build
+  displayName: "Build:"
+  jobs:
+
+  # Craete a job that installs the NPM modules, performs the Linting tests and 
+  # creates the package before testing on Azure
+  - job: setup_and_build
+    displayName: Setup the Build
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+
+    # Install the NPM modules for the build
+    - task: Npm@1
+      displayName: Install NPM Modules
+      inputs:
+        verbose: $(System.Debug)
+
+    # Compile the helper scripts that assist the build
+    - task: Npm@1
+      displayName: Compile Helper Scripts
+      inputs:
+        command: custom
+        customCommand: run compile:helpers
+        verbose: $(System.Debug)
+
+    # Perform Linting tasks as required by Microsoft
+    - task: Npm@1
+      displayName: Microsoft Lint Tests
+      inputs:
+        command: custom
+        customCommand: run test:lint
+        verbose: $(System.Debug)
+
+    # Publish the lint tests
+    - task: PublishTestResults@2
+      displayName: Publish Lint Test Results
+      inputs:
+        testResultsFiles: lint_out.xml
+        searchFolder: $(Build.SourcesDirectory)/build/tests
+        testRunTitle: CAMSA Templates - Lint Test
+
+    # Perform the build of the templates to create the necessary archive files
+    - task: Npm@1
+      displayName: Build CAMSA Package
+      inputs:
+        command: custom
+        customCommand: run build -- -v $(Build.BuildNumber)
+        verbose: $(System.Debug)
+
+    # Create version file so that the templates package is versioned with the build number
+    - task: eliostruyf.build-task.custom-build-task.file-creator@1
+      displayName: 'Create version file'
+      inputs:
+        filepath: '$(Build.ArtifactStagingDirectory)/working/version'
+        filecontent: '$(Build.BuildNumber)'
+
+    # Upload the artifacts from the build to Azure DevOps
+    - task: CopyFiles@2
+      displayName: Copy build output files to artifact directory
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)/build
+        TargetFolder: $(Build.ArtifactStagingDirectory)
+
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Templates and packages
+      inputs:
+        targetPath: $(Build.ArtifactStagingDirectory)
+        artifact: build
+
+  # Deploy the templates into Azure and run InSpec tests
+  - job: deploy_and_test
+    displayName: Deploy & Test CAMSA ARM Templates
+    condition: eq(variables['deploy_to_azure'], 'true')
+    dependsOn: setup_and_build
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+
+    # Patch the parameters file with the correct values to perform a deployment
+    # This is so that all parameters can be set a template file and then updated with values
+    # pertaining to the build
+    - task: JsonPatch@3
+      displayName: Patch parameters file for deployment
+      inputs:
+        SyntaxType: slick
+        JsonWorkingDir: $(Build.SourcesDirectory)/test/integration/build
+        JsonTargetFilters: parameters.json
+        JsonPatchContent: |
+          = /parameters/prefix/value => "camsa"
+          = /parameters/chefUsername/value => "inspec"
+          = /parameters/chefUserFullname/value => "Inspec Operator"
+          = /parameters/chefUserPassword/value => "Chef123!"
+          = /parameters/chefUserEmailaddress/value => "inspec@example.com"
+          = /parameters/chefOrg/value => "camsa"
+          = /parameters/chefOrgDescription/value => "Chef Automate Managed Service Application"
+          = /parameters/logAnalyticsTier/value => "Free"
+          = /parameters/debug/value => true
+          = /parameters/autoDiscoverSASToken/value => true
+          = /parameters/sshSourceAddresses/value => ["10.1.1.0/24"]
+        OutputPatchFile: true
+        TreatErrors: ERROR      
+
+    # Download the artifacts so they can be used to deploy and test
+    - task: DownloadPipelineArtifact@2
+      displayName: Download built templates
+      inputs:
+        buildType: current
+        artifact: build
+        targetPath: $(Pipeline.Workspace)/artifacts  
+
+    # Copy the parameters file so it is uploaded to blob storage too
+    - task: CopyFiles@2
+      displayName: Copy parameters file
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)/test/integration/build
+        Contents: parameters.json
+        TargetFolder: $(Pipeline.Workspace)/artifacts/working/staging
+        OverWrite: true    
+
+    # Upload the template files to the specified blob storage
+    - task: turtlesystems-azure-storage-preview@1
+      displayName: Upload Templates to Blob Storage
+      inputs:
+        azureSubscription: Partner Engineering
+        resourceGroupName: $(sa_resource_group_name)
+        location: $(sa_location)
+        storageAccountName: $(sa_name)
+        containerName: $(sa_build_container_name)
+        uploadDirectory: $(Pipeline.Workspace)/artifacts/working/staging
+        vstsSasTokenVariableName: AZDO_SAS_TOKEN
+
+    # Deploy to Azure for testing
+    - task: AzureResourceGroupDeployment@2
+      displayName: Deploy CAMSA Templates
+      inputs:
+        azureSubscription: Partner Engineering
+        resourceGroupName: $(deploy_rg_name)
+        action: Create Or Update Resource Group
+        location: $(deploy_location)
+        templateLocation: URL of the file
+        csmFileLink: https://$(sa_name).blob.core.windows.net/$(sa_build_container_name)/mainTemplate.json?$(AZDO_SAS_TOKEN)
+        csmParametersFileLink: https://$(sa_name).blob.core.windows.net/$(sa_build_container_name)/parameters.json?$(AZDO_SAS_TOKEN)
+        deploymentMode: Incremental
+        deploymentName: azdo-camsa-deploy
+        deploymentOutputs: camsa.outputs
+
+    # Read the outputs from the deployment and make them available as environment variables
+    # that the next set of tasks can use
+    - task: ARM Outputs@5
+      displayName: Set deployment outputs as environment variables
+      inputs:
+        ConnectedServiceNameSelector: ConnectedServiceNameARM
+        ConnectedServiceNameARM: Partner Engineering
+        resourceGroupName: $(deploy_rg_name)
+        prefix: arm_
+        whenLastDeploymentIsFailed: fail
+
+    # Patch the InSpec inputs file so that the tests work with the current deployment
+    - task: YamlPatch@3
+      displayName: Patch InSpec Inputs
+      inputs:
+        SyntaxType: slick
+        YamlWorkingDir: $(Build.SourcesDirectory)/test/integration
+        YamlTargetFilters: inspec_inputs.yml
+        YamlPatchContent: |
+          = /location => "$(azure_location_name)"
+          = /location_name => "$(azure_location_display)"
+          + /resource_group_name => "$(deploy_rg_name)"
+          + /customer_resource_group_name => "$(deploy_rg_name)"
+          + /customer_virtual_network_name => "camsa-$(ARM_UNIQUESHORT)-Subnet"
+          + /customer_subnet_name => "camsa-$(ARM_UNIQUESHORT)-Subnet"
+          + /unique_string => "$(ARM_UNIQUESHORT)"
+          + /la_location => "$(azure_location_name)"
+          + /ops_function_apikey => "$(ARM_CONFIGSTOREFUNCTIONAPIKEY)"
+          + /prefix => "camsa"
+        OutputPatchFile: true
+        TreatErrors: ERROR
+
+    # Copy the inspec inputs file to the artifacts so it can be uploaded for indepdent testing
+    - task: CopyFiles@2
+      displayName: Copy InSpec inputs file
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)/test/integration
+        Contents: inspec_inputs.yml
+        TargetFolder: $(Build.ArtifactStagingDirectory)/inspec
+
+    # Upload the inspec inputs file
+    # This is done before the tests are run so that if there are any errors the tests can 
+    # be run independently against the deployed infrastructure
+    - task: PublishPipelineArtifact@1
+      displayName: Publish InSpec inputs
+      inputs:
+        targetPath: $(Build.ArtifactStagingDirectory)
+        artifact: inspec
+
+    - task: vsts-chef-task-install-inspec@1
+      displayName: Install InSpec
+
+    # Perform the InSpec tests against the infrastructure and the Azure Functions
+    - task: vsts-chef-task-exec-inspec@1
+      displayName: Test Infrastructure
+      inputs:
+        inspecProfilePath: $(Build.SourcesDirectory)/test/integration/infrastructure/verify
+        inspecArguments: -t azure:// --input-file $(Build.SourcesDirectory)/test/integration/inspec_inputs.yml
+        inspecResultsFile: $(Build.SourcesDirectory)/build/tests/inspec_infrastructure.out
+
+    - task: vsts-chef-task-exec-inspec@1
+      displayName: Test CAMSA instance functions
+      inputs:
+        inspecProfilePath: $(Build.SourcesDirectory)/test/integration/services/verify
+        inspecArguments: --input-file $(Build.SourcesDirectory)/test/integration/inspec_inputs.yml
+        inspecResultsFile: $(Build.SourcesDirectory)/build/tests/inspec_services.out    
+
+    # Upload test results to Azure DevOps
+    - task: PublishTestResults@2
+      displayName: Publish InSpec test results
+      inputs:
+        searchFolder: $(Build.SourcesDirectory)/build/tests
+        testResultsFiles: |
+          inspec_infrastructure.out
+          inspec_services.out
+        testRunTitle: CAMSA - Infrastructure Tests
+
+    # Delete the deployment
+    - task: AzureResourceGroupDeployment@2
+      displayName: Delete Deployment
+      condition: and(succeeded(), eq(variables['teardown'], 'true'))
+      inputs:
+        azureSubscription: Partner Engineering
+        action: DeleteRG
+        resourceGroupName: $(deploy_rg_name)
+      

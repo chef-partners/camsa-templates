@@ -32,11 +32,15 @@
       },
       "patch": [
           {
-              "fileName": "createUIDefinition.json",
+              "fileName": "createUiDefinition.json",
               "items": [
                   {
                       "path": "parameters.outputs.verifyURLApiKey",
-                      "value": "ENV.verifyURLApiKey"
+                      "value": "ENV.VERIFY_URL_APIKEY"
+                  },
+                  {
+                      "path": "parameters.outputs.alertAGEmails",
+                      "value": "ENV.ALERT_AG_EMAILS"
                   }
               ],
               "remove": true
@@ -55,15 +59,7 @@
       ]
   },
   "deploy": {
-    "templateFile": "mainTemplate.json",
-    "resourceGroup": {
-      "name": "rjs-ama",
-      "location": "eastus"
-    },
-    "storageAccount": {
-      "name": "chefarmstorage",
-      "containerName": "rjsscratch",
-      "groupName": "Azure-Managed-App-Storage"
-    }
+    "templateFile": "mainTemplate.json"
   }
+  
 }

@@ -1,5 +1,5 @@
-resource_group_name = attribute('resource_group_name', default: 'InSpec-AMA', description: 'Name of the resource group to interogate')
-execute_rules_tests = attribute('execute_rules_tests', default: false)
+resource_group_name = input('resource_group_name', value: 'InSpec-AMA', description: 'Name of the resource group to interogate')
+execute_rules_tests = input('execute_rules_tests', value: false)
 
 title = 'Ensure that the scheduled query rules have been deployed correctly'
 

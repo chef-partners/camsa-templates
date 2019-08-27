@@ -1,13 +1,13 @@
-resource_group_name = attribute('resource_group_name', default: 'InSpec-AMA', description: 'Name of the resource group to interogate')
-unique_string = attribute('unique_string', default: '9j2f')
-location = attribute('location', default: 'westeurope')
-prefix = attribute('prefix', default: 'inspec')
+resource_group_name = input('resource_group_name', value: 'InSpec-AMA', description: 'Name of the resource group to interogate')
+unique_string = input('unique_string', value: '9j2f')
+location = input('location', value: 'westeurope')
+prefix = input('prefix', value: 'inspec')
 
 # This name needs to be specified because for AppServices Azure passes the displayname and not the name of the location
 # So westeurope = West Europe
-location_name = attribute('location_name', default: 'West Europe')
+location_name = attribute('location_name', value: 'West Europe')
 
-provider = attribute('provider', default: '2680257b-9f22-4261-b1ef-72412d367a68')
+provider = attribute('provider', value: '2680257b-9f22-4261-b1ef-72412d367a68')
 
 title 'Ensure that the server farm, website and functions are setup correctly'
 
@@ -15,7 +15,7 @@ title 'Ensure that the server farm, website and functions are setup correctly'
 app_service_plan_name = format('%s-%s-AppServicePlan', prefix, unique_string)
 app_service_name = format('%s-%s-AppService', prefix, unique_string)
 
-control 'AMA Functions Service Plan (Server Farm)' do
+control 'CAMSA Functions Service Plan (Server Farm)' do
   impact 1.0
   title 'Service Plan is using the Consumption Hosting option'
 

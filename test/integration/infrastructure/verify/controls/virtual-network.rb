@@ -1,12 +1,12 @@
 # Configure attributes for the tests
-customer_resource_group_name = attribute('customer_resource_group_name', default: 'InSpec-AMA-Customer', description: 'Name of the resource group that holds the existing customer virtual network')
-customer_virtual_network_name = attribute('customer_virtual_network_name', default: 'InSpec-Customer-Network', description: 'Name of the eixsiting customer virtual network')
-customer_subnet_name = attribute('customer_subnet_name', default: 'InSpec-Customer-Subnet', description: 'Name of the customer subnet within the customer vnet')
-vnet_address_prefix = attribute('vnet_address_prefix', default: '10.3.0.0/24', description: 'The address space that has been assigned to the virtual network')
-customer_subnet_prefix = attribute('customer_subnet_prefix', default: '10.3.0.0/25', description: 'The address space assigned to the customer subnet')
-location = attribute('location', default: 'westeurope', description: 'Location of the resources within Azure')
-unique_string = attribute('unique_string', default: '9j2f', description: 'The 4 character string that is used to uniquely identify resources')
-prefix = attribute('prefix', default: 'inspec')
+customer_resource_group_name = input('customer_resource_group_name', value: 'InSpec-AMA-Customer', description: 'Name of the resource group that holds the existing customer virtual network')
+customer_virtual_network_name = input('customer_virtual_network_name', value: 'InSpec-Customer-Network', description: 'Name of the eixsiting customer virtual network')
+customer_subnet_name = input('customer_subnet_name', value: 'InSpec-Customer-Subnet', description: 'Name of the customer subnet within the customer vnet')
+vnet_address_prefix = input('vnet_address_prefix', value: '10.0.0.0/24', description: 'The address space that has been assigned to the virtual network')
+customer_subnet_prefix = input('customer_subnet_prefix', value: '10.0.0.0/24', description: 'The address space assigned to the customer subnet')
+location = input('location', value: 'westeurope', description: 'Location of the resources within Azure')
+unique_string = input('unique_string', value: '9j2f', description: 'The 4 character string that is used to uniquely identify resources')
+prefix = input('prefix', value: 'inspec')
 
 title 'Ensure Subnets are configured in customer network'
 

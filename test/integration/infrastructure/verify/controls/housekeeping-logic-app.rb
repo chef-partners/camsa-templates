@@ -1,13 +1,13 @@
-resource_group_name = attribute('resource_group_name', default: 'InSpec-AMA', description: 'Name of the resource group to interogate')
-location = attribute('location', default: 'westeurope')
-prefix = attribute('prefix', default: 'inspec')
+resource_group_name = input('resource_group_name', value: 'InSpec-AMA', description: 'Name of the resource group to interogate')
+location = input('location', value: 'westeurope')
+prefix = input('prefix', value: 'inspec')
 
 title 'Ensure that the LogicApp for Backup Housekeeping is properly configured'
 
 # Set the name of the logic app
 logic_app_name = format('%s-Backup-HouseKeeping-LogicApp', prefix)
 
-control 'AMA Backup LogicApp' do
+control 'CAMSA Backup LogicApp' do
   impact 1.0
   title 'LogicApp for Housekeeping'
 
