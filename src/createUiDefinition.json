@@ -361,11 +361,11 @@
                         "label": "SSL renewal",
                         "elements": [
                             {
-                                "name": "warning",
+                                "name": "warning_ssl",
                                 "type": "Microsoft.Common.InfoBox",
                                 "options": {
                                     "icon": "Warning",
-                                    "text": "If an SSL renewal is required, both the Automate and Chef services will be taken down to allow this. Renewal will occur within 30 days of expiry."
+                                    "text": "If an SSL renewal is required, Chef services will be taken down to allow this. Renewal will occur within 30 days of expiry."
                                 },
                                 "visible": true
                             },
@@ -550,11 +550,11 @@
                         "label": "Backup",
                         "elements": [
                             {
-                                "name": "warning",
+                                "name": "warning_backup",
                                 "type": "Microsoft.Common.InfoBox",
                                 "options": {
                                     "icon": "Warning",
-                                    "text": "The Chef Server will be brought down during the backup so please set the backup to run at a time that has minimal impact."
+                                    "text": "Chef Services will be brought down during the backup so please set the backup to run at a time that has minimal impact."
                                 },
                                 "visible": true
                             },
