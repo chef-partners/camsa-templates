@@ -32,9 +32,6 @@
       "automateLicense": {
         "value": ""
       },
-      "logAnalyticsTier": {
-        "value": ""
-      },
       "autoDiscoverSASToken": {
         "value": false
       },
