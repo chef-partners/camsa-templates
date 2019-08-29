@@ -489,6 +489,11 @@ do
               $CHEF_USER_NAME \
               $CHEF_ORGNAME)
         executeCmd "${cmd}"
+
+        # Ensure the the user is an admin of the chef server so that new users can be created
+        log "setting user as admin" 1
+        cmd=$(printf 'chef-server-ctl grant-server-admin-permissions %s' $CHEF_USER_NAME)
+        executeCmd "${cmd}"
       fi
 
       # Create a user that can be used to monitor the Chef server using the API
