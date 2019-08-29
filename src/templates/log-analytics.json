@@ -8,9 +8,6 @@
                 "description": "The name of the workspace"
             }
         },
-        "sku": {
-            "type": "String"
-        },
         "location": {
             "defaultValue": "[resourceGroup().location]",
             "type": "String"
@@ -28,11 +25,10 @@
             "workspace": "[parameters('workspaceName')]"
         },
         "la": {
-            "sku": "[parameters('sku')]",
-            "retention": "[if(equals(toLower(parameters('sku')), 'free'), 7, 30)]"
+            "retention": "30"
         },
         "apiVersions": {
-            "workspace": "2015-03-20",
+            "workspace": "2015-11-01-preview",
             "dataSources": "2015-11-01-preview"
         },
         "tags": "[parameters('tags')]",
@@ -49,9 +45,6 @@
             "location": "[variables('location')]",
             "tags": "[variables('tags')]",
             "properties": {
-                "sku": {
-                    "name": "[variables('la').sku]"
-                },
                 "retentionInDays": "[variables('la').retention]"
             },
             "resources": [

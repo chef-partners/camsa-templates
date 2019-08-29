@@ -233,109 +233,7 @@
                       "visible": "[steps('automateLicenseStep').hasLicense]"
                     }
                 ]
-            },
-
-            {
-                "name": "logAnalyticsStep",
-                "label": "Log Analytics",
-                "bladeTitle": "Log Analytics Tier",
-                "subLabel": {
-                    "preValidation": "Please select the tier you want to use for your Log Analytics workspace",
-                    "postValidation": "Log Analytics tier has been specified"
-                },
-                "elements": [
-                    {
-                        "name": "warning",
-                        "type": "Microsoft.Common.InfoBox",
-                        "options": {
-                            "icon": "Info",
-                            "text": "If you are on a Pay As You Go Azure Subscription you cannot use the Free Log Analytics tier."
-                        },
-                        "visible": true
-                    },
-                    {
-                        "name": "tier",
-                        "type": "Microsoft.Common.DropDown",
-                        "label": "Tier",
-                        "toolTip": "Please select the appropriate service tier",
-                        "defaultValue": "Free",
-                        "constraints": {
-                            "allowedValues": [
-                                {
-                                    "label": "Free",
-                                    "value": "Free"
-                                },
-                                {
-                                    "label": "PerNode",
-                                    "value": "PerNode"
-                                },
-                                {
-                                    "label": "PerGB2018",
-                                    "value": "PerGB2018"
-                                }
-                            ]
-                        },
-                        "visible": true
-                    },
-                    {
-                        "name": "location",
-                        "type": "Microsoft.Common.DropDown",
-                        "label": "Location",
-                        "toolTip": "Location that the Log Analytcis should be deployed into",
-                        "defaultValue": "eastus",
-                        "constraints": {
-                            "allowedValues": [
-                                {
-                                    "label": "Australia Central",
-                                    "value": "australiacentral"
-                                },
-                                {
-                                    "label": "Australia Central 2",
-                                    "value": "australiacentral2"
-                                },
-                                {
-                                    "label": "Australia South East",
-                                    "value": "australiasoutheast"
-                                },
-                                {
-                                    "label": "Canada Central",
-                                    "value": "canadacentral"
-                                },
-                                {
-                                    "label": "Central India",
-                                    "value": "centralindia"
-                                },
-                                {
-                                    "label": "East US",
-                                    "value": "eastus"
-                                },
-                                {
-                                    "label": "Japan East",
-                                    "value": "japaneast"
-                                },
-                                {
-                                    "label": "South East Asia",
-                                    "value": "southeastasia"
-                                },
-                                {
-                                    "label": "UK South",
-                                    "value": "uksouth"
-                                },
-                                {
-                                    "label": "West Central US",
-                                    "value": "westcentralus"
-                                },
-                                {
-                                    "label": "West Europe",
-                                    "value": "westeurope"
-                                }                                
-                            ],
-                            "required": true 
-                        },
-                        "visible": true
-                    }
-                ]
-            },            
+            },  
 
             {
                 "name": "advancedSettings",
@@ -797,8 +695,6 @@
             "chefOrgDescription": "[steps('chefCredentialsStep').orgdescription]",
             "automateLicense": "[steps('automateLicenseStep').license]",
             "customerName": "[steps('automateLicenseStep').customerName]",
-            "logAnalyticsTier": "[steps('logAnalyticsStep').tier]",
-            "logAnalyticsLocation": "[steps('logAnalyticsStep').location]",
             "backupHour": "[steps('advancedSettings').backupCronSection.hour]",
             "backupMinute": "[steps('advancedSettings').backupCronSection.minute]",
             "location": "[location()]",
