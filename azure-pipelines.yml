@@ -112,7 +112,6 @@ stages:
           = /parameters/chefUserEmailaddress/value => "inspec@example.com"
           = /parameters/chefOrg/value => "camsa"
           = /parameters/chefOrgDescription/value => "Chef Automate Managed Service Application"
-          = /parameters/logAnalyticsTier/value => "Free"
           = /parameters/debug/value => true
           = /parameters/autoDiscoverSASToken/value => true
           = /parameters/sshSourceAddresses/value => ["10.1.1.0/24"]
