@@ -210,16 +210,6 @@
             }
         },
 
-        "logAnalyticsTier": {
-            "type": "string",
-            "defaultValue": "Free"
-        },
-
-        "logAnalyticsLocation": {
-            "type": "string",
-            "defaultValue": "eastus"
-        },
-
         "baseUrl": {
             "type": "string",
             "defaultValue": "https://chefarmstorage.blob.core.windows.net/ama",
@@ -401,7 +391,6 @@
         "baseUrl": "[if(not(empty(parameters('baseUrl'))), if(endsWith(parameters('baseUrl'), '/'), parameters('baseUrl'), concat(parameters('baseUrl'), '/')), if(contains(deployment().properties, 'templateLink'), uri(deployment().properties.templateLink.uri, '.'), ''))]",
 
         "location": "[parameters('location')]",
-        "logAnalyticsLocation": "[if(empty(parameters('logAnalyticsLocation')), variables('location'), parameters('logAnalyticsLocation'))]",
 
         "name": {
             "storageAccount": "[variables('unique')]",
@@ -563,10 +552,6 @@
         "automate": {
             "enabled": "[parameters('automateEnabled')]",
             "license": "[parameters('automateLicense')]"
-        },
-
-        "la": {
-            "sku": "[parameters('logAnalyticsTier')]"
         },
 
         "tags": {
@@ -888,11 +873,8 @@
                     "workspaceName": {
                         "value": "[variables('name').la]"
                     },
-                    "sku": {
-                        "value": "[variables('la').sku]"
-                    },
                     "location": {
-                        "value": "[variables('logAnalyticsLocation')]"
+                        "value": "[variables('location')]"
                     },
                     "logAnalyticsEnabled": {
                         "value": "[variables('enabled').logAnalytics]"

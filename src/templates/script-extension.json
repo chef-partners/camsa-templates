@@ -27,7 +27,7 @@
         },
 
         "scriptArguments": {
-            "type": "string",
+            "type": "securestring",
             "metadata": {
                 "description": "Arguments that should be passed to the script"
             },
@@ -35,7 +35,7 @@
         },
 
         "arguments": {
-            "type": "object",
+            "type": "secureObject",
             "defaultValue": {}
         },
 
